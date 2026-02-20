@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERD — Form Designer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Outfit:wght@400;600;700;800&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#0d1117;overflow:hidden;font-family:'IBM Plex Mono',monospace}
+
+/* ── TOOLBAR ── */
+#toolbar{
+  position:fixed;top:0;left:0;right:0;height:52px;
+  background:#0d1117;border-bottom:1px solid #21262d;
+  display:flex;align-items:center;gap:12px;padding:0 20px;z-index:100;
+}
+#toolbar h1{
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:1rem;
+  color:#f0f6fc;letter-spacing:.03em;margin-right:8px;
+  white-space:nowrap;
+}
+#toolbar h1 span{color:#f78166}
+
+.legend{display:flex;gap:16px;align-items:center;margin-left:auto}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:.65rem;color:#8b949e}
+.leg-dot{width:10px;height:10px;border-radius:2px}
+
+.tb-btn{
+  background:#161b22;border:1px solid #30363d;color:#c9d1d9;
+  padding:4px 12px;font-family:'IBM Plex Mono',monospace;font-size:.7rem;
+  cursor:pointer;border-radius:4px;transition:all .15s;
+}
+.tb-btn:hover{background:#21262d;border-color:#58a6ff;color:#58a6ff}
+
+/* ── CANVAS ── */
+#canvas-wrap{
+  position:fixed;top:52px;left:0;right:0;bottom:0;overflow:hidden;
+}
+svg#erd{width:100%;height:100%;cursor:grab}
+svg#erd.dragging{cursor:grabbing}
+
+/* ── TABLE NODES ── */
+.tbl-group{cursor:pointer}
+.tbl-box{
+  rx:6;ry:6;
+  filter:drop-shadow(0 4px 16px rgba(0,0,0,.5));
+  transition:filter .2s;
+}
+.tbl-group:hover .tbl-box{filter:drop-shadow(0 6px 24px rgba(0,0,0,.8))}
+.tbl-header{rx:6;ry:6}
+.tbl-name{
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:11px;
+  fill:#f0f6fc;dominant-baseline:middle;text-anchor:middle;
+}
+.tbl-mod{
+  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:7.5px;
+  fill:rgba(255,255,255,.5);dominant-baseline:middle;text-anchor:middle;
+}
+.col-row{transition:fill .15s}
+.col-row:hover{fill:#1c2128}
+.col-name{
+  font-family:'IBM Plex Mono',monospace;font-size:8.5px;fill:#c9d1d9;
+  dominant-baseline:middle;
+}
+.col-type{
+  font-family:'IBM Plex Mono',monospace;font-size:7.5px;fill:#6e7681;
+  dominant-baseline:middle;text-anchor:end;
+}
+.col-pk{font-size:7.5px;fill:#f7c948;dominant-baseline:middle}
+.col-fk{font-size:7.5px;fill:#79c0ff;dominant-baseline:middle}
+.col-icon{font-size:7px;dominant-baseline:middle;text-anchor:middle}
+
+/* ── RELATION LINES ── */
+.rel-line{fill:none;stroke-width:1.5;opacity:.7;transition:opacity .2s,stroke-width .2s}
+.rel-line:hover{opacity:1;stroke-width:2.5}
+.rel-label{
+  font-family:'IBM Plex Mono',monospace;font-size:7px;
+  fill:#8b949e;text-anchor:middle;dominant-baseline:middle;
+}
+
+/* ── MODULE ZONES ── */
+.zone-rect{rx:12;ry:12;fill:none;stroke-width:1.5;stroke-dasharray:6 4}
+.zone-label{
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:10px;
+  fill-opacity:.6;letter-spacing:.08em;text-transform:uppercase;
+}
+
+/* ── TOOLTIP ── */
+#tooltip{
+  position:fixed;background:#161b22;border:1px solid #30363d;
+  color:#e6edf3;font-family:'IBM Plex Mono',monospace;font-size:.7rem;
+  padding:8px 12px;border-radius:6px;pointer-events:none;opacity:0;
+  transition:opacity .15s;max-width:220px;line-height:1.6;z-index:200;
+}
+#tooltip.show{opacity:1}
+#tooltip strong{color:#79c0ff;display:block;margin-bottom:2px;font-family:'Outfit',sans-serif}
+
+/* ── MINIMAP ── */
+#minimap{
+  position:fixed;bottom:20px;right:20px;
+  width:160px;height:110px;
+  background:#161b22;border:1px solid #21262d;
+  border-radius:6px;overflow:hidden;z-index:100;
+}
+#minimap-svg{width:100%;height:100%}
+#minimap-viewport{fill:rgba(88,166,255,.15);stroke:#58a6ff;stroke-width:1;rx:2}
+
+#hint{
+  position:fixed;bottom:20px;left:20px;
+  font-size:.62rem;color:#484f58;font-family:'IBM Plex Mono',monospace;
+  line-height:1.8;
+}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <h1>ERD <span>Form Designer</span></h1>
+
+  <button class="tb-btn" onclick="resetView()">⌖ Reset</button>
+  <button class="tb-btn" onclick="fitView()">⊡ Fit</button>
+
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:#f78166"></div>Módulo 1 Componentes</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#79c0ff"></div>Módulo 2 Catálogos</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#56d364"></div>Módulo 3 Tributario</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#d2a8ff"></div>Módulo 4 Diseñador</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#ffa657"></div>Módulo 5 Ejecución</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#8b949e"></div>Base</div>
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <svg id="erd" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<div id="tooltip"></div>
+
+<div id="minimap">
+  <svg id="minimap-svg" xmlns="http://www.w3.org/2000/svg">
+    <g id="minimap-content"></g>
+    <rect id="minimap-viewport" x="0" y="0" width="40" height="30"/>
+  </svg>
+</div>
+
+<div id="hint">
+  🖱 Drag to pan &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Hover relations for details
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA MODEL
+// ═══════════════════════════════════════════════════
+const MODULES = {
+  base:     { color:'#6e7681', bg:'#161b22', header:'#21262d', zone:'#6e7681' },
+  comp:     { color:'#f78166', bg:'#1a1210', header:'#5c2018', zone:'#f78166' },
+  catalogo: { color:'#79c0ff', bg:'#0d1d2e', header:'#143054', zone:'#79c0ff' },
+  tributario:{ color:'#56d364', bg:'#0d1e10', header:'#133819', zone:'#56d364' },
+  diseno:   { color:'#d2a8ff', bg:'#1a1228', header:'#2e1d4e', zone:'#d2a8ff' },
+  ejecucion:{ color:'#ffa657', bg:'#1e1508', header:'#4a2d0c', zone:'#ffa657' },
+};
+
+const TABLES = [
+  // ── BASE ─────────────────────────────────────────
+  { id:'USUARIO', module:'base', x:820, y:40,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'LOGIN',t:'VARCHAR2(50)'},
+      {n:'NOMBRE_COMPLETO',t:'VARCHAR2(200)'},
+      {n:'EMAIL',t:'VARCHAR2(200)'},
+      {n:'ROL',t:'VARCHAR2(30)'},
+      {n:'ACTIVO',t:'NUMBER(1)'},
+    ]
+  },
+
+  // ── MÓDULO 1 ─────────────────────────────────────
+  { id:'CATEGORIA_COMPONENTE', module:'comp', x:40, y:40,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'IDENTIFICADOR_TECNICO',t:'VARCHAR2(50)'},
+      {n:'NOMBRE_AMIGABLE',t:'VARCHAR2(100)'},
+      {n:'PERMITE_CATALOGO',t:'NUMBER(1)'},
+      {n:'PERMITE_HIJOS',t:'NUMBER(1)'},
+      {n:'PERMITE_ADJUNTO',t:'NUMBER(1)'},
+      {n:'ACTIVO',t:'NUMBER(1)'},
+    ]
+  },
+  { id:'BIBLIOTECA_COMPONENTE', module:'comp', x:40, y:270,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_CATEGORIA_COMPONENTE',fk:'CATEGORIA_COMPONENTE',t:'NUMBER'},
+      {n:'NOMBRE_UI',t:'VARCHAR2(100)'},
+      {n:'CATEGORIA_UI',t:'VARCHAR2(50)'},
+      {n:'CONFIGURACION_DEFAULT_JSON',t:'CLOB'},
+      {n:'ACTIVO',t:'NUMBER(1)'},
+    ]
+  },
+
+  // ── MÓDULO 2 ─────────────────────────────────────
+  { id:'CATALOGO_MAESTRO', module:'catalogo', x:1200, y:40,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_UNICO',t:'VARCHAR2(50)'},
+      {n:'NOMBRE',t:'VARCHAR2(100)'},
+      {n:'METADATA_COLUMNAS_JSON',t:'CLOB'},
+      {n:'PERMITE_JERARQUIA',t:'NUMBER(1)'},
+      {n:'USUARIO_CREADOR',fk:'USUARIO',t:'NUMBER'},
+    ]
+  },
+  { id:'CATALOGO_DETALLE', module:'catalogo', x:1200, y:280,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_CATALOGO_MAESTRO',fk:'CATALOGO_MAESTRO',t:'NUMBER'},
+      {n:'CODIGO_ITEM_PADRE',fk:'CATALOGO_DETALLE',t:'NUMBER'},
+      {n:'VALOR_CLAVE',t:'VARCHAR2(100)'},
+      {n:'ETIQUETA',t:'VARCHAR2(200)'},
+      {n:'ATRIBUTOS_EXTRA_JSON',t:'CLOB'},
+      {n:'ACTIVO',t:'NUMBER(1)'},
+    ]
+  },
+
+  // ── MÓDULO 3 ─────────────────────────────────────
+  { id:'CONCEPTO_TRIBUTARIO', module:'tributario', x:1560, y:400,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_PADRE',fk:'CONCEPTO_TRIBUTARIO',t:'NUMBER'},
+      {n:'CASILLERO_SRI',t:'VARCHAR2(20)'},
+      {n:'NOMBRE',t:'VARCHAR2(300)'},
+      {n:'TIPO_DATO',t:'VARCHAR2(50)'},
+      {n:'ES_CALCULADO',t:'NUMBER(1)'},
+      {n:'FORMULA_CALCULO',t:'VARCHAR2(500)'},
+    ]
+  },
+
+  // ── MÓDULO 4 ─────────────────────────────────────
+  { id:'CATEGORIA_PLANTILLA', module:'diseno', x:400, y:40,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'NOMBRE',t:'VARCHAR2(100)'},
+      {n:'DESCRIPCION',t:'VARCHAR2(300)'},
+      {n:'ORDEN',t:'NUMBER'},
+      {n:'ACTIVO',t:'NUMBER(1)'},
+    ]
+  },
+  { id:'PLANTILLA', module:'diseno', x:400, y:240,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_CATEGORIA_PLANTILLA',fk:'CATEGORIA_PLANTILLA',t:'NUMBER'},
+      {n:'IDENTIFICADOR',t:'VARCHAR2(50)'},
+      {n:'NOMBRE',t:'VARCHAR2(200)'},
+      {n:'USUARIO_CREADOR',fk:'USUARIO',t:'NUMBER'},
+    ]
+  },
+  { id:'VERSION_PLANTILLA', module:'diseno', x:400, y:440,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_PLANTILLA',fk:'PLANTILLA',t:'NUMBER'},
+      {n:'NUMERO_VERSION',t:'VARCHAR2(20)'},
+      {n:'VIGENCIA_DESDE',t:'DATE'},
+      {n:'ESTADO',t:'VARCHAR2(20)'},
+      {n:'CONFIG_GLOBAL_JSON',t:'CLOB'},
+      {n:'USUARIO_CREADOR',fk:'USUARIO',t:'NUMBER'},
+    ]
+  },
+  { id:'VERSION_PLANTILLA_HISTORIAL', module:'diseno', x:400, y:710,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_VERSION_PLANTILLA',fk:'VERSION_PLANTILLA',t:'NUMBER'},
+      {n:'ESTADO_ANTERIOR',t:'VARCHAR2(20)'},
+      {n:'ESTADO_NUEVO',t:'VARCHAR2(20)'},
+      {n:'USUARIO_RESPONSABLE',fk:'USUARIO',t:'NUMBER'},
+    ]
+  },
+  { id:'SECCION_PLANTILLA', module:'diseno', x:760, y:440,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_VERSION_PLANTILLA',fk:'VERSION_PLANTILLA',t:'NUMBER'},
+      {n:'CODIGO_SECCION_PADRE',fk:'SECCION_PLANTILLA',t:'NUMBER'},
+      {n:'TIPO',t:'VARCHAR2(30)'},
+      {n:'CLAVE_UI',t:'VARCHAR2(100)'},
+      {n:'ETIQUETA',t:'VARCHAR2(200)'},
+      {n:'ORDEN',t:'NUMBER'},
+      {n:'CONFIG_LAYOUT_JSON',t:'CLOB'},
+    ]
+  },
+  { id:'CAMPO_PLANTILLA', module:'diseno', x:760, y:720,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_VERSION_PLANTILLA',fk:'VERSION_PLANTILLA',t:'NUMBER'},
+      {n:'CODIGO_SECCION',fk:'SECCION_PLANTILLA',t:'NUMBER'},
+      {n:'CODIGO_BIBLIOTECA_COMPONENTE',fk:'BIBLIOTECA_COMPONENTE',t:'NUMBER'},
+      {n:'CODIGO_CATALOGO_MAESTRO',fk:'CATALOGO_MAESTRO',t:'NUMBER'},
+      {n:'CLAVE_UI',t:'VARCHAR2(100)'},
+      {n:'ETIQUETA_UI',t:'VARCHAR2(200)'},
+      {n:'CATEGORIA_COMPONENTE',t:'VARCHAR2(50)'},
+      {n:'ORDEN',t:'NUMBER'},
+      {n:'ES_OBLIGATORIO',t:'NUMBER(1)'},
+      {n:'PROPIEDADES_UI_JSON',t:'CLOB'},
+    ]
+  },
+  { id:'REGLA_VALIDACION', module:'diseno', x:40, y:560,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'NOMBRE',t:'VARCHAR2(100)'},
+      {n:'TIPO',t:'VARCHAR2(30)'},
+      {n:'EXPRESION',t:'VARCHAR2(500)'},
+      {n:'MENSAJE_ERROR',t:'VARCHAR2(300)'},
+      {n:'REUTILIZABLE',t:'NUMBER(1)'},
+    ]
+  },
+  { id:'CAMPO_REGLA_VALIDACION', module:'diseno', x:40, y:810,
+    cols:[
+      {n:'CODIGO_CAMPO_PLANTILLA',pk:true,fk:'CAMPO_PLANTILLA',t:'NUMBER'},
+      {n:'CODIGO_REGLA_VALIDACION',pk:true,fk:'REGLA_VALIDACION',t:'NUMBER'},
+      {n:'ORDEN_EJECUCION',t:'NUMBER'},
+      {n:'PARAMETROS_JSON',t:'CLOB'},
+    ]
+  },
+  { id:'REGLA_CONDICIONAL', module:'diseno', x:40, y:1010,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_CAMPO_PLANTILLA',fk:'CAMPO_PLANTILLA',t:'NUMBER'},
+      {n:'ACCION',t:'VARCHAR2(20)'},
+      {n:'CONECTOR_LOGICO',t:'VARCHAR2(5)'},
+    ]
+  },
+  { id:'REGLA_CONDICIONAL_DETALLE', module:'diseno', x:40, y:1180,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_REGLA_CONDICIONAL',fk:'REGLA_CONDICIONAL',t:'NUMBER'},
+      {n:'CLAVE_UI_CAMPO_EVALUADO',t:'VARCHAR2(100)'},
+      {n:'OPERADOR',t:'VARCHAR2(20)'},
+      {n:'VALOR_REFERENCIA',t:'VARCHAR2(200)'},
+    ]
+  },
+  { id:'CAMPO_PLANTILLA_CONCEPTO', module:'diseno', x:1200, y:720,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_CAMPO_PLANTILLA',fk:'CAMPO_PLANTILLA',t:'NUMBER'},
+      {n:'CODIGO_CONCEPTO_TRIBUTARIO',fk:'CONCEPTO_TRIBUTARIO',t:'NUMBER'},
+      {n:'TIPO_OPERACION',t:'VARCHAR2(20)'},
+    ]
+  },
+  { id:'CONTROL_FLUJO_ESTADO', module:'diseno', x:1560, y:160,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_VERSION_PLANTILLA',fk:'VERSION_PLANTILLA',t:'NUMBER'},
+      {n:'ESTADO_ANTERIOR',t:'VARCHAR2(20)'},
+      {n:'ESTADO_NUEVO',t:'VARCHAR2(20)'},
+      {n:'USUARIO_RESPONSABLE',t:'VARCHAR2(100)'},
+    ]
+  },
+
+  // ── MÓDULO 5 ─────────────────────────────────────
+  { id:'FORMULARIO_DECLARACION', module:'ejecucion', x:1560, y:700,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_VERSION_PLANTILLA',fk:'VERSION_PLANTILLA',t:'NUMBER'},
+      {n:'RUC_CONTRIBUYENTE',t:'VARCHAR2(13)'},
+      {n:'PERIODO_FISCAL',t:'VARCHAR2(10)'},
+      {n:'ESTADO',t:'VARCHAR2(20)'},
+      {n:'DATOS_JSON',t:'CLOB'},
+      {n:'USUARIO_CREADOR',fk:'USUARIO',t:'NUMBER'},
+      {n:'FECHA_ENVIO',t:'TIMESTAMP'},
+    ]
+  },
+  { id:'DECLARACION_HISTORIAL_ESTADO', module:'ejecucion', x:1920, y:700,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_FORMULARIO_DECLARACION',fk:'FORMULARIO_DECLARACION',t:'NUMBER'},
+      {n:'ESTADO_ANTERIOR',t:'VARCHAR2(20)'},
+      {n:'ESTADO_NUEVO',t:'VARCHAR2(20)'},
+      {n:'USUARIO_RESPONSABLE',fk:'USUARIO',t:'NUMBER'},
+    ]
+  },
+  { id:'DETALLE_VALOR_CONCEPTO', module:'ejecucion', x:1920, y:960,
+    cols:[
+      {n:'CODIGO_FORMULARIO_DECLARACION',pk:true,fk:'FORMULARIO_DECLARACION',t:'NUMBER'},
+      {n:'CODIGO_CONCEPTO_TRIBUTARIO',pk:true,fk:'CONCEPTO_TRIBUTARIO',t:'NUMBER'},
+      {n:'VALOR_CALCULADO',t:'NUMBER(19,4)'},
+      {n:'FECHA_CALCULO',t:'TIMESTAMP'},
+    ]
+  },
+  { id:'DECLARACION_OBSERVACION', module:'ejecucion', x:1560, y:1000,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_FORMULARIO_DECLARACION',fk:'FORMULARIO_DECLARACION',t:'NUMBER'},
+      {n:'CODIGO_CAMPO_PLANTILLA',fk:'CAMPO_PLANTILLA',t:'NUMBER'},
+      {n:'TIPO',t:'VARCHAR2(20)'},
+      {n:'MENSAJE',t:'VARCHAR2(1000)'},
+      {n:'RESUELTO',t:'NUMBER(1)'},
+      {n:'USUARIO_CREADOR',fk:'USUARIO',t:'NUMBER'},
+    ]
+  },
+  { id:'DECLARACION_ADJUNTO', module:'ejecucion', x:1200, y:1050,
+    cols:[
+      {n:'CODIGO',pk:true,t:'NUMBER'},
+      {n:'CODIGO_FORMULARIO_DECLARACION',fk:'FORMULARIO_DECLARACION',t:'NUMBER'},
+      {n:'CODIGO_CAMPO_PLANTILLA',fk:'CAMPO_PLANTILLA',t:'NUMBER'},
+      {n:'NOMBRE_ORIGINAL',t:'VARCHAR2(255)'},
+      {n:'MIME_TYPE',t:'VARCHAR2(100)'},
+      {n:'TAMANO_BYTES',t:'NUMBER'},
+      {n:'HASH_SHA256',t:'VARCHAR2(64)'},
+      {n:'USUARIO_CARGA',fk:'USUARIO',t:'NUMBER'},
+    ]
+  },
+];
+
+// Relations [from_table, from_col, to_table, label]
+const RELATIONS = [
+  // Módulo 1
+  ['BIBLIOTECA_COMPONENTE','CODIGO_CATEGORIA_COMPONENTE','CATEGORIA_COMPONENTE','N:1'],
+  // Módulo 2
+  ['CATALOGO_DETALLE','CODIGO_CATALOGO_MAESTRO','CATALOGO_MAESTRO','N:1'],
+  ['CATALOGO_DETALLE','CODIGO_ITEM_PADRE','CATALOGO_DETALLE','N:1 (auto)'],
+  // Módulo 3
+  ['CONCEPTO_TRIBUTARIO','CODIGO_PADRE','CONCEPTO_TRIBUTARIO','N:1 (auto)'],
+  // Módulo 4 — plantilla
+  ['PLANTILLA','CODIGO_CATEGORIA_PLANTILLA','CATEGORIA_PLANTILLA','N:1'],
+  ['PLANTILLA','USUARIO_CREADOR','USUARIO','N:1'],
+  ['VERSION_PLANTILLA','CODIGO_PLANTILLA','PLANTILLA','N:1'],
+  ['VERSION_PLANTILLA','USUARIO_CREADOR','USUARIO','N:1'],
+  ['VERSION_PLANTILLA_HISTORIAL','CODIGO_VERSION_PLANTILLA','VERSION_PLANTILLA','N:1'],
+  ['VERSION_PLANTILLA_HISTORIAL','USUARIO_RESPONSABLE','USUARIO','N:1'],
+  ['SECCION_PLANTILLA','CODIGO_VERSION_PLANTILLA','VERSION_PLANTILLA','N:1'],
+  ['SECCION_PLANTILLA','CODIGO_SECCION_PADRE','SECCION_PLANTILLA','N:1 (auto)'],
+  ['CAMPO_PLANTILLA','CODIGO_VERSION_PLANTILLA','VERSION_PLANTILLA','N:1'],
+  ['CAMPO_PLANTILLA','CODIGO_SECCION','SECCION_PLANTILLA','N:1'],
+  ['CAMPO_PLANTILLA','CODIGO_BIBLIOTECA_COMPONENTE','BIBLIOTECA_COMPONENTE','N:1'],
+  ['CAMPO_PLANTILLA','CODIGO_CATALOGO_MAESTRO','CATALOGO_MAESTRO','N:1'],
+  // Reglas
+  ['CAMPO_REGLA_VALIDACION','CODIGO_CAMPO_PLANTILLA','CAMPO_PLANTILLA','N:M'],
+  ['CAMPO_REGLA_VALIDACION','CODIGO_REGLA_VALIDACION','REGLA_VALIDACION','N:M'],
+  ['REGLA_CONDICIONAL','CODIGO_CAMPO_PLANTILLA','CAMPO_PLANTILLA','N:1'],
+  ['REGLA_CONDICIONAL_DETALLE','CODIGO_REGLA_CONDICIONAL','REGLA_CONDICIONAL','N:1'],
+  // Concepto
+  ['CAMPO_PLANTILLA_CONCEPTO','CODIGO_CAMPO_PLANTILLA','CAMPO_PLANTILLA','N:M'],
+  ['CAMPO_PLANTILLA_CONCEPTO','CODIGO_CONCEPTO_TRIBUTARIO','CONCEPTO_TRIBUTARIO','N:M'],
+  // Control flujo
+  ['CONTROL_FLUJO_ESTADO','CODIGO_VERSION_PLANTILLA','VERSION_PLANTILLA','N:1'],
+  // Catálogo maestro
+  ['CATALOGO_MAESTRO','USUARIO_CREADOR','USUARIO','N:1'],
+  // Módulo 5
+  ['FORMULARIO_DECLARACION','CODIGO_VERSION_PLANTILLA','VERSION_PLANTILLA','N:1'],
+  ['FORMULARIO_DECLARACION','USUARIO_CREADOR','USUARIO','N:1'],
+  ['DECLARACION_HISTORIAL_ESTADO','CODIGO_FORMULARIO_DECLARACION','FORMULARIO_DECLARACION','N:1'],
+  ['DECLARACION_HISTORIAL_ESTADO','USUARIO_RESPONSABLE','USUARIO','N:1'],
+  ['DETALLE_VALOR_CONCEPTO','CODIGO_FORMULARIO_DECLARACION','FORMULARIO_DECLARACION','N:1'],
+  ['DETALLE_VALOR_CONCEPTO','CODIGO_CONCEPTO_TRIBUTARIO','CONCEPTO_TRIBUTARIO','N:1'],
+  ['DECLARACION_OBSERVACION','CODIGO_FORMULARIO_DECLARACION','FORMULARIO_DECLARACION','N:1'],
+  ['DECLARACION_OBSERVACION','CODIGO_CAMPO_PLANTILLA','CAMPO_PLANTILLA','N:1'],
+  ['DECLARACION_OBSERVACION','USUARIO_CREADOR','USUARIO','N:1'],
+  ['DECLARACION_ADJUNTO','CODIGO_FORMULARIO_DECLARACION','FORMULARIO_DECLARACION','N:1'],
+  ['DECLARACION_ADJUNTO','CODIGO_CAMPO_PLANTILLA','CAMPO_PLANTILLA','N:1'],
+  ['DECLARACION_ADJUNTO','USUARIO_CARGA','USUARIO','N:1'],
+];
+
+// Module zones (background groupings)
+const ZONES = [
+  { module:'comp',      label:'MÓDULO 1 · COMPONENTES', x:20,  y:20,  w:340, h:420 },
+  { module:'catalogo',  label:'MÓDULO 2 · CATÁLOGOS',   x:1180,y:20,  w:320, h:440 },
+  { module:'tributario',label:'MÓDULO 3 · TRIBUTARIO',  x:1540,y:370, w:320, h:250 },
+  { module:'diseno',    label:'MÓDULO 4 · DISEÑADOR',   x:380, y:20,  w:820, h:1340},
+  { module:'ejecucion', label:'MÓDULO 5 · EJECUCIÓN',   x:1540,y:670, w:700, h:620 },
+  { module:'base',      label:'BASE · USUARIOS',        x:800, y:20,  w:340, h:180 },
+];
+
+// ═══════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════
+const COL_H = 18, HDR_H = 36, PAD = 10, TBL_W = 230;
+
+const svg = document.getElementById('erd');
+const NS = 'http://www.w3.org/2000/svg';
+
+let viewTx = 60, viewTy = 60, viewScale = 0.62;
+let isDragging = false, dragStart = {x:0,y:0}, dragView = {x:0,y:0};
+
+function el(tag, attrs={}, parent=null){
+  const e = document.createElementNS(NS, tag);
+  for(const [k,v] of Object.entries(attrs)) e.setAttribute(k,v);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+function txt(str, attrs={}, parent=null){
+  const e = el('text', attrs, parent);
+  e.textContent = str;
+  return e;
+}
+
+// Pre-compute table sizes
+const tableInfo = {};
+TABLES.forEach(t=>{
+  const h = HDR_H + t.cols.length * COL_H + PAD;
+  tableInfo[t.id] = { x:t.x, y:t.y, w:TBL_W, h, cols:t.cols };
+});
+
+function getPortCenter(tableId, colName, side='right'){
+  const ti = tableInfo[tableId];
+  if(!ti) return {x:0,y:0};
+  const ci = ti.cols.findIndex(c=>c.n===colName);
+  const row = ci>=0 ? ci : 0;
+  const cy = ti.y + HDR_H + row*COL_H + COL_H/2;
+  const cx = side==='right' ? ti.x+ti.w : ti.x;
+  return {x:cx, y:cy};
+}
+
+function getTableCenter(tableId){
+  const ti = tableInfo[tableId];
+  return { x: ti.x + ti.w/2, y: ti.y + ti.h/2 };
+}
+
+// Determine best edge (left/right) based on relative position
+function bestEdge(fromId, toId){
+  const a = getTableCenter(fromId), b = getTableCenter(toId);
+  // from right side if target is to the right, else left
+  const fromSide = b.x >= a.x ? 'right' : 'left';
+  const toSide   = b.x >= a.x ? 'left'  : 'right';
+  return {fromSide, toSide};
+}
+
+function bezierPath(p1, p2){
+  const dx = Math.abs(p2.x - p1.x) * 0.45 + 40;
+  const c1x = p1.x + (p1.side==='right' ? dx : -dx);
+  const c2x = p2.x + (p2.side==='right' ? dx : -dx);
+  return `M ${p1.x},${p1.y} C ${c1x},${p1.y} ${c2x},${p2.y} ${p2.x},${p2.y}`;
+}
+
+// Main render group
+const root = el('g', {id:'root'}, svg);
+// Defs
+const defs = el('defs',{},svg);
+
+// Arrowhead markers per module color
+Object.entries(MODULES).forEach(([k,m])=>{
+  const marker = el('marker',{
+    id:`arrow-${k}`, markerWidth:'8', markerHeight:'8',
+    refX:'6', refY:'3', orient:'auto'
+  }, defs);
+  const path = el('path',{d:'M0,0 L0,6 L7,3 z', fill:m.color, opacity:'0.8'}, marker);
+});
+
+// === ZONES ===
+const zoneGroup = el('g',{id:'zones'},root);
+ZONES.forEach(z=>{
+  const m = MODULES[z.module];
+  el('rect',{
+    class:'zone-rect', x:z.x, y:z.y, width:z.w, height:z.h,
+    stroke:m.zone+'55', fill:m.bg+'33',
+  }, zoneGroup);
+  txt(z.label, {
+    class:'zone-label', x:z.x+14, y:z.y+16,
+    fill:m.zone
+  }, zoneGroup);
+});
+
+// === RELATIONS ===
+const relGroup = el('g',{id:'relations'},root);
+RELATIONS.forEach(([fromId, fromCol, toId, label], i)=>{
+  if(!tableInfo[fromId] || !tableInfo[toId]) return;
+  const {fromSide, toSide} = bestEdge(fromId, toId);
+  const p1 = getPortCenter(fromId, fromCol, fromSide);
+  const p2 = getPortCenter(toId, 'CODIGO', toSide);
+  p1.side = fromSide; p2.side = toSide;
+  const path = bezierPath(p1, p2);
+  const fromMod = TABLES.find(t=>t.id===fromId)?.module || 'base';
+  const m = MODULES[fromMod];
+  // Is this a self-referential relation?
+  const isSelf = fromId === toId;
+  const lineEl = el('path',{
+    class:'rel-line',
+    d: isSelf ? selfLoopPath(tableInfo[fromId]) : path,
+    stroke: m.color,
+    'marker-end': `url(#arrow-${fromMod})`,
+    'data-from': fromId,
+    'data-to': toId,
+    'data-label': label,
+    'data-col': fromCol,
+  }, relGroup);
+
+  // Mid-point label
+  const mid = pathMidpoint(p1, p2);
+  txt(label, {
+    class:'rel-label',
+    x: mid.x, y: mid.y - 6,
+    fill: m.color,
+    opacity:'0.8',
+  }, relGroup);
+});
+
+function selfLoopPath(ti){
+  const x = ti.x + ti.w;
+  const y = ti.y + HDR_H + COL_H/2;
+  return `M ${x},${y} C ${x+60},${y-30} ${x+60},${y+30} ${x},${y+COL_H}`;
+}
+
+function pathMidpoint(p1, p2){
+  return { x:(p1.x+p2.x)/2, y:(p1.y+p2.y)/2 };
+}
+
+// === TABLES ===
+const tblGroup = el('g',{id:'tables'},root);
+TABLES.forEach(t=>{
+  const m = MODULES[t.module];
+  const ti = tableInfo[t.id];
+  const g = el('g',{class:'tbl-group','data-id':t.id}, tblGroup);
+
+  // Shadow/bg
+  el('rect',{
+    class:'tbl-box',
+    x:ti.x, y:ti.y, width:ti.w, height:ti.h,
+    fill:'#0d1117', stroke:m.color+'55', 'stroke-width':'1.5',
+    rx:'6', ry:'6',
+  }, g);
+
+  // Header
+  el('rect',{
+    class:'tbl-header',
+    x:ti.x, y:ti.y, width:ti.w, height:HDR_H,
+    fill:m.header, rx:'6', ry:'6',
+  }, g);
+  // header bottom square corners
+  el('rect',{x:ti.x, y:ti.y+16, width:ti.w, height:20, fill:m.header}, g);
+
+  // Module tag
+  const modLabels = {comp:'M1',catalogo:'M2',tributario:'M3',diseno:'M4',ejecucion:'M5',base:'BASE'};
+  txt(modLabels[t.module], {
+    class:'tbl-mod', x:ti.x+ti.w-14, y:ti.y+10,
+    fill:m.color,
+  }, g);
+  // Table name
+  txt(t.id, {
+    class:'tbl-name', x:ti.x+ti.w/2, y:ti.y+HDR_H/2+2,
+  }, g);
+
+  // Columns
+  t.cols.forEach((c,i)=>{
+    const cy = ti.y + HDR_H + i*COL_H;
+    const rowRect = el('rect',{
+      class:'col-row',
+      x:ti.x+1, y:cy, width:ti.w-2, height:COL_H,
+      fill: i%2===0 ? '#0d1117' : '#0f1318',
+      rx:'0',
+    }, g);
+    // Bottom border
+    el('line',{x1:ti.x+8,y1:cy+COL_H-0.5,x2:ti.x+ti.w-8,y2:cy+COL_H-0.5,stroke:'#21262d','stroke-width':'0.5'},g);
+
+    // Icon
+    if(c.pk){
+      txt('🔑',{class:'col-icon',x:ti.x+10,y:cy+COL_H/2},g);
+    } else if(c.fk){
+      txt('🔗',{class:'col-icon',x:ti.x+10,y:cy+COL_H/2},g);
+    } else {
+      txt('·',{class:'col-icon',x:ti.x+10,y:cy+COL_H/2,fill:'#484f58'},g);
+    }
+    // Name
+    const nameEl = txt(c.n, {
+      class:'col-name', x:ti.x+22, y:cy+COL_H/2,
+      fill: c.pk ? '#f7c948' : c.fk ? '#79c0ff' : '#c9d1d9',
+    }, g);
+    // Type
+    txt(c.t,{class:'col-type',x:ti.x+ti.w-6,y:cy+COL_H/2},g);
+  });
+
+  // Bottom radius fill
+  el('rect',{x:ti.x+1,y:ti.y+ti.h-6,width:ti.w-2,height:6,fill:'#0d1117',rx:'0'},g);
+  el('rect',{x:ti.x+1,y:ti.y+ti.h-10,width:ti.w-2,height:10,fill:'#0d1117'},g);
+  // final bottom border arc
+  el('rect',{
+    x:ti.x, y:ti.y+ti.h-8, width:ti.w, height:8,
+    fill:'#0d1117', stroke:m.color+'55','stroke-width':'1.5',
+    rx:'6',ry:'6',
+  },g);
+
+  // Tooltip interaction
+  g.addEventListener('mouseenter', e => showTooltip(e, t, m));
+  g.addEventListener('mousemove', e => moveTooltip(e));
+  g.addEventListener('mouseleave', hideTooltip);
+});
+
+// ═══════════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════════
+const tooltip = document.getElementById('tooltip');
+function showTooltip(e, t, m){
+  const pks = t.cols.filter(c=>c.pk).map(c=>c.n).join(', ');
+  const fks = t.cols.filter(c=>c.fk).map(c=>`${c.n} → ${c.fk}`).join('<br>');
+  tooltip.innerHTML = `<strong>${t.id}</strong>
+    PK: ${pks}<br>${fks ? 'FK:<br>'+fks : ''}
+    <span style="color:${m.color};font-size:.6rem;display:block;margin-top:4px">
+    ${t.cols.length} columnas
+    </span>`;
+  tooltip.classList.add('show');
+  moveTooltip(e);
+}
+function moveTooltip(e){
+  tooltip.style.left = (e.clientX+14)+'px';
+  tooltip.style.top  = (e.clientY-10)+'px';
+}
+function hideTooltip(){ tooltip.classList.remove('show'); }
+
+// ═══════════════════════════════════════════════════
+// PAN & ZOOM
+// ═══════════════════════════════════════════════════
+const canvasWrap = document.getElementById('canvas-wrap');
+
+function applyTransform(){
+  root.setAttribute('transform',`translate(${viewTx},${viewTy}) scale(${viewScale})`);
+  updateMinimap();
+}
+
+canvasWrap.addEventListener('mousedown', e=>{
+  if(e.button!==0) return;
+  isDragging=true;
+  svg.classList.add('dragging');
+  dragStart={x:e.clientX,y:e.clientY};
+  dragView={x:viewTx,y:viewTy};
+});
+window.addEventListener('mousemove', e=>{
+  if(!isDragging) return;
+  viewTx = dragView.x + (e.clientX-dragStart.x);
+  viewTy = dragView.y + (e.clientY-dragStart.y);
+  applyTransform();
+});
+window.addEventListener('mouseup', ()=>{ isDragging=false; svg.classList.remove('dragging'); });
+
+canvasWrap.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.91;
+  const rect = canvasWrap.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  viewTx = mx - (mx - viewTx) * factor;
+  viewTy = my - (my - viewTy) * factor;
+  viewScale *= factor;
+  viewScale = Math.min(3, Math.max(0.15, viewScale));
+  applyTransform();
+},{passive:false});
+
+// Touch pan
+let lastTouch = null;
+canvasWrap.addEventListener('touchstart', e=>{
+  if(e.touches.length===1) lastTouch={x:e.touches[0].clientX,y:e.touches[0].clientY};
+});
+canvasWrap.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  if(e.touches.length===1 && lastTouch){
+    viewTx += e.touches[0].clientX - lastTouch.x;
+    viewTy += e.touches[0].clientY - lastTouch.y;
+    lastTouch={x:e.touches[0].clientX,y:e.touches[0].clientY};
+    applyTransform();
+  }
+},{passive:false});
+
+function resetView(){ viewTx=60; viewTy=60; viewScale=0.62; applyTransform(); }
+function fitView(){
+  // Compute bounding box of all tables
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  TABLES.forEach(t=>{
+    const ti=tableInfo[t.id];
+    minX=Math.min(minX,ti.x); minY=Math.min(minY,ti.y);
+    maxX=Math.max(maxX,ti.x+ti.w); maxY=Math.max(maxY,ti.y+ti.h);
+  });
+  const W=canvasWrap.clientWidth, H=canvasWrap.clientHeight;
+  const pad=60;
+  viewScale = Math.min((W-pad*2)/(maxX-minX),(H-pad*2)/(maxY-minY));
+  viewScale = Math.min(viewScale,1.2);
+  viewTx = pad - minX*viewScale;
+  viewTy = pad - minY*viewScale;
+  applyTransform();
+}
+
+// ═══════════════════════════════════════════════════
+// MINIMAP
+// ═══════════════════════════════════════════════════
+const minimapContent = document.getElementById('minimap-content');
+const minimapVP = document.getElementById('minimap-viewport');
+const mmW=160, mmH=110;
+
+// Compute full diagram bounds
+let allMinX=Infinity,allMinY=Infinity,allMaxX=-Infinity,allMaxY=-Infinity;
+TABLES.forEach(t=>{
+  const ti=tableInfo[t.id];
+  allMinX=Math.min(allMinX,ti.x); allMinY=Math.min(allMinY,ti.y);
+  allMaxX=Math.max(allMaxX,ti.x+ti.w); allMaxY=Math.max(allMaxY,ti.y+ti.h);
+});
+const diagW=allMaxX-allMinX+80, diagH=allMaxY-allMinY+80;
+const mmScale = Math.min(mmW/diagW, mmH/diagH);
+
+// Draw minimap tables
+TABLES.forEach(t=>{
+  const ti=tableInfo[t.id];
+  const m=MODULES[t.module];
+  el('rect',{
+    x:(ti.x-allMinX+40)*mmScale, y:(ti.y-allMinY+40)*mmScale,
+    width:ti.w*mmScale, height:ti.h*mmScale,
+    fill:m.bg, stroke:m.color+'88','stroke-width':'0.5',rx:'1',ry:'1',
+  }, minimapContent);
+});
+
+function updateMinimap(){
+  const cW=canvasWrap.clientWidth, cH=canvasWrap.clientHeight;
+  // viewport in diagram coords
+  const vpX = (-viewTx/viewScale - allMinX + 40)*mmScale;
+  const vpY = (-viewTy/viewScale - allMinY + 40)*mmScale;
+  const vpW = (cW/viewScale)*mmScale;
+  const vpH = (cH/viewScale)*mmScale;
+  minimapVP.setAttribute('x', vpX);
+  minimapVP.setAttribute('y', vpY);
+  minimapVP.setAttribute('width', vpW);
+  minimapVP.setAttribute('height', vpH);
+}
+
+// Init
+applyTransform();
+setTimeout(fitView, 50);
+</script>
+</body>
+</html>
