@@ -5,8 +5,8 @@
    
    CASO DE USO: Formulario 104 - Declaración IVA Mensual SRI Ecuador
    ================================================================ 
-revisa a profundidad este diagrama de base de datos que debe servir para crear una aplicacion que realiza un diseñador que realiza diseño dinamico de formularios con oracla y vue, si tienes algo que modificar en el sql dime, creame un diagrama y una guia del paso a paso para contruir este sistema, si puedes hacer un html mejor; /*
-   */
+revisa a profundidad este diagrama de base de datos que debe servir para crear una aplicación que realiza un diseñador que realiza diseño dinámico de formularios con Oracle 19c y vue, si tienes algo que modificar en el SQL dime, créame un diagrama y una guía del paso a paso para construir este sistema, si puedes hacer un HTML mejor;
+ */
 
 
 /* ================================================================
