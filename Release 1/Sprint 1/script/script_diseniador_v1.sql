@@ -9,6 +9,8 @@ revisa a profundidad este diagrama de base de datos que debe servir para crear u
  
  revisa a profundidad este diagrama de base de datos, para crear una aplicación que funcione como diseñador que realiza un que realiza diseño dinámico de formularios con stack Oracle 19c. quarkus + panache reactive(withsession y withTransaccion), vue3 + primevue+ pinia + vuevalidate + vuedragable , si tienes algo que modificar en el SQL dime, créame un diagrama y una guía del paso a paso muy detallado para construir este sistema tanto backend como frontend, si puedes hacer un HTML amigable mejor con todas las instrucciones y también con un ejemplo completo de insert sin omitir tablas;
  
+ revisa a profundidad este diagrama de base de datos, para crear blueprint para una aplicación que funcione como diseñador que realiza un que realiza diseño dinámico de formularios con stack Oracle 19c, quarkus + panache reactive(withsession y withTransaccion) + arquitectura exagonal + DDD, vue3 + primevue+ pinia + vuevalidate + vuedragable , si tienes algo que modificar en el SQL dime, créame un diagrama ERD y una guía del paso a paso muy detallado para construir este sistema tanto backend como frontend, si puedes crear un HTML amigable con todas las instrucciones y también con un ejemplo completo de insert sin omitir tablas;
+ 
  */
 
 
