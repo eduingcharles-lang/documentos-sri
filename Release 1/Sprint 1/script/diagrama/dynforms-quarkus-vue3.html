@@ -1,0 +1,2938 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DynForms · Quarkus + Vue 3 TS · Guía</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─── */
+:root {
+  --ink:      #0c0f14;
+  --ink2:     #111520;
+  --ink3:     #171c28;
+  --paper:    #e8ecf0;
+  --paper2:   #d4d9e0;
+  --rule:     #1e2535;
+  --rule2:    #2a3347;
+  --blueprint: #0d1f3c;
+
+  --red:   #e63946;
+  --amber: #f4a261;
+  --teal:  #2a9d8f;
+  --blue:  #457b9d;
+  --lilac: #9b72cf;
+  --gold:  #e9c46a;
+
+  --fg:    #c8d4e0;
+  --fg2:   #7a8fa8;
+  --fg3:   #3a4a5c;
+
+  --ff-display: 'Bebas Neue', sans-serif;
+  --ff-body:    'Crimson Pro', serif;
+  --ff-mono:    'Fira Code', monospace;
+
+  --r: 6px;
+  --transition: .18s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--ff-body);
+  background: var(--ink);
+  color: var(--fg);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.65;
+}
+
+/* ═══ NOISE TEXTURE OVERLAY ═══ */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: .4;
+}
+
+/* ═══ SIDEBAR LAYOUT ═══ */
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+  position: relative; z-index: 1;
+}
+
+/* ─── TOP BAR ─── */
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--ink2);
+  border-bottom: 1px solid var(--rule2);
+  display: flex; align-items: center; gap: 1.5rem;
+  padding: 0 2rem; height: 54px;
+  position: sticky; top: 0; z-index: 200;
+}
+.topbar-logo {
+  font-family: var(--ff-display);
+  font-size: 1.5rem; letter-spacing: 3px;
+  color: var(--fg); white-space: nowrap;
+  display: flex; align-items: center; gap: 10px;
+}
+.topbar-logo-mark {
+  width: 28px; height: 28px;
+  border: 2px solid var(--red);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .7rem; color: var(--red); font-family: var(--ff-mono);
+  font-weight: 600; letter-spacing: 0;
+}
+.topbar-divider { width: 1px; height: 28px; background: var(--rule2); }
+.topbar-subtitle {
+  font-family: var(--ff-mono); font-size: .68rem;
+  color: var(--fg3); letter-spacing: 1.5px; text-transform: uppercase;
+}
+.topbar-right {
+  margin-left: auto; display: flex; align-items: center; gap: .75rem;
+}
+.tech-pill {
+  padding: 3px 10px; border-radius: 100px;
+  font-family: var(--ff-mono); font-size: .62rem;
+  font-weight: 500; letter-spacing: .5px;
+  border: 1px solid;
+}
+.tp-quarkus { border-color: #c00; color: #ff6b6b; background: rgba(200,0,0,.08); }
+.tp-vue     { border-color: #3a7; color: #42d392; background: rgba(66,211,146,.08); }
+.tp-oracle  { border-color: #c84; color: #f4a261; background: rgba(244,162,97,.08); }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  background: var(--ink2);
+  border-right: 1px solid var(--rule);
+  padding: 1.5rem 0;
+  position: sticky; top: 54px;
+  height: calc(100vh - 54px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule2) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--rule2); border-radius: 2px; }
+
+.sidebar-section { margin-bottom: 1.8rem; }
+.sidebar-section-title {
+  font-family: var(--ff-mono); font-size: .6rem;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--fg3); padding: 0 1.5rem .5rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.sidebar-section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--rule);
+}
+.sidebar-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: .45rem 1.5rem;
+  font-family: var(--ff-mono); font-size: .72rem;
+  color: var(--fg2); text-decoration: none;
+  transition: var(--transition);
+  border-left: 2px solid transparent;
+  position: relative;
+}
+.sidebar-link:hover { color: var(--fg); background: rgba(255,255,255,.03); }
+.sidebar-link.active {
+  color: var(--fg);
+  border-left-color: var(--red);
+  background: rgba(230,57,70,.06);
+}
+.sidebar-link-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.sidebar-link-num {
+  margin-left: auto; font-size: .58rem; color: var(--fg3);
+  font-family: var(--ff-mono);
+}
+
+/* ─── MAIN CONTENT ─── */
+main {
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* ═══ HERO SECTION ═══ */
+.hero {
+  position: relative;
+  padding: 4rem 3.5rem 3rem;
+  border-bottom: 1px solid var(--rule);
+  overflow: hidden;
+}
+.hero-grid-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: .25;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+.hero-eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--ff-mono); font-size: .68rem;
+  color: var(--fg3); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 1.2rem;
+}
+.hero-eyebrow-line { width: 32px; height: 1px; background: var(--red); }
+.hero h1 {
+  font-family: var(--ff-display);
+  font-size: clamp(3.5rem, 8vw, 7rem);
+  line-height: .95;
+  letter-spacing: 4px;
+  color: var(--fg);
+  margin-bottom: .8rem;
+}
+.hero h1 .outline-text {
+  -webkit-text-stroke: 1px var(--fg3);
+  color: transparent;
+}
+.hero h1 .accent-text { color: var(--red); }
+.hero-sub {
+  font-family: var(--ff-body);
+  font-size: 1.15rem; font-weight: 300; font-style: italic;
+  color: var(--fg2); max-width: 540px;
+  margin-bottom: 2rem; line-height: 1.5;
+}
+.hero-stats {
+  display: flex; gap: 0;
+  border: 1px solid var(--rule2);
+  border-radius: var(--r);
+  overflow: hidden; width: fit-content;
+}
+.hero-stat {
+  padding: .9rem 1.5rem;
+  border-right: 1px solid var(--rule2);
+  text-align: center;
+}
+.hero-stat:last-child { border-right: none; }
+.hero-stat-val {
+  font-family: var(--ff-display);
+  font-size: 2rem; letter-spacing: 2px; line-height: 1;
+  margin-bottom: 2px;
+}
+.hero-stat-key {
+  font-family: var(--ff-mono); font-size: .58rem;
+  color: var(--fg3); letter-spacing: 1.5px; text-transform: uppercase;
+}
+
+/* ═══ CONTENT SECTIONS ═══ */
+.content-section {
+  padding: 3rem 3.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.section-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.5rem; align-items: start;
+  margin-bottom: 2.5rem;
+}
+.section-num-big {
+  font-family: var(--ff-display);
+  font-size: 5rem; line-height: 1;
+  letter-spacing: 2px;
+  opacity: .08; user-select: none;
+  color: var(--fg);
+}
+.section-meta {}
+.section-tag {
+  font-family: var(--ff-mono); font-size: .62rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--red); margin-bottom: .3rem;
+}
+.section-title {
+  font-family: var(--ff-display);
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  letter-spacing: 2px; line-height: 1.05;
+  margin-bottom: .4rem;
+}
+.section-desc {
+  font-family: var(--ff-body);
+  font-size: 1rem; color: var(--fg2);
+  font-style: italic; max-width: 650px;
+}
+
+/* ═══ ER DIAGRAM ═══ */
+.er-wrap {
+  background: var(--blueprint);
+  border: 1px solid rgba(69,123,157,.3);
+  border-radius: var(--r);
+  padding: 2rem;
+  overflow-x: auto;
+  position: relative;
+}
+.er-wrap::before {
+  content: 'SCHEMA DIAGRAM · M1 → M5';
+  position: absolute; top: .8rem; right: 1rem;
+  font-family: var(--ff-mono); font-size: .58rem;
+  color: rgba(69,123,157,.4); letter-spacing: 2px;
+}
+.er-scene {
+  position: relative;
+  width: 1260px; height: 1040px;
+}
+.er-svg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; overflow: visible;
+}
+.er-svg line, .er-svg path {
+  stroke-width: 1;
+  fill: none;
+  stroke-dasharray: 3 3;
+  opacity: .5;
+}
+.er-svg .solid { stroke-dasharray: none; stroke-width: 1.5; opacity: .8; }
+.c1 { stroke: var(--teal); }
+.c2 { stroke: var(--gold); }
+.c3 { stroke: var(--amber); }
+.c4 { stroke: var(--blue); }
+.c5 { stroke: var(--lilac); }
+
+.er-tbl {
+  position: absolute;
+  background: rgba(13,31,60,.85);
+  border: 1px solid rgba(69,123,157,.4);
+  border-radius: 5px;
+  overflow: hidden;
+  font-size: .68rem;
+  transition: border-color var(--transition), transform var(--transition);
+  cursor: default; min-width: 185px;
+  backdrop-filter: blur(4px);
+}
+.er-tbl:hover {
+  border-color: rgba(69,123,157,.9);
+  transform: translateY(-2px);
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+.er-head {
+  padding: .42rem .75rem;
+  font-family: var(--ff-mono); font-size: .65rem; font-weight: 600;
+  display: flex; justify-content: space-between; align-items: center;
+  letter-spacing: .5px;
+  border-bottom: 1px solid rgba(69,123,157,.2);
+}
+.er-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .22rem .75rem; gap: 6px;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+}
+.er-row:last-child { border-bottom: none; }
+.cn { font-family: var(--ff-mono); color: rgba(200,212,224,.6); font-size: .63rem; }
+.cn.pk { color: var(--gold); }
+.cn.fk { color: var(--blue); }
+.cn.uk { color: var(--teal); }
+.ct { font-size: .58rem; color: rgba(100,130,160,.7); white-space: nowrap; }
+.eb { font-size: .5rem; padding: 1px 4px; border-radius: 2px; font-weight: 700; font-family: var(--ff-mono); letter-spacing: .3px; }
+.pk-b { background: rgba(233,196,106,.15); color: var(--gold); }
+.fk-b { background: rgba(69,123,157,.2); color: #90caf9; }
+.uk-b { background: rgba(42,157,143,.15); color: var(--teal); }
+.ix-b { background: rgba(60,80,110,.3); color: var(--fg3); }
+
+/* module color accents */
+.m1 .er-head { background: rgba(42,157,143,.12); color: var(--teal); }
+.m2 .er-head { background: rgba(233,196,106,.1); color: var(--gold); }
+.m3 .er-head { background: rgba(244,162,97,.1); color: var(--amber); }
+.m4 .er-head { background: rgba(69,123,157,.12); color: #90caf9; }
+.m5 .er-head { background: rgba(155,114,207,.12); color: var(--lilac); }
+
+/* positions */
+.t-cat-comp  { top: 18px;  left: 14px; }
+.t-bib-comp  { top: 180px; left: 14px; }
+.t-cat-plt   { top: 18px;  left: 228px; }
+.t-cat-mae   { top: 175px; left: 228px; }
+.t-cat-det   { top: 345px; left: 228px; }
+.t-conc-trib { top: 18px;  left: 468px; }
+.t-plantilla { top: 230px; left: 468px; }
+.t-ver-plt   { top: 390px; left: 468px; }
+.t-ver-hist  { top: 562px; left: 468px; }
+.t-upa       { top: 685px; left: 468px; }
+.t-sec-plt   { top: 18px;  left: 700px; }
+.t-campo-plt { top: 248px; left: 700px; }
+.t-regla-val { top: 18px;  left: 960px; }
+.t-campo-rv  { top: 195px; left: 960px; }
+.t-regla-con { top: 330px; left: 960px; }
+.t-regla-cd  { top: 455px; left: 960px; }
+.t-campo-con { top: 578px; left: 960px; }
+.t-form-decl { top: 18px;  left: 1075px; }
+.t-decl-hist { top: 258px; left: 1075px; }
+.t-det-val   { top: 388px; left: 1075px; }
+.t-decl-obs  { top: 520px; left: 1075px; }
+.t-decl-adj  { top: 688px; left: 1075px; }
+
+/* ER legend */
+.er-legend {
+  display: flex; flex-wrap: wrap; gap: .9rem;
+  margin-bottom: 1.2rem;
+  font-family: var(--ff-mono); font-size: .68rem;
+  color: var(--fg3);
+}
+.leg { display: flex; align-items: center; gap: 6px; }
+.lsw { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.lline { width: 20px; height: 1px; flex-shrink: 0; }
+.lline.solid { height: 2px; }
+.lline.dash  { border-top: 1px dashed currentColor; background: none; height: 0; }
+
+/* ═══ GUIDE LAYOUT ═══ */
+.phase-list { display: flex; flex-direction: column; gap: .8rem; }
+
+.phase {
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.phase:hover { border-color: var(--rule2); }
+.phase.open { border-color: var(--rule2); }
+
+.phase-trigger {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: stretch;
+  cursor: pointer; user-select: none;
+  background: var(--ink2);
+}
+.phase-trigger:hover { background: rgba(255,255,255,.02); }
+
+.phase-index {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border-right: 1px solid var(--rule);
+  padding: 1rem .5rem;
+}
+.phase-index-num {
+  font-family: var(--ff-display);
+  font-size: 2.4rem; line-height: 1; letter-spacing: 1px;
+}
+.phase-index-layer {
+  font-family: var(--ff-mono); font-size: .5rem;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--fg3); margin-top: 2px;
+}
+.phase-heading { padding: .9rem 1.3rem; }
+.phase-title {
+  font-family: var(--ff-display);
+  font-size: 1.1rem; letter-spacing: 1.5px;
+  margin-bottom: 3px;
+}
+.phase-subtitle { font-size: .82rem; color: var(--fg2); font-style: italic; }
+.phase-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: .5rem; }
+.chip {
+  padding: 2px 8px; border-radius: 3px;
+  font-family: var(--ff-mono); font-size: .6rem;
+  border: 1px solid var(--rule2);
+  color: var(--fg3);
+  letter-spacing: .3px;
+}
+.chip.q  { border-color: rgba(200,0,0,.4);    color: #ff8080; background: rgba(200,0,0,.06); }
+.chip.v  { border-color: rgba(66,211,146,.3); color: #42d392; background: rgba(66,211,146,.06); }
+.chip.o  { border-color: rgba(244,162,97,.3); color: var(--amber); background: rgba(244,162,97,.06); }
+.chip.t  { border-color: rgba(155,114,207,.3); color: var(--lilac); background: rgba(155,114,207,.06); }
+
+.phase-chevron {
+  width: 52px; display: flex; align-items: center; justify-content: center;
+  color: var(--fg3); font-size: 1rem;
+  transition: transform var(--transition);
+}
+.phase.open .phase-chevron { transform: rotate(180deg); }
+
+.phase-body {
+  display: none;
+  border-top: 1px solid var(--rule);
+  background: var(--ink);
+}
+.phase.open .phase-body { display: block; }
+
+/* ─── STEPS TIMELINE ─── */
+.steps {
+  position: relative;
+  padding: 2rem 2rem 1.5rem 4.5rem;
+}
+.steps::before {
+  content: '';
+  position: absolute;
+  left: 2.6rem; top: 2.5rem; bottom: 2rem;
+  width: 1px; background: var(--rule2);
+}
+.step { display: flex; gap: 1.2rem; margin-bottom: 2rem; position: relative; }
+.step:last-child { margin-bottom: 0; }
+
+.step-bullet {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--ink2); border: 1px solid var(--rule2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ff-mono); font-size: .6rem; font-weight: 600;
+  color: var(--fg3); flex-shrink: 0;
+  margin-left: -3.95rem; z-index: 1;
+  transition: var(--transition);
+}
+.step:hover .step-bullet {
+  border-color: var(--red);
+  color: var(--red);
+}
+.step-body { flex: 1; }
+.step-title {
+  font-family: var(--ff-display);
+  font-size: 1.05rem; letter-spacing: 1px;
+  margin-bottom: .4rem; color: var(--fg);
+}
+.step-text {
+  font-size: .92rem; color: var(--fg2);
+  margin-bottom: .7rem; line-height: 1.6;
+}
+.step-text code {
+  font-family: var(--ff-mono);
+  background: rgba(69,123,157,.12); color: #90caf9;
+  padding: 1px 6px; border-radius: 3px;
+  font-size: .82em;
+}
+
+/* ─── CODE BLOCKS ─── */
+.code-wrap {
+  background: #050810;
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin: .7rem 0;
+  font-size: 0;
+}
+.code-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .4rem .9rem;
+  background: rgba(255,255,255,.02);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--ff-mono); font-size: .6rem;
+  color: var(--fg3); letter-spacing: 1px;
+}
+.code-lang {
+  padding: 1px 6px; border-radius: 2px;
+  font-size: .55rem; font-weight: 600;
+  border: 1px solid var(--rule2);
+}
+.lang-ts     { border-color: #3178c6; color: #3178c6; }
+.lang-java   { border-color: #f89820; color: #f89820; }
+.lang-sql    { border-color: var(--amber); color: var(--amber); }
+.lang-vue    { border-color: #42d392; color: #42d392; }
+.lang-yaml   { border-color: var(--teal); color: var(--teal); }
+
+pre {
+  padding: 1rem 1.1rem;
+  font-family: var(--ff-mono);
+  font-size: .73rem; line-height: 1.75;
+  color: #b8c8d8;
+  overflow-x: auto; tab-size: 2;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: var(--rule2); }
+
+/* syntax tokens */
+.kw  { color: #79c0ff; }
+.fn  { color: #d2a8ff; }
+.str { color: #a5d6ff; }
+.cm  { color: #3d5068; font-style: italic; }
+.tp  { color: #ffa657; }
+.num { color: #f97316; }
+.at  { color: #e9c46a; }
+.op  { color: #6ee7b7; }
+.de  { color: #ff6b9d; }  /* decorator / annotation */
+.en  { color: #ff9f80; }  /* enum value */
+.ifc { color: #93c5fd; }  /* interface/type */
+
+/* ─── CALLOUTS ─── */
+.callout {
+  border-radius: var(--r); padding: .7rem 1rem;
+  font-size: .85rem; display: flex; gap: 10px;
+  margin: .6rem 0; border: 1px solid; font-family: var(--ff-body);
+}
+.callout.warn { border-color: rgba(244,162,97,.3); background: rgba(244,162,97,.07); color: #fcd09a; }
+.callout.tip  { border-color: rgba(42,157,143,.3); background: rgba(42,157,143,.07); color: #7fd8cc; }
+.callout.info { border-color: rgba(69,123,157,.3); background: rgba(69,123,157,.07); color: #90caf9; }
+.callout-i    { flex-shrink: 0; margin-top: 1px; }
+
+/* ─── SUB BLOCKS ─── */
+.sub-block {
+  background: rgba(255,255,255,.02);
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  padding: .9rem 1rem; margin: .6rem 0;
+}
+.sub-title {
+  font-family: var(--ff-mono); font-size: .6rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--fg3); margin-bottom: .6rem;
+}
+.sub-list { list-style: none; display: flex; flex-direction: column; gap: .3rem; }
+.sub-list li {
+  font-size: .88rem; color: var(--fg2);
+  padding-left: 1rem; position: relative;
+}
+.sub-list li::before { content: '›'; position: absolute; left: 0; color: var(--red); }
+.sub-list strong { color: var(--fg); }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb { background: var(--rule2); border-radius: 3px; }
+
+/* ─── FOOTER ─── */
+.footer {
+  grid-column: 2;
+  border-top: 1px solid var(--rule);
+  padding: 1.5rem 3.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--ff-mono); font-size: .63rem; color: var(--fg3);
+  letter-spacing: .5px;
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeRight {
+  from { opacity:0; transform: translateX(-16px); }
+  to   { opacity:1; transform: translateX(0); }
+}
+.hero > * { animation: fadeRight .5s ease both; }
+.hero > *:nth-child(1) { animation-delay: .05s }
+.hero > *:nth-child(2) { animation-delay: .12s }
+.hero > *:nth-child(3) { animation-delay: .2s }
+.hero > *:nth-child(4) { animation-delay: .28s }
+
+@media (max-width: 900px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .content-section, .hero { padding: 2rem 1.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="topbar">
+  <div class="topbar-logo">
+    <div class="topbar-logo-mark">DF</div>
+    DYNFORMS
+  </div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-subtitle">Guía de Construcción · v2.0</div>
+  <div class="topbar-right">
+    <span class="tech-pill tp-oracle">Oracle 19c</span>
+    <span class="tech-pill tp-quarkus">Quarkus 3</span>
+    <span class="tech-pill tp-vue">Vue 3 + TS</span>
+  </div>
+</header>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Esquema</div>
+    <a href="#er" class="sidebar-link">
+      <span class="sidebar-link-dot" style="background:var(--blue)"></span>
+      Diagrama ER
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Fases</div>
+    <a href="#f1" class="sidebar-link">
+      <span class="sidebar-link-dot" style="background:var(--amber)"></span>
+      F1 · BD & PL/SQL
+      <span class="sidebar-link-num">6</span>
+    </a>
+    <a href="#f2" class="sidebar-link">
+      <span class="sidebar-link-dot" style="background:var(--red)"></span>
+      F2 · Quarkus Core
+      <span class="sidebar-link-num">4</span>
+    </a>
+    <a href="#f3" class="sidebar-link">
+      <span class="sidebar-link-dot" style="background:var(--red)"></span>
+      F3 · API Diseñador
+      <span class="sidebar-link-num">5</span>
+    </a>
+    <a href="#f4" class="sidebar-link">
+      <span class="sidebar-link-dot" style="background:var(--red)"></span>
+      F4 · API Ejecución
+      <span class="sidebar-link-num">4</span>
+    </a>
+    <a href="#f5" class="sidebar-link">
+      <span class="sidebar-link-dot" style="background:var(--teal)"></span>
+      F5 · Vue Tipos TS
+      <span class="sidebar-link-num">4</span>
+    </a>
+    <a href="#f6" class="sidebar-link">
+      <span class="sidebar-link-dot" style="background:var(--teal)"></span>
+      F6 · Vue Diseñador
+      <span class="sidebar-link-num">5</span>
+    </a>
+    <a href="#f7" class="sidebar-link">
+      <span class="sidebar-link-dot" style="background:var(--teal)"></span>
+      F7 · Motor Forms
+      <span class="sidebar-link-num">4</span>
+    </a>
+    <a href="#f8" class="sidebar-link">
+      <span class="sidebar-link-dot" style="background:var(--lilac)"></span>
+      F8 · Deploy & Tests
+      <span class="sidebar-link-num">4</span>
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Stack</div>
+    <a href="#f1" class="sidebar-link"><span class="sidebar-link-dot" style="background:var(--amber)"></span>Oracle 19c + Flyway</a>
+    <a href="#f2" class="sidebar-link"><span class="sidebar-link-dot" style="background:var(--red)"></span>Quarkus 3 + Panache</a>
+    <a href="#f5" class="sidebar-link"><span class="sidebar-link-dot" style="background:var(--teal)"></span>Vue 3 + TypeScript</a>
+    <a href="#f7" class="sidebar-link"><span class="sidebar-link-dot" style="background:var(--teal)"></span>VeeValidate 4</a>
+    <a href="#f8" class="sidebar-link"><span class="sidebar-link-dot" style="background:var(--lilac)"></span>Vitest + Playwright</a>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<main>
+
+<!-- ─── HERO ─── -->
+<div class="hero" id="top">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-eyebrow">
+    <div class="hero-eyebrow-line"></div>
+    Módulos M1 → M5 · Sin Seguridad ni Auditoría
+  </div>
+  <h1>
+    <span class="outline-text">DYN</span><span class="accent-text">FORMS</span><br>
+    GUÍA TÉCNICA
+  </h1>
+  <p class="hero-sub">
+    Diagrama ER del núcleo funcional y guía de construcción exhaustiva con
+    Quarkus 3, Vue 3 TypeScript estricto, VeeValidate y Oracle 19c.
+  </p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-val" style="color:var(--amber)">22</div>
+      <div class="hero-stat-key">Tablas</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" style="color:var(--red)">8</div>
+      <div class="hero-stat-key">Fases</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" style="color:var(--teal)">45+</div>
+      <div class="hero-stat-key">Pasos</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" style="color:var(--lilac)">100%</div>
+      <div class="hero-stat-key">TypeScript</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECCIÓN ER                             -->
+<!-- ═══════════════════════════════════════ -->
+<div class="content-section" id="er">
+  <div class="section-header">
+    <div class="section-num-big">01</div>
+    <div class="section-meta">
+      <div class="section-tag">§ Schema · Entidad-Relación</div>
+      <div class="section-title">DIAGRAMA ER<br>NÚCLEO FUNCIONAL</div>
+      <div class="section-desc">Relaciones entre los 5 módulos operativos. Línea sólida = FK obligatoria, punteada = FK opcional.</div>
+    </div>
+  </div>
+
+  <div class="er-legend">
+    <div class="leg"><div class="lsw" style="background:var(--teal)"></div>M1 · Componentes</div>
+    <div class="leg"><div class="lsw" style="background:var(--gold)"></div>M2 · Catálogos</div>
+    <div class="leg"><div class="lsw" style="background:var(--amber)"></div>M3 · Tributaria</div>
+    <div class="leg"><div class="lsw" style="background:var(--blue)"></div>M4 · Diseñador</div>
+    <div class="leg"><div class="lsw" style="background:var(--lilac)"></div>M5 · Ejecución</div>
+    <div class="leg" style="margin-left:.5rem">
+      <div class="lline solid" style="background:var(--blue)"></div>FK oblig.
+    </div>
+    <div class="leg">
+      <div class="lline dash" style="color:var(--fg3)"></div>FK opc.
+    </div>
+    <div class="leg"><span class="eb pk-b">PK</span> Primary Key</div>
+    <div class="leg"><span class="eb fk-b">FK</span> Foreign Key</div>
+    <div class="leg"><span class="eb uk-b">UK</span> Unique</div>
+    <div class="leg"><span class="eb ix-b">IX</span> Índice</div>
+  </div>
+
+  <div class="er-wrap">
+    <div class="er-scene">
+      <svg class="er-svg">
+        <!-- M1: CAT_COMP → BIB_COMP -->
+        <line class="solid c1" x1="103" y1="102" x2="103" y2="180"/>
+        <!-- M2: CAT_PLT → PLANTILLA -->
+        <path class="solid c2" d="M318 62 Q318 238 468 238"/>
+        <!-- M2: CAT_MAE → CAT_DET -->
+        <line class="solid c2" x1="318" y1="290" x2="318" y2="345"/>
+        <!-- CAT_DET self-ref -->
+        <path class="c2" d="M228 400 Q205 400 205 420 Q205 448 228 448"/>
+        <!-- M3: CONC_TRIB self-ref -->
+        <path class="c3" d="M468 60 Q445 60 445 88 Q445 116 468 116"/>
+        <!-- M3: CONC_TRIB → CAMPO_PLT_CONCEPTO -->
+        <path class="c3" d="M670 105 Q855 105 960 610"/>
+        <!-- M4: PLANTILLA → VERSION_PLT -->
+        <line class="solid c4" x1="566" y1="308" x2="566" y2="390"/>
+        <!-- M4: VERSION_PLT → VER_HIST -->
+        <line class="solid c4" x1="566" y1="472" x2="566" y2="562"/>
+        <!-- M4: VERSION_PLT → SEC_PLT -->
+        <path class="solid c4" d="M700 440 Q700 200 700 112"/>
+        <!-- M4: VERSION_PLT → CAMPO_PLT -->
+        <line class="solid c4" x1="700" y1="450" x2="700" y2="348"/>
+        <!-- M4: SEC_PLT → CAMPO_PLT -->
+        <line class="solid c4" x1="800" y1="196" x2="800" y2="248"/>
+        <!-- M4: SEC_PLT self-ref -->
+        <path class="c4" d="M700 58 Q678 58 678 85 Q678 112 700 112"/>
+        <!-- M1: BIB_COMP → CAMPO_PLT -->
+        <path class="c1" d="M200 265 Q450 265 700 365"/>
+        <!-- M2: CAT_MAE → CAMPO_PLT -->
+        <path class="c2" d="M420 230 Q560 230 700 360"/>
+        <!-- CAMPO_PLT → CAMPO_RV (via junction) -->
+        <path class="solid c4" d="M915 365 Q940 365 960 228"/>
+        <!-- CAMPO_PLT → REGLA_CON -->
+        <path class="solid c4" d="M915 375 Q940 375 960 355"/>
+        <!-- CAMPO_PLT_CONCEPTO line -->
+        <line class="solid c4" x1="915" y1="615" x2="960" y2="615"/>
+        <!-- M5: VERSION_PLT → FORM_DECL -->
+        <path class="solid c5" d="M700 448 Q1022 448 1075 108"/>
+        <!-- M5: FORM_DECL → DECL_HIST -->
+        <line class="solid c5" x1="1160" y1="218" x2="1160" y2="258"/>
+        <!-- M5: FORM_DECL → DET_VAL -->
+        <line class="solid c5" x1="1160" y1="228" x2="1160" y2="388"/>
+        <!-- M5: FORM_DECL → DECL_OBS -->
+        <line class="solid c5" x1="1160" y1="238" x2="1160" y2="520"/>
+        <!-- M5: FORM_DECL → DECL_ADJ -->
+        <line class="solid c5" x1="1160" y1="248" x2="1160" y2="688"/>
+        <!-- DET_VAL → CONC_TRIB -->
+        <path class="c3" d="M1075 435 Q880 435 670 118"/>
+        <!-- DECL_OBS → CAMPO_PLT -->
+        <path class="c4" d="M1075 562 Q990 562 990 388"/>
+        <!-- REGLA_CON → REGLA_CD -->
+        <line class="solid c4" x1="1048" y1="398" x2="1048" y2="455"/>
+        <!-- UPA → PLANTILLA -->
+        <path class="c4" d="M468 720 Q445 720 445 260 Q445 238 468 238"/>
+      </svg>
+
+      <!-- M1 -->
+      <div class="er-tbl m1 t-cat-comp" style="width:196px">
+        <div class="er-head">CATEGORIA_COMPONENTE <span class="eb pk-b">PK</span></div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn uk">IDENTIFICADOR_TECNICO</span><span class="ct">VARCHAR2 <span class="eb uk-b">UK</span></span></div>
+          <div class="er-row"><span class="cn">NOMBRE_AMIGABLE</span><span class="ct">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="cn">PERMITE_CATALOGO</span><span class="ct">NUMBER(1)</span></div>
+          <div class="er-row"><span class="cn">PERMITE_HIJOS</span><span class="ct">NUMBER(1)</span></div>
+          <div class="er-row"><span class="cn">PERMITE_ADJUNTO</span><span class="ct">NUMBER(1)</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m1 t-bib-comp" style="width:196px">
+        <div class="er-head">BIBLIOTECA_COMPONENTE <span class="eb pk-b">PK</span></div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_CATEGORIA_COMP</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn">NOMBRE_UI</span><span class="ct">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="cn">CATEGORIA_UI</span><span class="ct">VARCHAR2(50)</span></div>
+          <div class="er-row"><span class="cn">CONFIG_DEFAULT_JSON</span><span class="ct">CLOB JSON</span></div>
+          <div class="er-row"><span class="cn">ORDEN_CATALOGO</span><span class="ct">NUMBER</span></div>
+        </div>
+      </div>
+
+      <!-- M2 -->
+      <div class="er-tbl m2 t-cat-plt" style="width:186px">
+        <div class="er-head">CATEGORIA_PLANTILLA <span class="eb pk-b">PK</span></div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn">NOMBRE</span><span class="ct">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="cn">DESCRIPCION</span><span class="ct">VARCHAR2(300)</span></div>
+          <div class="er-row"><span class="cn">ORDEN</span><span class="ct">NUMBER</span></div>
+          <div class="er-row"><span class="cn">ACTIVO</span><span class="ct">NUMBER(1)</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m2 t-cat-mae" style="width:186px">
+        <div class="er-head">CATALOGO_MAESTRO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn uk">CODIGO_UNICO</span><span class="ct">VARCHAR2(50) <span class="eb uk-b">UK</span></span></div>
+          <div class="er-row"><span class="cn">NOMBRE</span><span class="ct">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="cn">METADATA_COLS_JSON</span><span class="ct">CLOB JSON</span></div>
+          <div class="er-row"><span class="cn">PERMITE_JERARQUIA</span><span class="ct">NUMBER(1)</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m2 t-cat-det" style="width:186px">
+        <div class="er-head">CATALOGO_DETALLE</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_CATALOGO_MAESTRO</span><span class="ct"><span class="eb fk-b">FK</span> <span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn fk">CODIGO_ITEM_PADRE</span><span class="ct">self <span class="eb fk-b">FK</span> <span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn uk">VALOR_CLAVE</span><span class="ct">VARCHAR2 <span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn">ETIQUETA</span><span class="ct">VARCHAR2(200)</span></div>
+          <div class="er-row"><span class="cn">ATRIBUTOS_EXTRA_JSON</span><span class="ct">CLOB JSON</span></div>
+        </div>
+      </div>
+
+      <!-- M3 -->
+      <div class="er-tbl m3 t-conc-trib" style="width:212px">
+        <div class="er-head">CONCEPTO_TRIBUTARIO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn fk">CODIGO_PADRE</span><span class="ct">self <span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn uk">CASILLERO_SRI</span><span class="ct">VARCHAR2 <span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn">NOMBRE</span><span class="ct">VARCHAR2(300)</span></div>
+          <div class="er-row"><span class="cn">TIPO_DATO</span><span class="ct">VARCHAR2(50)</span></div>
+          <div class="er-row"><span class="cn">ES_CALCULADO</span><span class="ct">NUMBER(1)</span></div>
+          <div class="er-row"><span class="cn">FORMULA_CALCULO</span><span class="ct">VARCHAR2(500)</span></div>
+          <div class="er-row"><span class="cn">VIGENCIA_DESDE/HASTA</span><span class="ct">DATE</span></div>
+        </div>
+      </div>
+
+      <!-- M4 -->
+      <div class="er-tbl m4 t-plantilla" style="width:210px">
+        <div class="er-head">PLANTILLA</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_CATEGORIA_PLT</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn uk">IDENTIFICADOR</span><span class="ct">VARCHAR2(50) <span class="eb uk-b">UK</span></span></div>
+          <div class="er-row"><span class="cn">NOMBRE</span><span class="ct">VARCHAR2(200)</span></div>
+          <div class="er-row"><span class="cn">DESCRIPCION</span><span class="ct">VARCHAR2(500)</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-ver-plt" style="width:210px">
+        <div class="er-head">VERSION_PLANTILLA</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn fk">CODIGO_PLANTILLA</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn uk">NUMERO_VERSION</span><span class="ct">VARCHAR2 <span class="eb uk-b">UK</span></span></div>
+          <div class="er-row"><span class="cn">VIGENCIA_DESDE/HASTA</span><span class="ct">DATE</span></div>
+          <div class="er-row"><span class="cn">ESTADO</span><span class="ct">BORRADOR|PUBLICADO</span></div>
+          <div class="er-row"><span class="cn">CONFIG_GLOBAL_JSON</span><span class="ct">CLOB JSON</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-ver-hist" style="width:210px">
+        <div class="er-head">VERSION_PLT_HISTORIAL</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn fk">COD_VERSION_PLT</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn">ESTADO_ANT → NUEVO</span><span class="ct">VARCHAR2(20)</span></div>
+          <div class="er-row"><span class="cn">COMENTARIO</span><span class="ct">VARCHAR2(500)</span></div>
+          <div class="er-row"><span class="cn">FECHA_CAMBIO</span><span class="ct">TIMESTAMP</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-upa" style="width:210px">
+        <div class="er-head">USR_PLANTILLA_ACCESO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn fk">CODIGO_USUARIO</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn fk">CODIGO_PLANTILLA</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn">PUEDE_DISENAR</span><span class="ct">NUMBER(1)</span></div>
+          <div class="er-row"><span class="cn">PUEDE_LLENAR</span><span class="ct">NUMBER(1)</span></div>
+          <div class="er-row"><span class="cn">PUEDE_REVISAR</span><span class="ct">NUMBER(1)</span></div>
+          <div class="er-row"><span class="cn">PUEDE_APROBAR</span><span class="ct">NUMBER(1)</span></div>
+          <div class="er-row"><span class="cn">FECHA_DESDE/HASTA</span><span class="ct">DATE</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-sec-plt" style="width:215px">
+        <div class="er-head">SECCION_PLANTILLA</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_VERSION_PLT</span><span class="ct"><span class="eb fk-b">FK</span> <span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_SECCION_PADRE</span><span class="ct">self <span class="eb fk-b">FK</span> <span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn">TIPO · CLAVE_UI</span><span class="ct">VARCHAR2</span></div>
+          <div class="er-row"><span class="cn">ETIQUETA</span><span class="ct">VARCHAR2(200)</span></div>
+          <div class="er-row"><span class="cn">ORDEN</span><span class="ct">NUMBER <span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn">CONFIG_LAYOUT_JSON</span><span class="ct">CLOB JSON</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-campo-plt" style="width:215px">
+        <div class="er-head">CAMPO_PLANTILLA</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_VERSION_PLT</span><span class="ct"><span class="eb fk-b">FK</span> <span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn fk">CODIGO_SECCION</span><span class="ct"><span class="eb fk-b">FK</span> <span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_BIBLIOTECA_COMP</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_CATALOGO_MAESTRO</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn uk">CLAVE_UI</span><span class="ct">VARCHAR2 <span class="eb uk-b">UK</span></span></div>
+          <div class="er-row"><span class="cn">CATEGORIA_COMPONENTE</span><span class="ct">VARCHAR2(50)</span></div>
+          <div class="er-row"><span class="cn">ES_OBLIGATORIO</span><span class="ct">NUMBER(1)</span></div>
+          <div class="er-row"><span class="cn">ANCHO_COLUMNAS</span><span class="ct">NUMBER (1-12)</span></div>
+          <div class="er-row"><span class="cn">PROPIEDADES_UI_JSON</span><span class="ct">CLOB JSON</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-regla-val" style="width:182px">
+        <div class="er-head">REGLA_VALIDACION</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn">NOMBRE</span><span class="ct">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="cn">TIPO</span><span class="ct">VARCHAR2(30)</span></div>
+          <div class="er-row"><span class="cn">EXPRESION</span><span class="ct">VARCHAR2(500)</span></div>
+          <div class="er-row"><span class="cn">MENSAJE_ERROR</span><span class="ct">VARCHAR2(300)</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-campo-rv" style="width:182px">
+        <div class="er-head">CAMPO_REGLA_VALIDACION</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn fk">COD_CAMPO_PLT</span><span class="ct"><span class="eb fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="cn fk">COD_REGLA_VAL</span><span class="ct"><span class="eb fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="cn">ORDEN_EJECUCION</span><span class="ct">NUMBER</span></div>
+          <div class="er-row"><span class="cn">PARAMETROS_JSON</span><span class="ct">CLOB JSON</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-regla-con" style="width:182px">
+        <div class="er-head">REGLA_CONDICIONAL</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_CAMPO_PLT</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn">ACCION</span><span class="ct">SHOW|HIDE|REQ</span></div>
+          <div class="er-row"><span class="cn">CONECTOR_LOGICO</span><span class="ct">AND|OR</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-regla-cd" style="width:182px">
+        <div class="er-head">REGLA_COND_DETALLE</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn fk">COD_REGLA_COND</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn">CLAVE_UI_CAMPO_EVAL</span><span class="ct">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="cn">OPERADOR</span><span class="ct">EQ|NEQ|GT|IN…</span></div>
+          <div class="er-row"><span class="cn">VALOR_REFERENCIA</span><span class="ct">VARCHAR2(200)</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m4 t-campo-con" style="width:182px">
+        <div class="er-head">CAMPO_PLT_CONCEPTO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn fk">COD_CAMPO_PLT</span><span class="ct"><span class="eb fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="cn fk">COD_CONCEPTO_TRIB</span><span class="ct"><span class="eb fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="cn">TIPO_OPERACION</span><span class="ct">VARCHAR2(20)</span></div>
+        </div>
+      </div>
+
+      <!-- M5 -->
+      <div class="er-tbl m5 t-form-decl" style="width:166px">
+        <div class="er-head">FORMULARIO_DECL</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn pk">CODIGO</span><span class="ct">NUMBER <span class="eb pk-b">PK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_VERSION_PLT</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn">RUC_CONTRIBUYENTE</span><span class="ct"><span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn">PERIODO_FISCAL</span><span class="ct"><span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn uk">NRO_DECLARACION</span><span class="ct"><span class="eb uk-b">UK</span></span></div>
+          <div class="er-row"><span class="cn">ESTADO</span><span class="ct"><span class="eb ix-b">IX</span></span></div>
+          <div class="er-row"><span class="cn">DATOS_JSON</span><span class="ct">CLOB JSON</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m5 t-decl-hist" style="width:166px">
+        <div class="er-head">DECL_HISTORIAL_ESTADO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn fk">COD_FORM_DECL</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn">ESTADO_ANT → NUEVO</span><span class="ct">VARCHAR2</span></div>
+          <div class="er-row"><span class="cn">COMENTARIO</span><span class="ct">VARCHAR2(1000)</span></div>
+          <div class="er-row"><span class="cn">FECHA_CAMBIO</span><span class="ct">TIMESTAMP</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m5 t-det-val" style="width:166px">
+        <div class="er-head">DETALLE_VALOR_CONCEPTO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn fk">COD_FORM_DECL</span><span class="ct"><span class="eb fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="cn fk">COD_CONCEPTO_TRIB</span><span class="ct"><span class="eb fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="cn">VALOR_CALCULADO</span><span class="ct">NUMBER(19,4)</span></div>
+          <div class="er-row"><span class="cn">FECHA_CALCULO</span><span class="ct">TIMESTAMP</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m5 t-decl-obs" style="width:166px">
+        <div class="er-head">DECL_OBSERVACION</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn fk">COD_FORM_DECL</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_CAMPO_PLT</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn">TIPO</span><span class="ct">GENERAL|VALIDACION</span></div>
+          <div class="er-row"><span class="cn">MENSAJE</span><span class="ct">VARCHAR2(1000)</span></div>
+          <div class="er-row"><span class="cn">RESUELTO</span><span class="ct">NUMBER(1)</span></div>
+        </div>
+      </div>
+      <div class="er-tbl m5 t-decl-adj" style="width:166px">
+        <div class="er-head">DECL_ADJUNTO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="cn fk">COD_FORM_DECL</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn fk">COD_CAMPO_PLT</span><span class="ct"><span class="eb fk-b">FK</span></span></div>
+          <div class="er-row"><span class="cn">NOMBRE_ORIGINAL</span><span class="ct">VARCHAR2(255)</span></div>
+          <div class="er-row"><span class="cn">RUTA_ALMACENAMIENTO</span><span class="ct">VARCHAR2(500)</span></div>
+          <div class="er-row"><span class="cn">MIME_TYPE</span><span class="ct">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="cn">HASH_SHA256</span><span class="ct">VARCHAR2(64)</span></div>
+        </div>
+      </div>
+    </div><!-- er-scene -->
+  </div><!-- er-wrap -->
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- GUÍA                                    -->
+<!-- ═══════════════════════════════════════ -->
+<div class="content-section" id="f1">
+  <div class="section-header">
+    <div class="section-num-big">F1</div>
+    <div class="section-meta">
+      <div class="section-tag">§ Fase 1 · Oracle 19c</div>
+      <div class="section-title">BASE DE DATOS<br>DDL & PL/SQL</div>
+      <div class="section-desc">Estructura Flyway, datos semilla de componentes, paquetes PL/SQL para cálculo tributario y máquina de estados.</div>
+    </div>
+  </div>
+  <div class="phase-list">
+
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--amber)">
+          <div class="phase-index-num">1.1</div>
+          <div class="phase-index-layer">Oracle · DDL</div>
+        </div>
+        <div class="phase-heading">
+          <div class="phase-title">ESTRUCTURA FLYWAY</div>
+          <div class="phase-subtitle">Migraciones versionadas — nunca editar scripts ya aplicados</div>
+          <div class="phase-chips"><span class="chip o">Oracle 19c</span><span class="chip o">Flyway 9</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">ÁRBOL DE MIGRACIONES</div>
+              <div class="step-text">Cada archivo es idempotente y se aplica en orden. Los scripts de seed van separados de los DDL.</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>Estructura del proyecto</span><span class="code-lang lang-yaml">TREE</span></div>
+<pre>db/migrations/
+├── V01__m1_categorias_componente.sql
+├── V02__m1_biblioteca_componente.sql
+├── V03__m2_catalogos.sql
+├── V04__m3_tributaria.sql
+├── V05__m4_disenador.sql          <span class="cm">← incluye USUARIO_PLANTILLA_ACCESO</span>
+├── V06__m5_ejecucion.sql
+├── V07__seed_categorias_componente.sql
+├── V08__seed_biblioteca_componentes.sql
+├── V09__seed_conceptos_sri.sql
+├── V10__pkg_formulario.sql
+├── V11__pkg_declaracion.sql
+└── V12__vistas_api.sql</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--amber)">
+          <div class="phase-index-num">1.2</div>
+          <div class="phase-index-layer">Oracle · Seed</div>
+        </div>
+        <div class="phase-heading">
+          <div class="phase-title">SEED DE COMPONENTES UI</div>
+          <div class="phase-subtitle">Contrato entre BD y frontend — IDENTIFICADOR_TECNICO es inmutable</div>
+          <div class="phase-chips"><span class="chip o">CATEGORIA_COMPONENTE</span><span class="chip o">BIBLIOTECA_COMPONENTE</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">CATEGORÍAS DE COMPONENTE</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>V07__seed_categorias_componente.sql</span><span class="code-lang lang-sql">SQL</span></div>
+<pre><span class="kw">INSERT ALL</span>
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE (IDENTIFICADOR_TECNICO, NOMBRE_AMIGABLE, PERMITE_CATALOGO, PERMITE_HIJOS, PERMITE_ADJUNTO)
+  <span class="kw">VALUES</span> (<span class="str">'INPUT_TEXT'</span>,     <span class="str">'Texto corto'</span>,       <span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'TEXTAREA'</span>,       <span class="str">'Texto largo'</span>,       <span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'INPUT_NUMBER'</span>,   <span class="str">'Número'</span>,            <span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'DATE_PICKER'</span>,    <span class="str">'Fecha'</span>,             <span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'SELECT'</span>,         <span class="str">'Lista desplegable'</span>, <span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'RADIO'</span>,          <span class="str">'Selección única'</span>,   <span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'CHECKBOX_GROUP'</span>, <span class="str">'Selec. múltiple'</span>,   <span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'CHECKBOX'</span>,       <span class="str">'Booleano'</span>,          <span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'FILE_UPLOAD'</span>,    <span class="str">'Adjunto'</span>,           <span class="num">0</span>,<span class="num">0</span>,<span class="num">1</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'PANEL'</span>,          <span class="str">'Contenedor'</span>,        <span class="num">0</span>,<span class="num">1</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'GRID_TABLE'</span>,     <span class="str">'Tabla editable'</span>,    <span class="num">0</span>,<span class="num">1</span>,<span class="num">0</span>)
+  <span class="kw">INTO</span> CATEGORIA_COMPONENTE <span class="kw">VALUES</span> (<span class="str">'DIVIDER'</span>,        <span class="str">'Separador visual'</span>, <span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>)
+<span class="kw">SELECT</span> <span class="num">1</span> <span class="kw">FROM</span> DUAL;
+<span class="kw">COMMIT</span>;</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">WIDGETS DE BIBLIOTECA (CONFIG JSON)</div>
+              <div class="step-text">El <code>CONFIG_DEFAULT_JSON</code> es el snapshot que Vue copia al canvas al arrastrar el widget. Define máscaras, prefijos, rangos, etc.</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>V08__seed_biblioteca_componentes.sql</span><span class="code-lang lang-sql">SQL</span></div>
+<pre><span class="kw">INSERT INTO</span> BIBLIOTECA_COMPONENTE
+    (CODIGO_CATEGORIA_COMPONENTE, NOMBRE_UI, CATEGORIA_UI, ORDEN_CATALOGO, CONFIGURACION_DEFAULT_JSON)
+<span class="kw">SELECT</span> c.CODIGO, w.NOMBRE_UI, w.CAT_UI, w.ORDEN, w.JCFG
+<span class="kw">FROM</span>  CATEGORIA_COMPONENTE c
+<span class="kw">JOIN</span> (
+    <span class="kw">SELECT</span> <span class="str">'INPUT_NUMBER'</span> ID, <span class="str">'Monto USD'</span>    NOMBRE_UI, <span class="str">'Numéricos'</span> CAT_UI, <span class="num">1</span> ORDEN,
+           <span class="str">'{"mask":"currency","prefix":"$","decimals":2,"placeholder":"0.00","min":0}'</span> JCFG <span class="kw">FROM</span> DUAL <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> <span class="str">'INPUT_NUMBER'</span>, <span class="str">'Porcentaje'</span>, <span class="str">'Numéricos'</span>, <span class="num">2</span>,
+           <span class="str">'{"mask":"percent","suffix":"%","decimals":2,"min":0,"max":100}'</span> <span class="kw">FROM</span> DUAL <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> <span class="str">'INPUT_NUMBER'</span>, <span class="str">'Cantidad entera'</span>, <span class="str">'Numéricos'</span>, <span class="num">3</span>,
+           <span class="str">'{"decimals":0,"min":0}'</span> <span class="kw">FROM</span> DUAL <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> <span class="str">'DATE_PICKER'</span>,  <span class="str">'Fecha DD/MM/YYYY'</span>, <span class="str">'Fechas'</span>, <span class="num">1</span>,
+           <span class="str">'{"format":"DD/MM/YYYY","showToday":true,"clearable":true}'</span> <span class="kw">FROM</span> DUAL <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> <span class="str">'SELECT'</span>, <span class="str">'Lista simple'</span>, <span class="str">'Selección'</span>, <span class="num">1</span>,
+           <span class="str">'{"filterable":true,"placeholder":"Seleccione..."}'</span> <span class="kw">FROM</span> DUAL <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> <span class="str">'FILE_UPLOAD'</span>, <span class="str">'PDF único'</span>, <span class="str">'Archivos'</span>, <span class="num">1</span>,
+           <span class="str">'{"accept":["application/pdf"],"maxMb":5,"multiple":false}'</span> <span class="kw">FROM</span> DUAL
+) w <span class="kw">ON</span> c.IDENTIFICADOR_TECNICO = w.ID;
+<span class="kw">COMMIT</span>;</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--amber)">
+          <div class="phase-index-num">1.3</div>
+          <div class="phase-index-layer">PL/SQL · Package</div>
+        </div>
+        <div class="phase-heading">
+          <div class="phase-title">PKG_FORMULARIO · CÁLCULO TRIBUTARIO</div>
+          <div class="phase-subtitle">Calcula DETALLE_VALOR_CONCEPTO desde DATOS_JSON usando JSON_VALUE y MERGE</div>
+          <div class="phase-chips"><span class="chip o">JSON_VALUE</span><span class="chip o">MERGE</span><span class="chip o">EXECUTE IMMEDIATE</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">PROCEDURE CALCULAR_CONCEPTOS</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>PKG_FORMULARIO.pks / pkb</span><span class="code-lang lang-sql">PL/SQL</span></div>
+<pre><span class="kw">CREATE OR REPLACE PACKAGE BODY</span> PKG_FORMULARIO <span class="kw">AS</span>
+
+  <span class="kw">PROCEDURE</span> <span class="fn">CALCULAR_CONCEPTOS</span>(p_form_id <span class="kw">IN</span> <span class="tp">NUMBER</span>) <span class="kw">IS</span>
+    v_json  <span class="tp">CLOB</span>;
+    v_valor <span class="tp">NUMBER</span>;
+  <span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> DATOS_JSON <span class="kw">INTO</span> v_json
+    <span class="kw">FROM</span>  FORMULARIO_DECLARACION <span class="kw">WHERE</span> CODIGO = p_form_id;
+
+    <span class="kw">FOR</span> rec <span class="kw">IN</span> (
+      <span class="kw">SELECT</span> cpc.CODIGO_CONCEPTO_TRIBUTARIO, cp.CLAVE_UI,
+             ct.FORMULA_CALCULO, ct.ES_CALCULADO
+      <span class="kw">FROM</span>  CAMPO_PLANTILLA_CONCEPTO cpc
+      <span class="kw">JOIN</span>  CAMPO_PLANTILLA cp   <span class="kw">ON</span> cp.CODIGO  = cpc.CODIGO_CAMPO_PLANTILLA
+      <span class="kw">JOIN</span>  CONCEPTO_TRIBUTARIO ct <span class="kw">ON</span> ct.CODIGO = cpc.CODIGO_CONCEPTO_TRIBUTARIO
+      <span class="kw">JOIN</span>  FORMULARIO_DECLARACION fd
+            <span class="kw">ON</span> fd.CODIGO_VERSION_PLANTILLA = cp.CODIGO_VERSION_PLANTILLA
+           <span class="kw">AND</span> fd.CODIGO = p_form_id
+    ) <span class="kw">LOOP</span>
+      <span class="kw">IF</span> rec.ES_CALCULADO = <span class="num">0</span> <span class="kw">THEN</span>
+        <span class="kw">SELECT</span> <span class="fn">JSON_VALUE</span>(v_json, <span class="str">'$.'</span> || rec.CLAVE_UI RETURNING <span class="tp">NUMBER</span>)
+        <span class="kw">INTO</span> v_valor <span class="kw">FROM</span> DUAL;
+      <span class="kw">ELSE</span>
+        <span class="kw">EXECUTE IMMEDIATE</span>
+          <span class="str">'SELECT '</span> || rec.FORMULA_CALCULO ||
+          <span class="str">' FROM FORMULARIO_DECLARACION WHERE CODIGO=:1'</span>
+          <span class="kw">INTO</span> v_valor <span class="kw">USING</span> p_form_id;
+      <span class="kw">END IF</span>;
+
+      <span class="kw">MERGE INTO</span> DETALLE_VALOR_CONCEPTO dvc
+      <span class="kw">USING DUAL ON</span> (
+        dvc.CODIGO_FORMULARIO_DECLARACION = p_form_id <span class="kw">AND</span>
+        dvc.CODIGO_CONCEPTO_TRIBUTARIO    = rec.CODIGO_CONCEPTO_TRIBUTARIO)
+      <span class="kw">WHEN MATCHED THEN</span>
+        <span class="kw">UPDATE SET</span> dvc.VALOR_CALCULADO = v_valor,
+                   dvc.FECHA_CALCULO   = CURRENT_TIMESTAMP
+      <span class="kw">WHEN NOT MATCHED THEN</span>
+        <span class="kw">INSERT</span> (CODIGO_FORMULARIO_DECLARACION, CODIGO_CONCEPTO_TRIBUTARIO, VALOR_CALCULADO)
+        <span class="kw">VALUES</span> (p_form_id, rec.CODIGO_CONCEPTO_TRIBUTARIO, v_valor);
+    <span class="kw">END LOOP</span>;
+    <span class="kw">COMMIT</span>;
+  <span class="kw">END</span> CALCULAR_CONCEPTOS;
+
+<span class="kw">END</span> PKG_FORMULARIO;</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">PKG_DECLARACION · MÁQUINA DE ESTADOS</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>PKG_DECLARACION — CAMBIAR_ESTADO</span><span class="code-lang lang-sql">PL/SQL</span></div>
+<pre><span class="kw">PROCEDURE</span> <span class="fn">CAMBIAR_ESTADO</span>(
+    p_form_id      <span class="kw">IN</span> <span class="tp">NUMBER</span>,
+    p_nuevo_estado <span class="kw">IN</span> <span class="tp">VARCHAR2</span>,
+    p_usuario_id   <span class="kw">IN</span> <span class="tp">NUMBER</span>,
+    p_comentario   <span class="kw">IN</span> <span class="tp">VARCHAR2</span> <span class="kw">DEFAULT NULL</span>
+) <span class="kw">IS</span>
+  v_actual <span class="tp">VARCHAR2(20)</span>;
+  v_ok     <span class="tp">BOOLEAN</span> := <span class="kw">FALSE</span>;
+<span class="kw">BEGIN</span>
+  <span class="kw">SELECT</span> ESTADO <span class="kw">INTO</span> v_actual
+  <span class="kw">FROM</span>  FORMULARIO_DECLARACION
+  <span class="kw">WHERE</span> CODIGO = p_form_id <span class="kw">FOR UPDATE</span>;
+
+  v_ok := (
+    (v_actual = <span class="str">'BORRADOR'</span>    <span class="kw">AND</span> p_nuevo_estado = <span class="str">'ENVIADO'</span>)    <span class="kw">OR</span>
+    (v_actual = <span class="str">'ENVIADO'</span>     <span class="kw">AND</span> p_nuevo_estado <span class="kw">IN</span> (<span class="str">'EN_REVISION'</span>,<span class="str">'RECHAZADO'</span>)) <span class="kw">OR</span>
+    (v_actual = <span class="str">'EN_REVISION'</span> <span class="kw">AND</span> p_nuevo_estado <span class="kw">IN</span> (<span class="str">'OBSERVADO'</span>,<span class="str">'APROBADO'</span>))   <span class="kw">OR</span>
+    (v_actual = <span class="str">'OBSERVADO'</span>   <span class="kw">AND</span> p_nuevo_estado = <span class="str">'EN_REVISION'</span>)
+  );
+
+  <span class="kw">IF NOT</span> v_ok <span class="kw">THEN</span>
+    <span class="fn">RAISE_APPLICATION_ERROR</span>(<span class="num">-20001</span>,
+      <span class="str">'Transición inválida: '</span> || v_actual || <span class="str">' → '</span> || p_nuevo_estado);
+  <span class="kw">END IF</span>;
+
+  <span class="kw">UPDATE</span> FORMULARIO_DECLARACION <span class="kw">SET</span> ESTADO = p_nuevo_estado <span class="kw">WHERE</span> CODIGO = p_form_id;
+
+  <span class="kw">INSERT INTO</span> DECLARACION_HISTORIAL_ESTADO
+    (CODIGO_FORMULARIO_DECLARACION, ESTADO_ANTERIOR, ESTADO_NUEVO, COMENTARIO, USUARIO_RESPONSABLE)
+  <span class="kw">VALUES</span> (p_form_id, v_actual, p_nuevo_estado, p_comentario, p_usuario_id);
+  <span class="kw">COMMIT</span>;
+<span class="kw">END</span>;</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- phase-list -->
+</div>
+
+<!-- ═══ FASE 2: QUARKUS CORE ═══ -->
+<div class="content-section" id="f2">
+  <div class="section-header">
+    <div class="section-num-big">F2</div>
+    <div class="section-meta">
+      <div class="section-tag">§ Fase 2 · Quarkus 3</div>
+      <div class="section-title">QUARKUS CORE<br>SETUP & ESTRUCTURA</div>
+      <div class="section-desc">Proyecto Quarkus 3 con Hibernate ORM Panache, RESTEasy Reactive, datasource Oracle 19c y arquitectura de capas.</div>
+    </div>
+  </div>
+  <div class="phase-list">
+
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--red)">
+          <div class="phase-index-num">2.1</div>
+          <div class="phase-index-layer">Quarkus · Setup</div>
+        </div>
+        <div class="phase-heading">
+          <div class="phase-title">ESTRUCTURA DEL PROYECTO</div>
+          <div class="phase-subtitle">Extensiones clave, application.properties y capas de arquitectura</div>
+          <div class="phase-chips"><span class="chip q">Panache</span><span class="chip q">RESTEasy Reactive</span><span class="chip q">Oracle JDBC</span><span class="chip q">SmallRye JWT</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">CREAR PROYECTO CON EXTENSIONES</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>Terminal</span><span class="code-lang lang-yaml">SHELL</span></div>
+<pre>quarkus create app com.empresa:dynforms \
+  --extension="resteasy-reactive-jackson,\
+               hibernate-orm-panache,\
+               jdbc-oracle,\
+               smallrye-jwt,\
+               flyway,\
+               redis-client,\
+               scheduler,\
+               smallrye-openapi" \
+  --no-code</pre>
+              </div>
+              <div class="code-wrap">
+                <div class="code-header"><span>src/main/resources/application.properties</span><span class="code-lang lang-yaml">PROPS</span></div>
+<pre><span class="at">quarkus.datasource.db-kind</span>=oracle
+<span class="at">quarkus.datasource.username</span>=dynforms_app
+<span class="at">quarkus.datasource.password</span>=${DB_PASSWORD}
+<span class="at">quarkus.datasource.jdbc.url</span>=jdbc:oracle:thin:@//${DB_HOST}:1521/DYNFORMS
+<span class="at">quarkus.datasource.jdbc.max-size</span>=20
+<span class="at">quarkus.hibernate-orm.dialect</span>=org.hibernate.dialect.OracleDialect
+<span class="at">quarkus.hibernate-orm.database.generation</span>=none  <span class="cm"># Flyway gestiona el DDL</span>
+<span class="at">quarkus.flyway.migrate-at-start</span>=true
+<span class="at">quarkus.flyway.locations</span>=db/migrations
+<span class="at">smallrye.jwt.sign.key.location</span>=jwt-private.pem
+<span class="at">mp.jwt.verify.publickey.location</span>=jwt-public.pem
+<span class="at">mp.jwt.verify.issuer</span>=https://dynforms.empresa.com</pre>
+              </div>
+              <div class="code-wrap">
+                <div class="code-header"><span>Estructura de paquetes</span><span class="code-lang lang-yaml">TREE</span></div>
+<pre>src/main/java/com/empresa/dynforms/
+├── domain/
+│   ├── componentes/   <span class="cm">← Entidades M1</span>
+│   ├── catalogos/     <span class="cm">← Entidades M2</span>
+│   ├── tributaria/    <span class="cm">← Entidades M3</span>
+│   ├── disenador/     <span class="cm">← Entidades M4</span>
+│   └── ejecucion/     <span class="cm">← Entidades M5</span>
+├── application/       <span class="cm">← Services (use cases)</span>
+├── infrastructure/
+│   ├── persistence/   <span class="cm">← Panache Repositories</span>
+│   └── storage/       <span class="cm">← MinIO adapter</span>
+└── api/
+    ├── v1/            <span class="cm">← @Path resources</span>
+    └── dto/           <span class="cm">← Request/Response records</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--red)">
+          <div class="phase-index-num">2.2</div>
+          <div class="phase-index-layer">Quarkus · Entidad</div>
+        </div>
+        <div class="phase-heading">
+          <div class="phase-title">ENTIDAD PANACHE + JSON CLOB</div>
+          <div class="phase-subtitle">CampoPlantilla con PROPIEDADES_UI_JSON mapeado a JsonNode via AttributeConverter</div>
+          <div class="phase-chips"><span class="chip q">Panache Entity</span><span class="chip q">AttributeConverter</span><span class="chip q">Jackson</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">ENTIDAD PANACHE CON JSON CLOB</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>domain/disenador/CampoPlantilla.java</span><span class="code-lang lang-java">JAVA</span></div>
+<pre><span class="de">@Entity</span>
+<span class="de">@Table</span>(name = <span class="str">"CAMPO_PLANTILLA"</span>)
+<span class="kw">public class</span> CampoPlantilla <span class="kw">extends</span> PanacheEntityBase {
+
+    <span class="de">@Id @GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="de">@Column</span>(name = <span class="str">"CODIGO"</span>)
+    <span class="kw">public</span> Long codigo;
+
+    <span class="de">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="de">@JoinColumn</span>(name = <span class="str">"CODIGO_VERSION_PLANTILLA"</span>)
+    <span class="kw">public</span> VersionPlantilla versionPlantilla;
+
+    <span class="de">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="de">@JoinColumn</span>(name = <span class="str">"CODIGO_SECCION"</span>)
+    <span class="kw">public</span> SeccionPlantilla seccion;
+
+    <span class="de">@Column</span>(name = <span class="str">"CLAVE_UI"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">public</span> String claveUi;
+
+    <span class="de">@Column</span>(name = <span class="str">"CATEGORIA_COMPONENTE"</span>)
+    <span class="kw">public</span> String categoriaComponente;
+
+    <span class="de">@Column</span>(name = <span class="str">"ETIQUETA_UI"</span>)
+    <span class="kw">public</span> String etiquetaUi;
+
+    <span class="de">@Column</span>(name = <span class="str">"ES_OBLIGATORIO"</span>)
+    <span class="kw">public</span> Boolean esObligatorio = <span class="kw">false</span>;
+
+    <span class="de">@Column</span>(name = <span class="str">"ANCHO_COLUMNAS"</span>)
+    <span class="kw">public</span> Integer anchoColumnas = 12;
+
+    <span class="de">@Column</span>(name = <span class="str">"PROPIEDADES_UI_JSON"</span>, columnDefinition = <span class="str">"CLOB"</span>)
+    <span class="de">@Convert</span>(converter = JsonNodeConverter.class)
+    <span class="kw">public</span> JsonNode propiedadesUi;  <span class="cm">// com.fasterxml.jackson.databind.JsonNode</span>
+
+    <span class="de">@Column</span>(name = <span class="str">"ORDEN"</span>)
+    <span class="kw">public</span> Integer orden;
+
+    <span class="de">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="de">@JoinColumn</span>(name = <span class="str">"CODIGO_CATALOGO_MAESTRO"</span>)
+    <span class="kw">public</span> CatalogoMaestro catalogoMaestro;
+
+    <span class="de">@OneToMany</span>(mappedBy = <span class="str">"campo"</span>, cascade = CascadeType.ALL)
+    <span class="kw">public</span> List&lt;CampoReglaValidacion&gt; reglasValidacion = new ArrayList&lt;&gt;();
+
+    <span class="de">@OneToMany</span>(mappedBy = <span class="str">"campo"</span>, cascade = CascadeType.ALL)
+    <span class="kw">public</span> List&lt;ReglaCondicional&gt; reglasCondicionales = new ArrayList&lt;&gt;();
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">CONVERTER JSON ↔ CLOB</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>infrastructure/persistence/JsonNodeConverter.java</span><span class="code-lang lang-java">JAVA</span></div>
+<pre><span class="de">@Converter</span>(autoApply = <span class="kw">false</span>)
+<span class="kw">public class</span> JsonNodeConverter
+    <span class="kw">implements</span> AttributeConverter&lt;JsonNode, String&gt; {
+
+    <span class="kw">private static final</span> ObjectMapper MAPPER = <span class="kw">new</span> ObjectMapper();
+
+    <span class="de">@Override</span>
+    <span class="kw">public</span> String <span class="fn">convertToDatabaseColumn</span>(JsonNode attribute) {
+        <span class="kw">if</span> (attribute == <span class="kw">null</span>) <span class="kw">return null</span>;
+        <span class="kw">try</span> { <span class="kw">return</span> MAPPER.writeValueAsString(attribute); }
+        <span class="kw">catch</span> (JsonProcessingException e) { <span class="kw">throw new</span> RuntimeException(e); }
+    }
+
+    <span class="de">@Override</span>
+    <span class="kw">public</span> JsonNode <span class="fn">convertToEntityAttribute</span>(String dbData) {
+        <span class="kw">if</span> (dbData == <span class="kw">null</span>) <span class="kw">return</span> MAPPER.nullNode();
+        <span class="kw">try</span> { <span class="kw">return</span> MAPPER.readTree(dbData); }
+        <span class="kw">catch</span> (JsonProcessingException e) { <span class="kw">throw new</span> RuntimeException(e); }
+    }
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--red)">
+          <div class="phase-index-num">2.3</div>
+          <div class="phase-index-layer">Quarkus · Resource</div>
+        </div>
+        <div class="phase-heading">
+          <div class="phase-title">API CATÁLOGOS Y COMPONENTES</div>
+          <div class="phase-subtitle">Endpoints que alimentan la biblioteca del diseñador y los SELECTs dinámicos</div>
+          <div class="phase-chips"><span class="chip q">RESTEasy Reactive</span><span class="chip q">@CacheResult</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">BIBLIOTECA DE COMPONENTES (CACHEADA)</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>api/v1/ComponenteResource.java</span><span class="code-lang lang-java">JAVA</span></div>
+<pre><span class="de">@Path</span>(<span class="str">"/api/v1/componentes"</span>)
+<span class="de">@Produces</span>(MediaType.APPLICATION_JSON)
+<span class="de">@RolesAllowed</span>(<span class="str">"*"</span>)
+<span class="kw">public class</span> ComponenteResource {
+
+    <span class="de">@Inject</span> BibliotecaComponenteService service;
+
+    <span class="de">@GET</span>
+    <span class="de">@Path</span>(<span class="str">"/biblioteca"</span>)
+    <span class="de">@CacheResult</span>(cacheName = <span class="str">"biblioteca-comp"</span>)
+    <span class="kw">public</span> Uni&lt;List&lt;BibliotecaGrupoDTO&gt;&gt; getBiblioteca() {
+        <span class="kw">return</span> service.getAgrupadaAsync();
+    }
+
+    <span class="de">@GET</span>
+    <span class="de">@Path</span>(<span class="str">"/categorias"</span>)
+    <span class="de">@CacheResult</span>(cacheName = <span class="str">"cat-comp"</span>)
+    <span class="kw">public</span> Uni&lt;List&lt;CategoriaComponenteDTO&gt;&gt; getCategorias() {
+        <span class="kw">return</span> Uni.createFrom().item(
+            CategoriaComponente.&lt;CategoriaComponente&gt;listAll()
+              .stream().filter(c -> c.activo)
+              .map(CategoriaComponenteDTO::from).toList()
+        );
+    }
+}
+
+<span class="cm">// DTO como record inmutable</span>
+<span class="kw">public record</span> BibliotecaGrupoDTO(String categoriaUi, List&lt;WidgetDTO&gt; widgets) {
+    <span class="kw">public static</span> BibliotecaGrupoDTO from(
+        String cat, List&lt;BibliotecaComponente&gt; items
+    ) {
+        <span class="kw">return new</span> BibliotecaGrupoDTO(cat, items.stream().map(WidgetDTO::from).toList());
+    }
+}
+<span class="kw">public record</span> WidgetDTO(
+    Long codigo, String nombreUi, String identificadorTecnico,
+    Boolean permiteHijos, Boolean permiteCatalogo, Boolean permiteAdjunto,
+    Object configDefaultJson
+) {
+    <span class="kw">public static</span> WidgetDTO from(BibliotecaComponente b) {
+        <span class="kw">return new</span> WidgetDTO(b.codigo, b.nombreUi,
+            b.categoriaComponente.identificadorTecnico,
+            b.categoriaComponente.permiteHijos == 1,
+            b.categoriaComponente.permiteCatalogo == 1,
+            b.categoriaComponente.permiteAdjunto == 1,
+            b.configuracionDefaultJson);
+    }
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">CATÁLOGOS CON JERARQUÍA (CONNECT BY)</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>api/v1/CatalogoResource.java</span><span class="code-lang lang-java">JAVA</span></div>
+<pre><span class="de">@GET</span>
+<span class="de">@Path</span>(<span class="str">"/{codigoUnico}/items"</span>)
+<span class="kw">public</span> Response getItems(
+    <span class="de">@PathParam</span>(<span class="str">"codigoUnico"</span>) String codigoUnico,
+    <span class="de">@QueryParam</span>(<span class="str">"q"</span>) String busqueda,
+    <span class="de">@QueryParam</span>(<span class="str">"padreId"</span>) Long padreId
+) {
+    CatalogoMaestro cm = CatalogoMaestro.find(
+        <span class="str">"codigoUnico"</span>, codigoUnico).firstResultOptional()
+        .orElseThrow(() -> <span class="kw">new</span> NotFoundException(<span class="str">"Catálogo no existe"</span>));
+
+    <span class="kw">if</span> (cm.permiteJerarquia == 1) {
+        <span class="cm">// Oracle CONNECT BY para árbol completo en 1 query</span>
+        List&lt;CatalogoDetalle&gt; arbol = CatalogoDetalle.find(
+            <span class="str">"SELECT * FROM CATALOGO_DETALLE "</span> +
+            <span class="str">"START WITH CODIGO_CATALOGO_MAESTRO=?1 AND CODIGO_ITEM_PADRE IS NULL "</span> +
+            <span class="str">"CONNECT BY PRIOR CODIGO = CODIGO_ITEM_PADRE "</span> +
+            <span class="str">"ORDER SIBLINGS BY ORDEN"</span>, cm.codigo).list();
+        <span class="kw">return</span> Response.ok(CatalogoItemDTO.toTree(arbol)).build();
+    }
+    <span class="kw">return</span> Response.ok(
+        CatalogoDetalle.find(<span class="str">"codigosCatalogoMaestro = ?1 and activo = 1"</span>, cm.codigo)
+            .stream().map(CatalogoItemDTO::from).toList()
+    ).build();
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ FASE 3: API DISEÑADOR ═══ -->
+<div class="content-section" id="f3">
+  <div class="section-header">
+    <div class="section-num-big">F3</div>
+    <div class="section-meta">
+      <div class="section-tag">§ Fase 3 · Quarkus · API</div>
+      <div class="section-title">API DISEÑADOR<br>PLANTILLAS & CAMPOS</div>
+      <div class="section-desc">Endpoints para gestionar versiones, secciones, campos, reglas y la operación crítica de clonar versión.</div>
+    </div>
+  </div>
+  <div class="phase-list">
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--red)">
+          <div class="phase-index-num">3.1</div><div class="phase-index-layer">API · Estructura</div>
+        </div>
+        <div class="phase-heading">
+          <div class="phase-title">CARGAR ESTRUCTURA COMPLETA</div>
+          <div class="phase-subtitle">GET /api/v1/versiones/{id}/estructura — árbol sin N+1</div>
+          <div class="phase-chips"><span class="chip q">EntityGraph</span><span class="chip q">@NamedQuery</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">SERVICE: CARGAR ÁRBOL SECCIONES + CAMPOS</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>application/EstructuraVersionService.java</span><span class="code-lang lang-java">JAVA</span></div>
+<pre><span class="de">@ApplicationScoped</span>
+<span class="de">@Transactional</span>(Transactional.TxType.SUPPORTS)
+<span class="kw">public class</span> EstructuraVersionService {
+
+    <span class="kw">public</span> EstructuraVersionDTO getEstructura(Long versionId) {
+        <span class="cm">// 1. Cargar versión con plantilla</span>
+        VersionPlantilla version = VersionPlantilla.findByIdOptional(versionId)
+            .orElseThrow(() -> <span class="kw">new</span> NotFoundException(<span class="str">"Versión no existe"</span>));
+
+        <span class="cm">// 2. Cargar secciones ordenadas</span>
+        List&lt;SeccionPlantilla&gt; secciones = SeccionPlantilla.list(
+            <span class="str">"versionPlantilla.codigo = ?1 ORDER BY orden"</span>, versionId);
+
+        <span class="cm">// 3. Campos con reglas (EntityGraph evita N+1)</span>
+        List&lt;CampoPlantilla&gt; campos = CampoPlantilla.find(
+            <span class="str">"SELECT cp FROM CampoPlantilla cp "</span> +
+            <span class="str">"LEFT JOIN FETCH cp.reglasValidacion rv "</span> +
+            <span class="str">"LEFT JOIN FETCH cp.reglasCondicionales rc "</span> +
+            <span class="str">"WHERE cp.versionPlantilla.codigo = ?1 "</span> +
+            <span class="str">"ORDER BY cp.orden"</span>, versionId).list();
+
+        <span class="kw">return</span> EstructuraVersionDTO.from(version, secciones, campos);
+    }
+}
+
+<span class="cm">// DTO de respuesta</span>
+<span class="kw">public record</span> EstructuraVersionDTO(
+    Long idVersion, String numeroVersion, String estado,
+    List&lt;SeccionConCamposDTO&gt; secciones
+) {
+    <span class="kw">public static</span> EstructuraVersionDTO from(
+        VersionPlantilla v, List&lt;SeccionPlantilla&gt; secs, List&lt;CampoPlantilla&gt; campos
+    ) {
+        Map&lt;Long, List&lt;CampoDTO&gt;&gt; porSeccion = campos.stream()
+            .collect(Collectors.groupingBy(
+                c -> c.seccion != <span class="kw">null</span> ? c.seccion.codigo : 0L,
+                Collectors.mapping(CampoDTO::from, Collectors.toList())
+            ));
+        List&lt;SeccionConCamposDTO&gt; secsDTOs = secs.stream()
+            .map(s -> <span class="kw">new</span> SeccionConCamposDTO(
+                s.codigo, s.claveUi, s.etiqueta, s.tipo, s.orden,
+                porSeccion.getOrDefault(s.codigo, List.of())
+            )).toList();
+        <span class="kw">return new</span> EstructuraVersionDTO(v.codigo, v.numeroVersion, v.estado, secsDTOs);
+    }
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">ENDPOINT: AGREGAR CAMPO (SNAPSHOT DEL WIDGET)</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>POST /api/v1/versiones/{id}/campos</span><span class="code-lang lang-java">JAVA</span></div>
+<pre><span class="de">@POST</span>
+<span class="de">@Path</span>(<span class="str">"/{versionId}/campos"</span>)
+<span class="de">@Transactional</span>
+<span class="kw">public</span> Response agregarCampo(
+    <span class="de">@PathParam</span>(<span class="str">"versionId"</span>) Long versionId,
+    AgregarCampoRequest req
+) {
+    BibliotecaComponente widget = BibliotecaComponente
+        .findByIdOptional(req.codigoBiblioteca())
+        .orElseThrow(() -> <span class="kw">new</span> NotFoundException(<span class="str">"Widget no existe"</span>));
+
+    CampoPlantilla campo = <span class="kw">new</span> CampoPlantilla();
+    campo.versionPlantilla = VersionPlantilla.findById(versionId);
+    campo.seccion          = req.codigoSeccion() != <span class="kw">null</span>
+        ? SeccionPlantilla.findById(req.codigoSeccion()) : <span class="kw">null</span>;
+    campo.claveUi          = widget.categoriaComponente.identificadorTecnico
+        .toLowerCase() + <span class="str">"_"</span> + UUID.randomUUID().toString().substring(0, 8);
+    campo.etiquetaUi       = widget.nombreUi;
+    campo.categoriaComponente = widget.categoriaComponente.identificadorTecnico;
+    campo.orden            = req.orden();
+    campo.propiedadesUi    = widget.configuracionDefaultJson; <span class="cm">// ← snapshot</span>
+    campo.anchoColumnas    = 12;
+    campo.esObligatorio    = false;
+    campo.persist();
+
+    <span class="kw">return</span> Response.status(201).entity(CampoDTO.from(campo)).build();
+}
+
+<span class="kw">public record</span> AgregarCampoRequest(
+    Long codigoBiblioteca, Long codigoSeccion, Integer orden
+) {}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">03</div>
+            <div class="step-body">
+              <div class="step-title">CLONAR VERSIÓN VÍA STORED PROCEDURE</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>application/VersionPlantillaService.java</span><span class="code-lang lang-java">JAVA</span></div>
+<pre><span class="de">@Transactional</span>
+<span class="kw">public</span> Long clonarVersion(Long versionOrigen, String nuevoNumero, Long usuarioId) {
+    <span class="cm">// Llamar al procedure PL/SQL CLONAR_VERSION</span>
+    Object[] params = <span class="kw">new</span> Object[<span class="num">4</span>];
+    entityManager.createNativeQuery(
+        <span class="str">"BEGIN CLONAR_VERSION(:p1, :p2, :p3, :p4); END;"</span>)
+        .setParameter(<span class="str">"p1"</span>, versionOrigen)
+        .setParameter(<span class="str">"p2"</span>, nuevoNumero)
+        .setParameter(<span class="str">"p3"</span>, usuarioId)
+        .setParameter(<span class="str">"p4"</span>, params)  <span class="cm">// OUT param</span>
+        .executeUpdate();
+
+    <span class="cm">// Recuperar la nueva versión creada</span>
+    <span class="kw">return</span> VersionPlantilla.find(
+        <span class="str">"plantilla.codigo = (SELECT CODIGO_PLANTILLA FROM VERSION_PLANTILLA WHERE CODIGO=?1)"</span> +
+        <span class="str">" AND numeroVersion = ?2"</span>, versionOrigen, nuevoNumero)
+        .firstResult().codigo;
+}
+
+<span class="de">@PUT</span> <span class="de">@Path</span>(<span class="str">"/{id}/publicar"</span>) <span class="de">@Transactional</span>
+<span class="kw">public</span> Response publicar(<span class="de">@PathParam</span>(<span class="str">"id"</span>) Long versionId, <span class="de">@Context</span> SecurityContext sec) {
+    VersionPlantilla v = VersionPlantilla.findByIdOptional(versionId)
+        .orElseThrow(() -> <span class="kw">new</span> NotFoundException());
+
+    <span class="kw">if</span> (!<span class="str">"BORRADOR"</span>.equals(v.estado))
+        <span class="kw">throw new</span> WebApplicationException(<span class="str">"Solo borradores pueden publicarse"</span>, 409);
+
+    <span class="kw">if</span> (CampoPlantilla.count(<span class="str">"versionPlantilla.codigo"</span>, versionId) == 0)
+        <span class="kw">throw new</span> WebApplicationException(<span class="str">"La versión necesita al menos 1 campo"</span>, 422);
+
+    <span class="cm">// Cerrar versión anterior</span>
+    VersionPlantilla.update(
+        <span class="str">"estado = 'CERRADA', vigenciaHasta = CURRENT_DATE "</span> +
+        <span class="str">"WHERE plantilla = ?1 AND estado = 'PUBLICADO'"</span>, v.plantilla);
+
+    v.estado = <span class="str">"PUBLICADO"</span>;
+    v.vigenciaDesde = LocalDate.now();
+    v.persist();
+    <span class="kw">return</span> Response.ok(VersionDTO.from(v)).build();
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FASE 4: EJECUCIÓN ═══ -->
+<div class="content-section" id="f4">
+  <div class="section-header">
+    <div class="section-num-big">F4</div>
+    <div class="section-meta">
+      <div class="section-tag">§ Fase 4 · Quarkus · Ejecución</div>
+      <div class="section-title">API EJECUCIÓN<br>DECLARACIONES & ADJUNTOS</div>
+      <div class="section-desc">Crear declaraciones, guardar datos, validar server-side, gestionar adjuntos en MinIO y transicionar estados.</div>
+    </div>
+  </div>
+  <div class="phase-list">
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--red)"><div class="phase-index-num">4.1</div><div class="phase-index-layer">API · Declaración</div></div>
+        <div class="phase-heading">
+          <div class="phase-title">CREAR Y GUARDAR DECLARACIÓN</div>
+          <div class="phase-subtitle">Validar unicidad RUC+Periodo, guardar DATOS_JSON y disparar cálculo tributario</div>
+          <div class="phase-chips"><span class="chip q">@Transactional</span><span class="chip q">@Scheduled</span><span class="chip o">PKG_FORMULARIO</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">CREAR DECLARACIÓN</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>api/v1/DeclaracionResource.java</span><span class="code-lang lang-java">JAVA</span></div>
+<pre><span class="de">@POST @Transactional</span>
+<span class="kw">public</span> Response crear(CrearDeclaracionRequest req, <span class="de">@Context</span> SecurityContext sec) {
+    <span class="kw">long</span> existe = FormularioDeclaracion.count(
+        <span class="str">"versionPlantilla.codigo = ?1 AND rucContribuyente = ?2 AND periodoFiscal = ?3"</span>,
+        req.versionId(), req.ruc(), req.periodo());
+
+    <span class="kw">if</span> (existe > 0)
+        <span class="kw">throw new</span> WebApplicationException(<span class="str">"Declaración duplicada"</span>, 409);
+
+    FormularioDeclaracion dec = <span class="kw">new</span> FormularioDeclaracion();
+    dec.versionPlantilla  = VersionPlantilla.findById(req.versionId());
+    dec.rucContribuyente  = req.ruc();
+    dec.periodoFiscal     = req.periodo();
+    dec.estado            = <span class="str">"BORRADOR"</span>;
+    dec.datosJson         = <span class="str">"{}"</span>;
+    dec.usuarioCreador    = Long.parseLong(sec.getUserPrincipal().getName());
+    dec.fechaCreacion     = LocalDateTime.now();
+    dec.persist();
+    <span class="kw">return</span> Response.status(201).entity(DeclaracionDTO.from(dec)).build();
+}
+
+<span class="de">@PUT @Path</span>(<span class="str">"/{id}/datos"</span>) <span class="de">@Transactional</span>
+<span class="kw">public</span> Response guardarDatos(<span class="de">@PathParam</span>(<span class="str">"id"</span>) Long decId, JsonNode datos,
+                              <span class="de">@Context</span> SecurityContext sec) {
+    FormularioDeclaracion dec = FormularioDeclaracion.findByIdOptional(decId)
+        .orElseThrow(() -> <span class="kw">new</span> NotFoundException());
+
+    <span class="kw">if</span> (!Set.of(<span class="str">"BORRADOR"</span>,<span class="str">"OBSERVADO"</span>).contains(dec.estado))
+        <span class="kw">throw new</span> WebApplicationException(<span class="str">"No editable en estado: "</span> + dec.estado, 422);
+
+    dec.datosJson = datos.toString();
+    dec.persist();
+
+    <span class="cm">// Llamar PKG_FORMULARIO asíncronamente</span>
+    Long uid = decId;
+    vertx.executeBlocking(() -> {
+        entityManager.createNativeQuery(
+            <span class="str">"BEGIN PKG_FORMULARIO.CALCULAR_CONCEPTOS(:p1); END;"</span>)
+            .setParameter(<span class="str">"p1"</span>, uid).executeUpdate();
+        <span class="kw">return null</span>;
+    });
+    <span class="kw">return</span> Response.ok().build();
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">SUBIDA DE ADJUNTOS A MINIO</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>POST /declaraciones/{id}/adjuntos — Multipart</span><span class="code-lang lang-java">JAVA</span></div>
+<pre><span class="de">@POST @Path</span>(<span class="str">"/{id}/adjuntos"</span>)
+<span class="de">@Consumes</span>(MediaType.MULTIPART_FORM_DATA)
+<span class="de">@Transactional</span>
+<span class="kw">public</span> Response subirAdjunto(
+    <span class="de">@PathParam</span>(<span class="str">"id"</span>) Long decId,
+    <span class="de">@MultipartForm</span> AdjuntoForm form
+) {
+    String mime = <span class="fn">detectarMime</span>(form.archivo);  <span class="cm">// Apache Tika</span>
+    <span class="kw">long</span>   size = form.archivo.length();
+
+    <span class="kw">if</span> (size > 10L * 1024 * 1024)
+        <span class="kw">throw new</span> WebApplicationException(<span class="str">"Archivo supera 10MB"</span>, 422);
+
+    String hash = DigestUtils.sha256Hex(Files.newInputStream(form.archivo.toPath()));
+
+    String ruta = <span class="str">"decl/"</span> + decId + <span class="str">"/"</span> + UUID.randomUUID()
+                + <span class="str">"_"</span> + form.archivo.getName();
+
+    minioClient.putObject(PutObjectArgs.builder()
+        .bucket(<span class="str">"dynforms"</span>).object(ruta)
+        .stream(Files.newInputStream(form.archivo.toPath()), size, -1)
+        .contentType(mime).build());
+
+    DeclaracionAdjunto adj = <span class="kw">new</span> DeclaracionAdjunto();
+    adj.declaracion       = FormularioDeclaracion.findById(decId);
+    adj.nombreOriginal    = form.archivo.getName();
+    adj.rutaAlmacenamiento = ruta;
+    adj.mimeType          = mime;
+    adj.tamanioBytes      = size;
+    adj.hashSha256        = hash;
+    adj.persist();
+    <span class="kw">return</span> Response.status(201).entity(AdjuntoDTO.from(adj)).build();
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FASE 5: TIPOS TYPESCRIPT ═══ -->
+<div class="content-section" id="f5">
+  <div class="section-header">
+    <div class="section-num-big">F5</div>
+    <div class="section-meta">
+      <div class="section-tag">§ Fase 5 · Vue 3 · TypeScript</div>
+      <div class="section-title">TIPOS, INTERFACES<br>& ENUMS TYPESCRIPT</div>
+      <div class="section-desc">Toda la capa de tipos del frontend. Enums estrictos para estados, interfaces para las entidades de BD y types utilitarios. <strong>Base de todo el código Vue.</strong></div>
+    </div>
+  </div>
+  <div class="phase-list">
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--teal)"><div class="phase-index-num">5.1</div><div class="phase-index-layer">TS · Enums</div></div>
+        <div class="phase-heading">
+          <div class="phase-title">ENUMS DEL DOMINIO</div>
+          <div class="phase-subtitle">Estados, tipos de componente, operadores condicionales — nunca usar strings sueltos</div>
+          <div class="phase-chips"><span class="chip v">enum</span><span class="chip v">const enum</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">src/types/enums.ts</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>src/types/enums.ts</span><span class="code-lang lang-ts">TS</span></div>
+<pre><span class="cm">// ── Estados de Declaración ──────────────────────────────────</span>
+<span class="kw">export enum</span> <span class="ifc">EstadoDeclaracion</span> {
+  <span class="en">BORRADOR</span>    = <span class="str">'BORRADOR'</span>,
+  <span class="en">ENVIADO</span>     = <span class="str">'ENVIADO'</span>,
+  <span class="en">EN_REVISION</span> = <span class="str">'EN_REVISION'</span>,
+  <span class="en">OBSERVADO</span>   = <span class="str">'OBSERVADO'</span>,
+  <span class="en">APROBADO</span>    = <span class="str">'APROBADO'</span>,
+  <span class="en">RECHAZADO</span>   = <span class="str">'RECHAZADO'</span>,
+}
+
+<span class="cm">// ── Estados de Versión de Plantilla ────────────────────────</span>
+<span class="kw">export enum</span> <span class="ifc">EstadoVersion</span> {
+  <span class="en">BORRADOR</span>  = <span class="str">'BORRADOR'</span>,
+  <span class="en">PUBLICADO</span> = <span class="str">'PUBLICADO'</span>,
+  <span class="en">CERRADA</span>   = <span class="str">'CERRADA'</span>,
+}
+
+<span class="cm">// ── Tipos de Componente UI (mapea IDENTIFICADOR_TECNICO) ───</span>
+<span class="kw">export enum</span> <span class="ifc">TipoComponente</span> {
+  <span class="en">INPUT_TEXT</span>    = <span class="str">'INPUT_TEXT'</span>,
+  <span class="en">TEXTAREA</span>      = <span class="str">'TEXTAREA'</span>,
+  <span class="en">INPUT_NUMBER</span>  = <span class="str">'INPUT_NUMBER'</span>,
+  <span class="en">DATE_PICKER</span>   = <span class="str">'DATE_PICKER'</span>,
+  <span class="en">SELECT</span>        = <span class="str">'SELECT'</span>,
+  <span class="en">RADIO</span>         = <span class="str">'RADIO'</span>,
+  <span class="en">CHECKBOX_GROUP</span>= <span class="str">'CHECKBOX_GROUP'</span>,
+  <span class="en">CHECKBOX</span>      = <span class="str">'CHECKBOX'</span>,
+  <span class="en">FILE_UPLOAD</span>   = <span class="str">'FILE_UPLOAD'</span>,
+  <span class="en">PANEL</span>         = <span class="str">'PANEL'</span>,
+  <span class="en">GRID_TABLE</span>    = <span class="str">'GRID_TABLE'</span>,
+  <span class="en">DIVIDER</span>       = <span class="str">'DIVIDER'</span>,
+}
+
+<span class="cm">// ── Tipos de Regla de Validación ───────────────────────────</span>
+<span class="kw">export enum</span> <span class="ifc">TipoReglaValidacion</span> {
+  <span class="en">REQUIRED</span>   = <span class="str">'REQUIRED'</span>,
+  <span class="en">MIN_LENGTH</span> = <span class="str">'MIN_LENGTH'</span>,
+  <span class="en">MAX_LENGTH</span> = <span class="str">'MAX_LENGTH'</span>,
+  <span class="en">REGEX</span>      = <span class="str">'REGEX'</span>,
+  <span class="en">MIN_VALUE</span>  = <span class="str">'MIN_VALUE'</span>,
+  <span class="en">MAX_VALUE</span>  = <span class="str">'MAX_VALUE'</span>,
+  <span class="en">CUSTOM</span>     = <span class="str">'CUSTOM'</span>,
+}
+
+<span class="cm">// ── Acción de Regla Condicional ────────────────────────────</span>
+<span class="kw">export enum</span> <span class="ifc">AccionCondicional</span> {
+  <span class="en">SHOW</span>     = <span class="str">'SHOW'</span>,
+  <span class="en">HIDE</span>     = <span class="str">'HIDE'</span>,
+  <span class="en">REQUIRED</span> = <span class="str">'REQUIRED'</span>,
+  <span class="en">DISABLE</span>  = <span class="str">'DISABLE'</span>,
+}
+
+<span class="cm">// ── Operadores de Condición ────────────────────────────────</span>
+<span class="kw">export enum</span> <span class="ifc">OperadorCondicional</span> {
+  <span class="en">EQ</span>        = <span class="str">'EQ'</span>,
+  <span class="en">NEQ</span>       = <span class="str">'NEQ'</span>,
+  <span class="en">GT</span>        = <span class="str">'GT'</span>,
+  <span class="en">GTE</span>       = <span class="str">'GTE'</span>,
+  <span class="en">LT</span>        = <span class="str">'LT'</span>,
+  <span class="en">LTE</span>       = <span class="str">'LTE'</span>,
+  <span class="en">CONTAINS</span>  = <span class="str">'CONTAINS'</span>,
+  <span class="en">IN</span>        = <span class="str">'IN'</span>,
+  <span class="en">EMPTY</span>     = <span class="str">'EMPTY'</span>,
+  <span class="en">NOT_EMPTY</span> = <span class="str">'NOT_EMPTY'</span>,
+}
+
+<span class="cm">// ── Conector lógico ────────────────────────────────────────</span>
+<span class="kw">export enum</span> <span class="ifc">ConectorLogico</span> {
+  <span class="en">AND</span> = <span class="str">'AND'</span>,
+  <span class="en">OR</span>  = <span class="str">'OR'</span>,
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--teal)"><div class="phase-index-num">5.2</div><div class="phase-index-layer">TS · Interfaces</div></div>
+        <div class="phase-heading">
+          <div class="phase-title">INTERFACES DEL DOMINIO</div>
+          <div class="phase-subtitle">CampoDTO, SeccionDTO, ReglaCondicional, VersionPlantilla, FormularioDeclaracion</div>
+          <div class="phase-chips"><span class="chip v">interface</span><span class="chip v">type</span><span class="chip v">Readonly</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">src/types/disenador.ts — Interfaces del diseñador</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>src/types/disenador.ts</span><span class="code-lang lang-ts">TS</span></div>
+<pre><span class="kw">import type</span> {
+  <span class="ifc">TipoComponente</span>, <span class="ifc">TipoReglaValidacion</span>,
+  <span class="ifc">AccionCondicional</span>, <span class="ifc">OperadorCondicional</span>, <span class="ifc">ConectorLogico</span>,
+  <span class="ifc">EstadoVersion</span>
+} <span class="kw">from</span> <span class="str">'./enums'</span>
+
+<span class="cm">// ── Widget de la biblioteca ─────────────────────────────────</span>
+<span class="kw">export interface</span> <span class="ifc">WidgetDTO</span> {
+  <span class="kw">readonly</span> codigo:               number
+  <span class="kw">readonly</span> nombreUi:             string
+  <span class="kw">readonly</span> identificadorTecnico: <span class="ifc">TipoComponente</span>
+  <span class="kw">readonly</span> categoriaUi:          string
+  <span class="kw">readonly</span> permiteHijos:         boolean
+  <span class="kw">readonly</span> permiteCatalogo:      boolean
+  <span class="kw">readonly</span> permiteAdjunto:       boolean
+  <span class="kw">readonly</span> configDefaultJson:    <span class="ifc">PropiedadesUI</span>
+}
+
+<span class="cm">// ── Propiedades UI (snapshot almacenado en PROPIEDADES_UI_JSON) ─</span>
+<span class="kw">export interface</span> <span class="ifc">PropiedadesUI</span> {
+  placeholder?:  string
+  mask?:         string
+  prefix?:       string
+  suffix?:       string
+  decimals?:     number
+  min?:          number
+  max?:          number
+  format?:       string
+  filterable?:   boolean
+  multiple?:     boolean
+  accept?:       string[]
+  maxMb?:        number
+  <span class="cm">// extensible por tipo de componente</span>
+  [key: string]: unknown
+}
+
+<span class="cm">// ── Regla de validación en un campo ────────────────────────</span>
+<span class="kw">export interface</span> <span class="ifc">ReglaValidacionDTO</span> {
+  codigo:         number
+  nombre:         string
+  tipo:           <span class="ifc">TipoReglaValidacion</span>
+  expresion?:     string
+  mensajeError:   string
+  parametros?:    Record&lt;string, unknown&gt;
+  ordenEjecucion: number
+}
+
+<span class="cm">// ── Detalle de condición ────────────────────────────────────</span>
+<span class="kw">export interface</span> <span class="ifc">CondicionalDetalleDTO</span> {
+  codigo?:               number
+  claveUiCampoEvaluado:  string
+  operador:              <span class="ifc">OperadorCondicional</span>
+  valorReferencia?:      string
+}
+
+<span class="cm">// ── Regla condicional completa ──────────────────────────────</span>
+<span class="kw">export interface</span> <span class="ifc">ReglaCondicionalDTO</span> {
+  codigo?:         number
+  accion:          <span class="ifc">AccionCondicional</span>
+  conectorLogico:  <span class="ifc">ConectorLogico</span>
+  orden:           number
+  condiciones:     <span class="ifc">CondicionalDetalleDTO</span>[]
+}
+
+<span class="cm">// ── Campo de plantilla ──────────────────────────────────────</span>
+<span class="kw">export interface</span> <span class="ifc">CampoDTO</span> {
+  codigo:              number
+  claveUi:             string
+  etiquetaUi:          string
+  categoriaComponente: <span class="ifc">TipoComponente</span>
+  orden:               number
+  esObligatorio:       boolean
+  esVisible:           boolean
+  esEditable:          boolean
+  anchoColumnas:       <span class="ifc">ColSpan</span>
+  codigoSeccion?:      number
+  catalogoCodigoUnico?: string
+  propiedadesUi:       <span class="ifc">PropiedadesUI</span>
+  reglasValidacion:    <span class="ifc">ReglaValidacionDTO</span>[]
+  reglasCondicionales: <span class="ifc">ReglaCondicionalDTO</span>[]
+}
+
+<span class="cm">// ── Columnas permitidas (grid de 12) ───────────────────────</span>
+<span class="kw">export type</span> <span class="ifc">ColSpan</span> = 1|2|3|4|5|6|7|8|9|10|11|12
+
+<span class="cm">// ── Sección con sus campos anidados ────────────────────────</span>
+<span class="kw">export interface</span> <span class="ifc">SeccionConCamposDTO</span> {
+  codigo:          number
+  claveUi:         string
+  etiqueta:        string
+  tipo:            string
+  orden:           number
+  codigoSeccionPadre?: number
+  campos:          <span class="ifc">CampoDTO</span>[]
+}
+
+<span class="cm">// ── Versión de plantilla ────────────────────────────────────</span>
+<span class="kw">export interface</span> <span class="ifc">VersionPlantillaDTO</span> {
+  <span class="kw">readonly</span> idVersion:     number
+  <span class="kw">readonly</span> numeroVersion: string
+  <span class="kw">readonly</span> estado:        <span class="ifc">EstadoVersion</span>
+  <span class="kw">readonly</span> vigenciaDesde: string
+  vigenciaHasta?:          string
+  secciones:               <span class="ifc">SeccionConCamposDTO</span>[]
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">src/types/ejecucion.ts — Interfaces de ejecución</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>src/types/ejecucion.ts</span><span class="code-lang lang-ts">TS</span></div>
+<pre><span class="kw">import type</span> { <span class="ifc">EstadoDeclaracion</span> } <span class="kw">from</span> <span class="str">'./enums'</span>
+
+<span class="kw">export interface</span> <span class="ifc">FormularioDeclaracionDTO</span> {
+  <span class="kw">readonly</span> codigo:          number
+  <span class="kw">readonly</span> versionId:       number
+  <span class="kw">readonly</span> rucContribuyente: string
+  <span class="kw">readonly</span> periodoFiscal:   string
+  numeroDeclaracion?:        string
+  estado:                    <span class="ifc">EstadoDeclaracion</span>
+  prioridad:                 <span class="ifc">PrioridadDeclaracion</span>
+  datosJson:                 <span class="ifc">DatosFormulario</span>
+  <span class="kw">readonly</span> fechaCreacion:   string
+}
+
+<span class="cm">// Los datos del formulario son un mapa claveUi → valor</span>
+<span class="kw">export type</span> <span class="ifc">DatosFormulario</span> = Record&lt;string, <span class="ifc">ValorCampo</span>&gt;
+<span class="kw">export type</span> <span class="ifc">ValorCampo</span>      = string | number | boolean | string[] | null
+
+<span class="kw">export type</span> <span class="ifc">PrioridadDeclaracion</span> = <span class="str">'BAJA'</span> | <span class="str">'NORMAL'</span> | <span class="str">'ALTA'</span> | <span class="str">'URGENTE'</span>
+
+<span class="kw">export interface</span> <span class="ifc">ObservacionDTO</span> {
+  codigo:        number
+  tipo:          <span class="str">'GENERAL'</span> | <span class="str">'VALIDACION'</span>
+  mensaje:       string
+  claveUiCampo?: string
+  resuelto:      boolean
+  fechaCreacion: string
+}
+
+<span class="kw">export interface</span> <span class="ifc">AdjuntoDTO</span> {
+  codigo:         number
+  nombreOriginal: string
+  mimeType:       string
+  tamanioBytes:   number
+  hashSha256:     string
+  fechaCarga:     string
+}
+
+<span class="cm">// Estado de autosave del formulario</span>
+<span class="kw">export type</span> <span class="ifc">AutosaveStatus</span> = <span class="str">'idle'</span> | <span class="str">'saving'</span> | <span class="str">'saved'</span> | <span class="str">'error'</span>
+
+<span class="cm">// Resultado de validación client-side</span>
+<span class="kw">export interface</span> <span class="ifc">ErrorValidacion</span> {
+  claveUi:  string
+  mensaje:  string
+  tipo:     <span class="str">'client'</span> | <span class="str">'server'</span>
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FASE 6: VUE DISEÑADOR ═══ -->
+<div class="content-section" id="f6">
+  <div class="section-header">
+    <div class="section-num-big">F6</div>
+    <div class="section-meta">
+      <div class="section-tag">§ Fase 6 · Vue 3 · Diseñador</div>
+      <div class="section-title">VUE 3 DISEÑADOR<br>STORE & CANVAS</div>
+      <div class="section-desc">Store Pinia completamente tipado, canvas drag & drop con vuedraggable, panel de propiedades y autosave.</div>
+    </div>
+  </div>
+  <div class="phase-list">
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--teal)"><div class="phase-index-num">6.1</div><div class="phase-index-layer">Vue · Pinia</div></div>
+        <div class="phase-heading">
+          <div class="phase-title">STORE PINIA TIPADO CON UNDO/REDO</div>
+          <div class="phase-subtitle">Estado del diseñador completamente inferido por TypeScript — sin any</div>
+          <div class="phase-chips"><span class="chip v">Pinia</span><span class="chip v">defineStore</span><span class="chip v">TypeScript strict</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">stores/designer.store.ts</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>src/modules/designer/stores/designer.store.ts</span><span class="code-lang lang-ts">TS</span></div>
+<pre><span class="kw">import</span> { defineStore }    <span class="kw">from</span> <span class="str">'pinia'</span>
+<span class="kw">import</span> { ref, computed }  <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import type</span> {
+  <span class="ifc">CampoDTO</span>, <span class="ifc">SeccionConCamposDTO</span>, <span class="ifc">VersionPlantillaDTO</span>,
+  <span class="ifc">PropiedadesUI</span>, <span class="ifc">ColSpan</span>
+} <span class="kw">from</span> <span class="str">'@/types/disenador'</span>
+<span class="kw">import</span> { <span class="ifc">EstadoVersion</span> } <span class="kw">from</span> <span class="str">'@/types/enums'</span>
+
+<span class="kw">interface</span> <span class="ifc">DesignerSnapshot</span> {
+  secciones: <span class="ifc">SeccionConCamposDTO</span>[]
+  campos:    <span class="ifc">CampoDTO</span>[]
+}
+
+<span class="kw">interface</span> <span class="ifc">DesignerState</span> {
+  version:           <span class="ifc">VersionPlantillaDTO</span> | null
+  secciones:         <span class="ifc">SeccionConCamposDTO</span>[]
+  campos:            <span class="ifc">CampoDTO</span>[]
+  campoSeleccionado: <span class="ifc">CampoDTO</span> | null
+  modoPreview:       boolean
+  hayPendientes:     boolean
+  historial:         <span class="ifc">DesignerSnapshot</span>[]
+  histIdx:           number
+}
+
+<span class="kw">export const</span> useDesignerStore = <span class="fn">defineStore</span>(<span class="str">'designer'</span>, () => {
+  <span class="cm">// ── Estado ──────────────────────────────────────────────</span>
+  <span class="kw">const</span> state = ref&lt;<span class="ifc">DesignerState</span>&gt;({
+    version: null, secciones: [], campos: [],
+    campoSeleccionado: null, modoPreview: false,
+    hayPendientes: false, historial: [], histIdx: -1
+  })
+
+  <span class="cm">// ── Computed ────────────────────────────────────────────</span>
+  <span class="kw">const</span> version           = <span class="fn">computed</span>(() => state.value.version)
+  <span class="kw">const</span> campos            = <span class="fn">computed</span>(() => state.value.campos)
+  <span class="kw">const</span> secciones         = <span class="fn">computed</span>(() => state.value.secciones)
+  <span class="kw">const</span> campoSeleccionado = <span class="fn">computed</span>(() => state.value.campoSeleccionado)
+  <span class="kw">const</span> modoPreview       = <span class="fn">computed</span>(() => state.value.modoPreview)
+  <span class="kw">const</span> esBorrador        = <span class="fn">computed</span>(() =>
+    state.value.version?.estado === <span class="ifc">EstadoVersion</span>.<span class="en">BORRADOR</span>)
+
+  <span class="kw">const</span> arbol = <span class="fn">computed</span>(() =>
+    [...state.value.secciones]
+      .sort((a, b) => a.orden - b.orden)
+      .map(sec => ({
+        ...sec,
+        campos: state.value.campos
+          .filter(c => c.codigoSeccion === sec.codigo)
+          .sort((a, b) => a.orden - b.orden)
+      }))
+  )
+
+  <span class="cm">// ── Actions ──────────────────────────────────────────────</span>
+  <span class="kw">function</span> <span class="fn">cargarVersion</span>(v: <span class="ifc">VersionPlantillaDTO</span>): void {
+    state.value.version   = v
+    state.value.secciones = v.secciones
+    state.value.campos    = v.secciones.flatMap(s => s.campos)
+    state.value.historial = []
+    state.value.histIdx   = -1
+  }
+
+  <span class="kw">function</span> <span class="fn">seleccionarCampo</span>(campo: <span class="ifc">CampoDTO</span> | null): void {
+    state.value.campoSeleccionado = campo
+  }
+
+  <span class="kw">function</span> <span class="fn">snapshot</span>(): void {
+    <span class="kw">const</span> snap: <span class="ifc">DesignerSnapshot</span> = {
+      secciones: structuredClone(state.value.secciones),
+      campos:    structuredClone(state.value.campos),
+    }
+    state.value.historial = state.value.historial.slice(0, state.value.histIdx + 1)
+    state.value.historial.push(snap)
+    state.value.histIdx = state.value.historial.length - 1
+    state.value.hayPendientes = true
+  }
+
+  <span class="kw">function</span> <span class="fn">undo</span>(): void {
+    <span class="kw">if</span> (state.value.histIdx > 0) {
+      state.value.histIdx--
+      <span class="kw">const</span> prev = state.value.historial[state.value.histIdx]
+      state.value.secciones = prev.secciones
+      state.value.campos    = prev.campos
+    }
+  }
+
+  <span class="kw">function</span> <span class="fn">actualizarPropiedades</span>(
+    codigoCampo: number,
+    props: Partial&lt;<span class="ifc">CampoDTO</span>&gt;
+  ): void {
+    <span class="kw">const</span> idx = state.value.campos.findIndex(c => c.codigo === codigoCampo)
+    <span class="kw">if</span> (idx !== -1) {
+      state.value.campos[idx] = { ...state.value.campos[idx], ...props }
+      <span class="fn">snapshot</span>()
+    }
+  }
+
+  <span class="kw">function</span> <span class="fn">actualizarPropiedadesUI</span>(
+    codigoCampo: number,
+    propUi: Partial&lt;<span class="ifc">PropiedadesUI</span>&gt;
+  ): void {
+    <span class="kw">const</span> idx = state.value.campos.findIndex(c => c.codigo === codigoCampo)
+    <span class="kw">if</span> (idx !== -1) {
+      state.value.campos[idx].propiedadesUi = {
+        ...state.value.campos[idx].propiedadesUi, ...propUi
+      }
+      <span class="fn">snapshot</span>()
+    }
+  }
+
+  <span class="kw">function</span> <span class="fn">togglePreview</span>(): void {
+    state.value.modoPreview = !state.value.modoPreview
+    state.value.campoSeleccionado = null
+  }
+
+  <span class="kw">return</span> {
+    <span class="cm">// computed</span>
+    version, campos, secciones, campoSeleccionado,
+    modoPreview, esBorrador, arbol,
+    hayPendientes: <span class="fn">computed</span>(() => state.value.hayPendientes),
+    <span class="cm">// actions</span>
+    cargarVersion, seleccionarCampo, snapshot, undo,
+    actualizarPropiedades, actualizarPropiedadesUI, togglePreview,
+    setHayPendientes: (v: boolean) => { state.value.hayPendientes = v }
+  }
+})</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">AUTOSAVE TIPADO CON useDebounceFn</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>composables/useAutosave.ts</span><span class="code-lang lang-ts">TS</span></div>
+<pre><span class="kw">import</span> { ref, watch, onMounted }    <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import</span> { useDebounceFn }           <span class="kw">from</span> <span class="str">'@vueuse/core'</span>
+<span class="kw">import</span> { useDesignerStore }        <span class="kw">from</span> <span class="str">'../stores/designer.store'</span>
+<span class="kw">import type</span> { <span class="ifc">AutosaveStatus</span> }     <span class="kw">from</span> <span class="str">'@/types/ejecucion'</span>
+<span class="kw">import</span> { disenadorApi }            <span class="kw">from</span> <span class="str">'@/api/disenador.api'</span>
+
+<span class="kw">const</span> DRAFT_KEY = (id: number): string => `draft_version_${id}`
+
+<span class="kw">export function</span> <span class="fn">useAutosave</span>(versionId: number) {
+  <span class="kw">const</span> store  = <span class="fn">useDesignerStore</span>()
+  <span class="kw">const</span> status = ref&lt;<span class="ifc">AutosaveStatus</span>&gt;(<span class="str">'idle'</span>)
+
+  <span class="kw">const</span> guardar = <span class="fn">useDebounceFn</span>(async (): Promise&lt;void&gt; => {
+    <span class="kw">if</span> (!store.hayPendientes.value) <span class="kw">return</span>
+    status.value = <span class="str">'saving'</span>
+    <span class="kw">try</span> {
+      <span class="kw">await</span> disenadorApi.<span class="fn">guardarEstructura</span>(versionId, {
+        secciones: store.secciones.value,
+        campos:    store.campos.value
+      })
+      status.value = <span class="str">'saved'</span>
+      store.<span class="fn">setHayPendientes</span>(<span class="kw">false</span>)
+      localStorage.<span class="fn">removeItem</span>(<span class="fn">DRAFT_KEY</span>(versionId))
+    } <span class="kw">catch</span> (err: unknown) {
+      status.value = <span class="str">'error'</span>
+      localStorage.<span class="fn">setItem</span>(<span class="fn">DRAFT_KEY</span>(versionId), JSON.<span class="fn">stringify</span>({
+        secciones: store.secciones.value,
+        campos:    store.campos.value
+      }))
+      console.error(<span class="str">'Autosave falló:'</span>, err)
+    }
+  }, 2500)
+
+  <span class="fn">watch</span>(() => store.hayPendientes.value, (pending) => {
+    <span class="kw">if</span> (pending) <span class="fn">guardar</span>()
+  })
+
+  <span class="fn">onMounted</span>((): void => {
+    <span class="kw">const</span> raw = localStorage.<span class="fn">getItem</span>(<span class="fn">DRAFT_KEY</span>(versionId))
+    <span class="kw">if</span> (raw) {
+      <span class="cm">// TODO: mostrar modal de restauración</span>
+      console.warn(<span class="str">'Existe un borrador local sin guardar'</span>)
+    }
+  })
+
+  <span class="kw">return</span> { status, guardar } <span class="kw">as const</span>
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FASE 7: MOTOR FORMULARIOS ═══ -->
+<div class="content-section" id="f7">
+  <div class="section-header">
+    <div class="section-num-big">F7</div>
+    <div class="section-meta">
+      <div class="section-tag">§ Fase 7 · Vue 3 · Motor Forms</div>
+      <div class="section-title">MOTOR DE FORMULARIOS<br>VEEVALIDATE & CONDICIONALES</div>
+      <div class="section-desc">DynamicField.vue con tipos estrictos, VeeValidate 4 con reglas compiladas desde BD, composable de condicionales reactivo.</div>
+    </div>
+  </div>
+  <div class="phase-list">
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--teal)"><div class="phase-index-num">7.1</div><div class="phase-index-layer">Vue · DynamicField</div></div>
+        <div class="phase-heading">
+          <div class="phase-title">DYNAMICFIELD.VUE — MOTOR RAÍZ</div>
+          <div class="phase-subtitle">Mapeo TipoComponente → AsyncComponent con defineProps tipado</div>
+          <div class="phase-chips"><span class="chip v">defineAsyncComponent</span><span class="chip v">defineProps</span><span class="chip v">TipoComponente</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">DynamicField.vue — componente raíz del motor</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>components/motor/DynamicField.vue</span><span class="code-lang lang-vue">VUE</span></div>
+<pre><span class="kw">&lt;script setup lang="ts"&gt;</span>
+<span class="kw">import</span> { defineAsyncComponent, computed, type Component } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import type</span> { <span class="ifc">CampoDTO</span>, <span class="ifc">ValorCampo</span> }   <span class="kw">from</span> <span class="str">'@/types/disenador'</span>
+<span class="kw">import</span> { <span class="ifc">TipoComponente</span> }               <span class="kw">from</span> <span class="str">'@/types/enums'</span>
+
+<span class="cm">// ── Props con tipos estrictos ──────────────────────────────</span>
+<span class="kw">interface</span> <span class="ifc">Props</span> {
+  campo:       <span class="ifc">CampoDTO</span>
+  modelValue:  <span class="ifc">ValorCampo</span>
+  error?:      string
+  readonly?:   boolean
+  disabled?:   boolean
+}
+
+<span class="kw">const</span> props = <span class="fn">defineProps</span>&lt;<span class="ifc">Props</span>&gt;()
+<span class="kw">const</span> emit  = <span class="fn">defineEmits</span>&lt;{
+  <span class="str">'update:modelValue'</span>: [value: <span class="ifc">ValorCampo</span>]
+  <span class="str">'blur'</span>:              []
+}&gt;()
+
+<span class="cm">// ── Mapa TipoComponente → AsyncComponent ──────────────────</span>
+<span class="kw">const</span> FIELD_MAP: Record&lt;<span class="ifc">TipoComponente</span>, () => Promise&lt;Component&gt;&gt; = {
+  [<span class="ifc">TipoComponente</span>.<span class="en">INPUT_TEXT</span>]:    () => <span class="kw">import</span>(<span class="str">'./fields/TextInput.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">TEXTAREA</span>]:      () => <span class="kw">import</span>(<span class="str">'./fields/TextArea.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">INPUT_NUMBER</span>]:  () => <span class="kw">import</span>(<span class="str">'./fields/NumberInput.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">DATE_PICKER</span>]:   () => <span class="kw">import</span>(<span class="str">'./fields/DatePicker.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">SELECT</span>]:        () => <span class="kw">import</span>(<span class="str">'./fields/SelectField.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">RADIO</span>]:         () => <span class="kw">import</span>(<span class="str">'./fields/RadioGroup.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">CHECKBOX_GROUP</span>]:() => <span class="kw">import</span>(<span class="str">'./fields/CheckboxGroup.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">CHECKBOX</span>]:      () => <span class="kw">import</span>(<span class="str">'./fields/CheckboxField.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">FILE_UPLOAD</span>]:   () => <span class="kw">import</span>(<span class="str">'./fields/FileUpload.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">PANEL</span>]:         () => <span class="kw">import</span>(<span class="str">'./fields/PanelField.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">GRID_TABLE</span>]:    () => <span class="kw">import</span>(<span class="str">'./fields/GridTable.vue'</span>),
+  [<span class="ifc">TipoComponente</span>.<span class="en">DIVIDER</span>]:       () => <span class="kw">import</span>(<span class="str">'./fields/DividerField.vue'</span>),
+}
+
+<span class="kw">const</span> fieldComponent = <span class="fn">computed</span>(() =>
+  <span class="fn">defineAsyncComponent</span>({
+    loader: FIELD_MAP[props.campo.categoriaComponente]
+      ?? FIELD_MAP[<span class="ifc">TipoComponente</span>.<span class="en">INPUT_TEXT</span>],
+    loadingComponent: LoadingField,
+    errorComponent: ErrorField,
+  })
+)
+<span class="kw">&lt;/script&gt;</span>
+
+<span class="kw">&lt;template&gt;</span>
+  &lt;div
+    :class="[`col-span-${campo.anchoColumnas}`,'field-wrapper']"
+    :data-campo="campo.claveUi"
+  &gt;
+    &lt;label :for="campo.claveUi" class="field-label"&gt;
+      {{ campo.etiquetaUi }}
+      &lt;span v-if="campo.esObligatorio" class="required-mark" aria-hidden="true"&gt;*&lt;/span&gt;
+    &lt;/label&gt;
+
+    &lt;component
+      :is="fieldComponent"
+      :id="campo.claveUi"
+      :name="campo.claveUi"
+      :config="campo.propiedadesUi"
+      :model-value="modelValue"
+      :readonly="readonly ?? false"
+      :disabled="disabled ?? false"
+      :aria-invalid="!!error"
+      @update:model-value="emit('update:modelValue', $event)"
+      @blur="emit('blur')"
+    /&gt;
+
+    &lt;Transition name="err"&gt;
+      &lt;p v-if="error" class="field-error" role="alert"&gt;{{ error }}&lt;/p&gt;
+    &lt;/Transition&gt;
+  &lt;/div&gt;
+<span class="kw">&lt;/template&gt;</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--teal)"><div class="phase-index-num">7.2</div><div class="phase-index-layer">Vue · VeeValidate</div></div>
+        <div class="phase-heading">
+          <div class="phase-title">VEEVALIDATE 4 — REGLAS DESDE BD</div>
+          <div class="phase-subtitle">useField + useForm con reglas compiladas en runtime desde TipoReglaValidacion</div>
+          <div class="phase-chips"><span class="chip v">useForm</span><span class="chip v">useField</span><span class="chip v">defineRule</span><span class="chip v">TipoReglaValidacion</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">REGISTRO GLOBAL DE REGLAS VeeValidate</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>plugins/veevalidate.ts</span><span class="code-lang lang-ts">TS</span></div>
+<pre><span class="kw">import</span> { defineRule, configure } <span class="kw">from</span> <span class="str">'vee-validate'</span>
+<span class="kw">import</span> { <span class="ifc">TipoReglaValidacion</span> }  <span class="kw">from</span> <span class="str">'@/types/enums'</span>
+
+<span class="cm">// ── Definir reglas reutilizables globales ──────────────────</span>
+<span class="fn">defineRule</span>(<span class="ifc">TipoReglaValidacion</span>.<span class="en">REQUIRED</span>,
+  (value: unknown): boolean | string =>
+    (value !== null && value !== undefined && value !== <span class="str">''</span>)
+    || <span class="str">'Este campo es requerido'</span>
+)
+
+<span class="fn">defineRule</span>(<span class="ifc">TipoReglaValidacion</span>.<span class="en">MIN_LENGTH</span>,
+  (value: string, [min]: [number], ctx): boolean | string =>
+    value.length >= min || `Mínimo ${min} caracteres`
+)
+
+<span class="fn">defineRule</span>(<span class="ifc">TipoReglaValidacion</span>.<span class="en">MAX_LENGTH</span>,
+  (value: string, [max]: [number]): boolean | string =>
+    value.length <= max || `Máximo ${max} caracteres`
+)
+
+<span class="fn">defineRule</span>(<span class="ifc">TipoReglaValidacion</span>.<span class="en">REGEX</span>,
+  (value: string, [pattern]: [string], ctx): boolean | string => {
+    <span class="kw">const</span> re = <span class="kw">new</span> RegExp(pattern)
+    <span class="kw">return</span> re.<span class="fn">test</span>(value) || <span class="str">'Formato inválido'</span>
+  }
+)
+
+<span class="fn">defineRule</span>(<span class="ifc">TipoReglaValidacion</span>.<span class="en">MIN_VALUE</span>,
+  (value: number, [min]: [number]): boolean | string =>
+    value >= min || `El valor mínimo es ${min}`
+)
+
+<span class="fn">defineRule</span>(<span class="ifc">TipoReglaValidacion</span>.<span class="en">MAX_VALUE</span>,
+  (value: number, [max]: [number]): boolean | string =>
+    value <= max || `El valor máximo es ${max}`
+)
+
+<span class="fn">configure</span>({
+  generateMessage: (ctx) => `El campo ${ctx.field} es inválido`,
+  validateOnInput: true,
+  validateOnBlur:  true,
+})</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">COMPOSABLE useFormularioDinamico — VeeValidate + reglas de BD</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>composables/useFormularioDinamico.ts</span><span class="code-lang lang-ts">TS</span></div>
+<pre><span class="kw">import</span> { useForm, useField }     <span class="kw">from</span> <span class="str">'vee-validate'</span>
+<span class="kw">import</span> { computed, type Ref }   <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import type</span> {
+  <span class="ifc">CampoDTO</span>, <span class="ifc">DatosFormulario</span>,
+  <span class="ifc">ReglaValidacionDTO</span>, <span class="ifc">ErrorValidacion</span>
+} <span class="kw">from</span> <span class="str">'@/types'</span>
+<span class="kw">import</span> { <span class="ifc">TipoReglaValidacion</span> } <span class="kw">from</span> <span class="str">'@/types/enums'</span>
+
+<span class="cm">// Convierte ReglaValidacionDTO[] → objeto de reglas VeeValidate</span>
+<span class="kw">function</span> <span class="fn">compilarReglas</span>(
+  campo: <span class="ifc">CampoDTO</span>
+): Record&lt;string, unknown&gt; {
+  <span class="kw">const</span> reglas: Record&lt;string, unknown&gt; = {}
+
+  <span class="kw">if</span> (campo.esObligatorio) {
+    reglas[<span class="ifc">TipoReglaValidacion</span>.<span class="en">REQUIRED</span>] = <span class="kw">true</span>
+  }
+
+  campo.reglasValidacion
+    .sort((a, b) => a.ordenEjecucion - b.ordenEjecucion)
+    .forEach((regla: <span class="ifc">ReglaValidacionDTO</span>) => {
+      <span class="kw">const</span> params = regla.parametros ?? {}
+      <span class="kw">switch</span> (regla.tipo) {
+        <span class="kw">case</span> <span class="ifc">TipoReglaValidacion</span>.<span class="en">MIN_LENGTH</span>:
+          reglas[<span class="ifc">TipoReglaValidacion</span>.<span class="en">MIN_LENGTH</span>] = [params[<span class="str">'min'</span>] as number]
+          <span class="kw">break</span>
+        <span class="kw">case</span> <span class="ifc">TipoReglaValidacion</span>.<span class="en">MAX_LENGTH</span>:
+          reglas[<span class="ifc">TipoReglaValidacion</span>.<span class="en">MAX_LENGTH</span>] = [params[<span class="str">'max'</span>] as number]
+          <span class="kw">break</span>
+        <span class="kw">case</span> <span class="ifc">TipoReglaValidacion</span>.<span class="en">REGEX</span>:
+          reglas[<span class="ifc">TipoReglaValidacion</span>.<span class="en">REGEX</span>] = [regla.expresion]
+          <span class="kw">break</span>
+        <span class="kw">case</span> <span class="ifc">TipoReglaValidacion</span>.<span class="en">MIN_VALUE</span>:
+          reglas[<span class="ifc">TipoReglaValidacion</span>.<span class="en">MIN_VALUE</span>] = [params[<span class="str">'min'</span>] as number]
+          <span class="kw">break</span>
+        <span class="kw">case</span> <span class="ifc">TipoReglaValidacion</span>.<span class="en">MAX_VALUE</span>:
+          reglas[<span class="ifc">TipoReglaValidacion</span>.<span class="en">MAX_VALUE</span>] = [params[<span class="str">'max'</span>] as number]
+          <span class="kw">break</span>
+      }
+    })
+
+  <span class="kw">return</span> reglas
+}
+
+<span class="kw">export function</span> <span class="fn">useFormularioDinamico</span>(campos: Ref&lt;<span class="ifc">CampoDTO</span>[]&gt;) {
+  <span class="kw">const</span> { handleSubmit, errors, values, resetForm } = <span class="fn">useForm</span>&lt;<span class="ifc">DatosFormulario</span>&gt;()
+
+  <span class="cm">// Mapa campo.claveUi → { value, errorMessage }</span>
+  <span class="kw">const</span> fieldControls = <span class="fn">computed</span>(() => {
+    <span class="kw">return</span> Object.fromEntries(
+      campos.value.map((campo: <span class="ifc">CampoDTO</span>) => {
+        <span class="kw">const</span> { value, errorMessage } = <span class="fn">useField</span>&lt;unknown&gt;(
+          campo.claveUi,
+          <span class="fn">compilarReglas</span>(campo),
+          { label: campo.etiquetaUi }
+        )
+        <span class="kw">return</span> [campo.claveUi, { value, errorMessage }]
+      })
+    )
+  })
+
+  <span class="kw">const</span> enviar = <span class="fn">handleSubmit</span>(async (datos: <span class="ifc">DatosFormulario</span>) => {
+    <span class="kw">return</span> datos
+  })
+
+  <span class="kw">const</span> erroresServidor = (
+    obs: <span class="ifc">ErrorValidacion</span>[]
+  ): Record&lt;string, string&gt; =>
+    Object.fromEntries(obs.map(e => [e.claveUi, e.mensaje]))
+
+  <span class="kw">return</span> { fieldControls, errors, values, enviar, resetForm, erroresServidor } <span class="kw">as const</span>
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">03</div>
+            <div class="step-body">
+              <div class="step-title">COMPOSABLE useCondicionales — visibilidad reactiva tipada</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>composables/useCondicionales.ts</span><span class="code-lang lang-ts">TS</span></div>
+<pre><span class="kw">import</span> { computed, type Ref } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import type</span> {
+  <span class="ifc">CampoDTO</span>, <span class="ifc">DatosFormulario</span>,
+  <span class="ifc">CondicionalDetalleDTO</span>
+} <span class="kw">from</span> <span class="str">'@/types/disenador'</span>
+<span class="kw">import</span> {
+  <span class="ifc">AccionCondicional</span>, <span class="ifc">OperadorCondicional</span>, <span class="ifc">ConectorLogico</span>
+} <span class="kw">from</span> <span class="str">'@/types/enums'</span>
+
+<span class="kw">type</span> <span class="ifc">VisibilidadMapa</span> = Record&lt;string, boolean&gt;
+
+<span class="kw">function</span> <span class="fn">evaluarCondicion</span>(
+  cond:   <span class="ifc">CondicionalDetalleDTO</span>,
+  datos:  <span class="ifc">DatosFormulario</span>
+): boolean {
+  <span class="kw">const</span> val = datos[cond.claveUiCampoEvaluado]
+  <span class="kw">const</span> ref = cond.valorReferencia
+
+  <span class="kw">switch</span> (cond.operador) {
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">EQ</span>:        <span class="kw">return</span> String(val) === ref
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">NEQ</span>:       <span class="kw">return</span> String(val) !== ref
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">GT</span>:        <span class="kw">return</span> Number(val) > Number(ref)
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">GTE</span>:       <span class="kw">return</span> Number(val) >= Number(ref)
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">LT</span>:        <span class="kw">return</span> Number(val) < Number(ref)
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">LTE</span>:       <span class="kw">return</span> Number(val) <= Number(ref)
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">CONTAINS</span>:  <span class="kw">return</span> String(val).includes(ref ?? <span class="str">''</span>)
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">IN</span>:
+      <span class="kw">return</span> (ref?.split(<span class="str">','</span>) ?? []).includes(String(val))
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">EMPTY</span>:     <span class="kw">return</span> !val || val === <span class="str">''</span>
+    <span class="kw">case</span> <span class="ifc">OperadorCondicional</span>.<span class="en">NOT_EMPTY</span>: <span class="kw">return</span> !!val && val !== <span class="str">''</span>
+    <span class="kw">default</span>: <span class="kw">return false</span>
+  }
+}
+
+<span class="kw">export function</span> <span class="fn">useCondicionales</span>(
+  campos:   Ref&lt;<span class="ifc">CampoDTO</span>[]&gt;,
+  formData: Ref&lt;<span class="ifc">DatosFormulario</span>&gt;
+) {
+  <span class="kw">const</span> visibilidad = <span class="fn">computed</span>((): <span class="ifc">VisibilidadMapa</span> => {
+    <span class="kw">const</span> mapa: <span class="ifc">VisibilidadMapa</span> = {}
+
+    campos.value.forEach((campo: <span class="ifc">CampoDTO</span>) => {
+      mapa[campo.claveUi] = campo.esVisible
+
+      campo.reglasCondicionales.forEach(regla => {
+        <span class="kw">const</span> resultados = regla.condiciones.map(c =>
+          <span class="fn">evaluarCondicion</span>(c, formData.value)
+        )
+        <span class="kw">const</span> cumple = regla.conectorLogico === <span class="ifc">ConectorLogico</span>.<span class="en">AND</span>
+          ? resultados.every(Boolean)
+          : resultados.some(Boolean)
+
+        <span class="kw">if</span> (cumple) {
+          <span class="kw">switch</span> (regla.accion) {
+            <span class="kw">case</span> <span class="ifc">AccionCondicional</span>.<span class="en">SHOW</span>:  mapa[campo.claveUi] = <span class="kw">true</span>;  <span class="kw">break</span>
+            <span class="kw">case</span> <span class="ifc">AccionCondicional</span>.<span class="en">HIDE</span>:  mapa[campo.claveUi] = <span class="kw">false</span>; <span class="kw">break</span>
+          }
+        }
+      })
+    })
+    <span class="kw">return</span> mapa
+  })
+
+  <span class="kw">return</span> { visibilidad } <span class="kw">as const</span>
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FASE 8: DEPLOY ═══ -->
+<div class="content-section" id="f8">
+  <div class="section-header">
+    <div class="section-num-big">F8</div>
+    <div class="section-meta">
+      <div class="section-tag">§ Fase 8 · Tests & Deploy</div>
+      <div class="section-title">DEPLOY, TESTS<br>& OPTIMIZACIÓN</div>
+      <div class="section-desc">Docker Compose de desarrollo, tests unitarios con Vitest tipados, E2E con Playwright y configuraciones Oracle para producción.</div>
+    </div>
+  </div>
+  <div class="phase-list">
+    <div class="phase open">
+      <div class="phase-trigger" onclick="tog(this)">
+        <div class="phase-index" style="color:var(--lilac)"><div class="phase-index-num">8.1</div><div class="phase-index-layer">Tests · Vitest</div></div>
+        <div class="phase-heading">
+          <div class="phase-title">TESTS UNITARIOS VUE — VITEST</div>
+          <div class="phase-subtitle">Composables useCondicionales y useFormularioDinamico con tipos estrictos</div>
+          <div class="phase-chips"><span class="chip t">Vitest</span><span class="chip t">@vue/test-utils</span></div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-bullet">01</div>
+            <div class="step-body">
+              <div class="step-title">Test del motor de condicionales</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>tests/useCondicionales.spec.ts</span><span class="code-lang lang-ts">TS</span></div>
+<pre><span class="kw">import</span> { describe, it, expect } <span class="kw">from</span> <span class="str">'vitest'</span>
+<span class="kw">import</span> { ref }                  <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import</span> { useCondicionales }     <span class="kw">from</span> <span class="str">'@/composables/useCondicionales'</span>
+<span class="kw">import type</span> { <span class="ifc">CampoDTO</span>, <span class="ifc">DatosFormulario</span> } <span class="kw">from</span> <span class="str">'@/types/disenador'</span>
+<span class="kw">import</span> {
+  <span class="ifc">TipoComponente</span>, <span class="ifc">AccionCondicional</span>,
+  <span class="ifc">OperadorCondicional</span>, <span class="ifc">ConectorLogico</span>
+} <span class="kw">from</span> <span class="str">'@/types/enums'</span>
+
+<span class="kw">const</span> <span class="fn">makeCampo</span> = (overrides: Partial&lt;<span class="ifc">CampoDTO</span>&gt;): <span class="ifc">CampoDTO</span> => ({
+  codigo: 1, claveUi: <span class="str">'campo_b'</span>, etiquetaUi: <span class="str">'Campo B'</span>,
+  categoriaComponente: <span class="ifc">TipoComponente</span>.<span class="en">INPUT_TEXT</span>,
+  orden: 1, esObligatorio: false, esVisible: true,
+  esEditable: true, anchoColumnas: 12,
+  propiedadesUi: {}, reglasValidacion: [],
+  reglasCondicionales: [], ...overrides
+})
+
+<span class="fn">describe</span>(<span class="str">'useCondicionales'</span>, () => {
+  <span class="fn">it</span>(<span class="str">'HIDE oculta el campo cuando la condición EQ se cumple'</span>, () => {
+    <span class="kw">const</span> campos = ref&lt;<span class="ifc">CampoDTO</span>[]&gt;([<span class="fn">makeCampo</span>({
+      reglasCondicionales: [{
+        accion:         <span class="ifc">AccionCondicional</span>.<span class="en">HIDE</span>,
+        conectorLogico: <span class="ifc">ConectorLogico</span>.<span class="en">AND</span>,
+        orden: 1,
+        condiciones: [{
+          claveUiCampoEvaluado: <span class="str">'tipo_contribuyente'</span>,
+          operador:             <span class="ifc">OperadorCondicional</span>.<span class="en">EQ</span>,
+          valorReferencia:      <span class="str">'PERSONA_NATURAL'</span>
+        }]
+      }]
+    })])
+    <span class="kw">const</span> formData = ref&lt;<span class="ifc">DatosFormulario</span>&gt;({ tipo_contribuyente: <span class="str">'PERSONA_NATURAL'</span> })
+    <span class="kw">const</span> { visibilidad } = <span class="fn">useCondicionales</span>(campos, formData)
+
+    expect(visibilidad.value[<span class="str">'campo_b'</span>]).toBe(<span class="kw">false</span>)
+  })
+
+  <span class="fn">it</span>(<span class="str">'NO oculta cuando el valor no coincide'</span>, () => {
+    <span class="kw">const</span> campos = ref&lt;<span class="ifc">CampoDTO</span>[]&gt;([<span class="fn">makeCampo</span>({
+      reglasCondicionales: [{
+        accion: <span class="ifc">AccionCondicional</span>.<span class="en">HIDE</span>, conectorLogico: <span class="ifc">ConectorLogico</span>.<span class="en">AND</span>, orden: 1,
+        condiciones: [{ claveUiCampoEvaluado: <span class="str">'tipo_contribuyente'</span>,
+          operador: <span class="ifc">OperadorCondicional</span>.<span class="en">EQ</span>, valorReferencia: <span class="str">'PERSONA_NATURAL'</span> }]
+      }]
+    })])
+    <span class="kw">const</span> formData = ref&lt;<span class="ifc">DatosFormulario</span>&gt;({ tipo_contribuyente: <span class="str">'SOCIEDAD'</span> })
+    <span class="kw">const</span> { visibilidad } = <span class="fn">useCondicionales</span>(campos, formData)
+
+    expect(visibilidad.value[<span class="str">'campo_b'</span>]).toBe(<span class="kw">true</span>)
+  })
+})</pre>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-bullet">02</div>
+            <div class="step-body">
+              <div class="step-title">DOCKER COMPOSE DE DESARROLLO</div>
+              <div class="code-wrap">
+                <div class="code-header"><span>docker-compose.dev.yml</span><span class="code-lang lang-yaml">YAML</span></div>
+<pre><span class="at">version</span>: <span class="str">'3.9'</span>
+<span class="at">services</span>:
+  <span class="at">oracle</span>:
+    image: gvenzl/oracle-xe:21-slim-faststart
+    environment:
+      ORACLE_PASSWORD: DevPass123
+      ORACLE_DATABASE: DYNFORMS
+    ports: [<span class="str">"1521:1521"</span>]
+    volumes: [oracle_data:/opt/oracle/oradata]
+
+  <span class="at">minio</span>:
+    image: minio/minio
+    command: server /data --console-address :9001
+    environment: { MINIO_ROOT_USER: minio, MINIO_ROOT_PASSWORD: minio123 }
+    ports: [<span class="str">"9000:9000"</span>, <span class="str">"9001:9001"</span>]
+
+  <span class="at">redis</span>:
+    image: redis:7-alpine
+    ports: [<span class="str">"6379:6379"</span>]
+
+  <span class="at">backend</span>:
+    image: quarkus/dynforms-jvm
+    build: { context: ./backend, dockerfile: src/main/docker/Dockerfile.jvm }
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:oracle:thin:@oracle:1521/DYNFORMS
+      QUARKUS_DATASOURCE_PASSWORD: DevPass123
+      MINIO_ENDPOINT: http://minio:9000
+      QUARKUS_REDIS_HOSTS: redis://redis:6379
+    ports: [<span class="str">"8080:8080"</span>]
+    depends_on: [oracle, minio, redis]
+
+  <span class="at">frontend</span>:
+    build: { context: ./frontend, target: dev }
+    volumes: [./frontend:/app, /app/node_modules]
+    ports: [<span class="str">"5173:5173"</span>]
+    environment: { VITE_API_URL: http://localhost:8080 }
+    depends_on: [backend]
+
+<span class="at">volumes</span>:
+  oracle_data:</pre>
+              </div>
+              <div class="callout tip">
+                <span class="callout-i">💡</span>
+                Para desarrollo nativo de Quarkus sin Docker, usar <code>quarkus dev</code> con
+                <code>%dev.quarkus.datasource.jdbc.url</code> apuntando al contenedor Oracle local.
+                Hot reload funciona tanto en backend como frontend.
+              </div>
+              <div class="sub-block">
+                <div class="sub-title">Optimizaciones Oracle Producción</div>
+                <ul class="sub-list">
+                  <li><strong>Particionamiento:</strong> FORMULARIO_DECLARACION por PERIODO_FISCAL (RANGE MONTHLY)</li>
+                  <li><strong>JSON Index:</strong> CREATE SEARCH INDEX sobre DATOS_JSON para filtros frecuentes</li>
+                  <li><strong>Result Cache:</strong> <code>/*+ RESULT_CACHE */</code> en estructura de plantillas publicadas</li>
+                  <li><strong>HikariCP:</strong> max-size=20, connection-timeout=5000, idle-timeout=300000</li>
+                  <li><strong>Quarkus Native:</strong> Compilar a nativo con GraalVM para arranque &lt;50ms en containers</li>
+                  <li><strong>AWR Reports:</strong> Revisar semanalmente TOP SQL por buffer gets y elapsed time</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <span>DYNFORMS · Quarkus 3 + Vue 3 TypeScript + VeeValidate + Oracle 19c</span>
+  <span>v2.0 · Feb 2026</span>
+</footer>
+
+</main>
+</div>
+
+<script>
+function tog(trigger) {
+  trigger.closest('.phase').classList.toggle('open')
+  const chev = trigger.querySelector('.phase-chevron')
+  if (chev) chev.textContent = trigger.closest('.phase').classList.contains('open') ? '▾' : '▸'
+}
+
+// Sidebar active link on scroll
+const ids = [...document.querySelectorAll('[id]')].filter(el => el.id)
+const links = [...document.querySelectorAll('.sidebar-link')]
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id))
+    }
+  })
+}, { rootMargin: '-20% 0px -70% 0px' })
+ids.forEach(el => obs.observe(el))
+</script>
+</body>
+</html>

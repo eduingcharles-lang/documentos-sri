@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DynForms · Arquitectura & Guía</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #0f1117;
+    --bg3: #151820;
+    --surface: #1a1e28;
+    --surface2: #222738;
+    --border: #2a2f40;
+    --accent: #5b8cff;
+    --accent2: #8b5cf6;
+    --accent3: #06d6a0;
+    --accent4: #f97316;
+    --accent5: #f43f5e;
+    --gold: #fbbf24;
+    --text: #e4e8f0;
+    --text2: #8892a4;
+    --text3: #535a6b;
+    --radius: 10px;
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'Sora', sans-serif;
+    --font-code: 'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,12,16,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0;
+    padding: 0 2rem; height: 58px;
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    color: var(--accent);
+    letter-spacing: -.5px;
+    margin-right: 2.5rem;
+    white-space: nowrap;
+  }
+  .nav-tabs {
+    display: flex; gap: 0; list-style: none; height: 100%; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tabs li a {
+    display: flex; align-items: center; gap: 7px;
+    height: 100%; padding: 0 1.1rem;
+    color: var(--text2); text-decoration: none;
+    font-size: 0.82rem; font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all .2s; white-space: nowrap;
+  }
+  .nav-tabs li a:hover, .nav-tabs li a.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  .nav-tabs li a .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(91,140,255,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 30% at 80% 100%, rgba(139,92,246,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(91,140,255,0.1); border: 1px solid rgba(91,140,255,0.25);
+    color: var(--accent); padding: 5px 14px; border-radius: 100px;
+    font-size: 0.75rem; font-weight: 500; letter-spacing: .5px;
+    margin-bottom: 1.5rem; text-transform: uppercase;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    line-height: 1.08;
+    letter-spacing: -.5px;
+    margin-bottom: 1rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero p {
+    color: var(--text2); font-size: 1.05rem;
+    max-width: 600px; margin: 0 auto 2.5rem;
+  }
+  .hero-tags {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    max-width: 600px; margin: 0 auto;
+  }
+  .tag {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text2); padding: 4px 12px; border-radius: 100px;
+    font-size: 0.75rem; font-family: var(--font-code);
+  }
+
+  /* ─── SECTIONS ─── */
+  section {
+    max-width: 1300px; margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+  .section-label {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 2rem;
+  }
+  .section-num {
+    font-family: var(--font-code);
+    font-size: 0.72rem; color: var(--text3);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+  h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    margin-bottom: 0.5rem;
+    line-height: 1.15;
+  }
+  .subtitle {
+    color: var(--text2); margin-bottom: 2rem;
+    max-width: 700px;
+  }
+
+  /* ─── ALERT BOXES ─── */
+  .alert {
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    border: 1px solid;
+    font-size: 0.88rem;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .alert-icon { flex-shrink: 0; margin-top: 2px; font-size: 1rem; }
+  .alert.warn { background: rgba(249,115,22,.07); border-color: rgba(249,115,22,.3); color: #fdba74; }
+  .alert.ok   { background: rgba(6,214,160,.07);  border-color: rgba(6,214,160,.3);  color: #5eead4; }
+  .alert.info { background: rgba(91,140,255,.07); border-color: rgba(91,140,255,.3); color: #93c5fd; }
+  .alert strong { font-weight: 600; }
+
+  /* ─── SQL CARDS ─── */
+  .sql-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+    gap: 1.5rem;
+  }
+  @media(max-width:640px){ .sql-grid { grid-template-columns: 1fr; } }
+
+  .sql-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .sql-card-header {
+    padding: .75rem 1.2rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .sql-card-header span { font-family: var(--font-code); font-size: 0.8rem; color: var(--text2); }
+  .badge {
+    padding: 2px 9px; border-radius: 100px;
+    font-size: 0.7rem; font-weight: 600; font-family: var(--font-code);
+  }
+  .badge-warn  { background: rgba(249,115,22,.15); color: #fb923c; }
+  .badge-fix   { background: rgba(6,214,160,.15);  color: #34d399; }
+  .badge-new   { background: rgba(91,140,255,.15); color: #818cf8; }
+  .badge-ok    { background: rgba(100,100,120,.15); color: var(--text2); }
+  pre {
+    background: #080a0f;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    font-family: var(--font-code);
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #c9d1d9;
+  }
+  .kw  { color: #79c0ff; }
+  .fn  { color: #d2a8ff; }
+  .str { color: #a5d6ff; }
+  .cm  { color: #545d6a; font-style: italic; }
+  .tp  { color: #ffa657; }
+  .num { color: #79c0ff; }
+
+  /* ─── ER DIAGRAM ─── */
+  .er-canvas-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    overflow-x: auto;
+  }
+  .er-canvas {
+    display: grid;
+    grid-template-columns: repeat(5, 200px);
+    gap: 1.5rem 2.5rem;
+    min-width: 1100px;
+    position: relative;
+  }
+
+  .er-group {
+    display: flex; flex-direction: column; gap: .75rem;
+  }
+  .er-group-title {
+    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--text3); font-family: var(--font-code);
+    padding-bottom: .3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: .1rem;
+  }
+  .er-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.72rem;
+    transition: border-color .2s, transform .15s;
+    cursor: default;
+  }
+  .er-table:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    z-index: 10;
+    position: relative;
+  }
+  .er-table-head {
+    padding: .45rem .75rem;
+    font-family: var(--font-code);
+    font-size: 0.7rem;
+    font-weight: 500;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .er-table-head .er-pk { font-size: 0.6rem; opacity: .6; }
+  .er-table-body { border-top: 1px solid var(--border); }
+  .er-col {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .28rem .75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    gap: 8px;
+  }
+  .er-col:last-child { border-bottom: none; }
+  .er-col-name { color: var(--text2); font-family: var(--font-code); }
+  .er-col-name.pk { color: var(--gold); }
+  .er-col-name.fk { color: var(--accent); }
+  .er-col-type { color: var(--text3); font-size: 0.62rem; white-space: nowrap; }
+  .er-col-badge {
+    font-size: 0.55rem; padding: 1px 5px; border-radius: 3px;
+    font-weight: 600; letter-spacing: .3px;
+  }
+  .pk-badge { background: rgba(251,191,36,.15); color: var(--gold); }
+  .fk-badge { background: rgba(91,140,255,.15); color: var(--accent); }
+  .idx-badge { background: rgba(6,214,160,.12); color: var(--accent3); }
+
+  /* Color themes per module */
+  .m0 .er-table-head { background: rgba(244,63,94,.12); color: #fb7185; }
+  .m1 .er-table-head { background: rgba(6,214,160,.1); color: #34d399; }
+  .m2 .er-table-head { background: rgba(251,191,36,.1); color: #fbbf24; }
+  .m3 .er-table-head { background: rgba(249,115,22,.1); color: #fb923c; }
+  .m4 .er-table-head { background: rgba(91,140,255,.12); color: #818cf8; }
+  .m5 .er-table-head { background: rgba(139,92,246,.12); color: #a78bfa; }
+  .m6 .er-table-head { background: rgba(100,116,139,.15); color: #94a3b8; }
+
+  /* ─── LEGEND ─── */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+    font-size: 0.78rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .lswatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ─── STEP GUIDE ─── */
+  .phases { display: flex; flex-direction: column; gap: 1.5rem; }
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .phase-header {
+    display: flex; align-items: stretch; cursor: pointer;
+    user-select: none;
+  }
+  .phase-num {
+    width: 64px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    border-right: 1px solid var(--border);
+  }
+  .phase-meta { flex: 1; padding: .9rem 1.2rem; }
+  .phase-title {
+    font-weight: 600; font-size: 0.95rem;
+    margin-bottom: 2px;
+  }
+  .phase-sub { font-size: 0.8rem; color: var(--text2); }
+  .phase-toggle {
+    width: 50px; display: flex; align-items: center; justify-content: center;
+    color: var(--text3); font-size: 1.2rem; transition: transform .2s;
+  }
+  .phase.open .phase-toggle { transform: rotate(180deg); }
+  .phase-body {
+    display: none; border-top: 1px solid var(--border);
+    padding: 1.5rem;
+  }
+  .phase.open .phase-body { display: block; }
+
+  .steps { display: flex; flex-direction: column; gap: 1rem; }
+  .step {
+    display: flex; gap: 1rem; align-items: flex-start;
+  }
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 600; font-family: var(--font-code);
+    flex-shrink: 0; margin-top: 2px;
+    color: var(--text2);
+  }
+  .step-content { flex: 1; }
+  .step-content strong { display: block; font-size: 0.88rem; margin-bottom: .2rem; }
+  .step-content p { font-size: 0.82rem; color: var(--text2); }
+
+  .tech-chips {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: .6rem;
+  }
+  .tech-chip {
+    padding: 3px 10px; border-radius: 5px;
+    font-size: 0.7rem; font-family: var(--font-code);
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2);
+  }
+
+  code {
+    font-family: var(--font-code);
+    background: rgba(91,140,255,.1);
+    color: var(--accent);
+    padding: 1px 6px; border-radius: 4px;
+    font-size: 0.82em;
+  }
+
+  /* ─── STACK ─── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .stack-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    transition: border-color .2s, transform .15s;
+  }
+  .stack-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .stack-card-icon { font-size: 1.6rem; margin-bottom: .7rem; }
+  .stack-card-name { font-weight: 600; font-size: 0.9rem; margin-bottom: .2rem; }
+  .stack-card-desc { font-size: 0.78rem; color: var(--text2); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--text3);
+    margin-top: 4rem;
+    font-family: var(--font-code);
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .hero > * { animation: fadeUp .6s ease both; }
+  .hero > *:nth-child(1) { animation-delay: .05s }
+  .hero > *:nth-child(2) { animation-delay: .12s }
+  .hero > *:nth-child(3) { animation-delay: .2s }
+  .hero > *:nth-child(4) { animation-delay: .28s }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">⬡ DynForms</div>
+  <ul class="nav-tabs">
+    <li><a href="#analisis"><span class="dot" style="background:#fb923c"></span>Análisis SQL</a></li>
+    <li><a href="#correcciones"><span class="dot" style="background:#34d399"></span>Correcciones</a></li>
+    <li><a href="#er"><span class="dot" style="background:#818cf8"></span>Diagrama ER</a></li>
+    <li><a href="#stack"><span class="dot" style="background:#fbbf24"></span>Stack</a></li>
+    <li><a href="#guia"><span class="dot" style="background:#5b8cff"></span>Guía Paso a Paso</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🏗 Oracle 19c · Vue 3 · Formularios Dinámicos</div>
+  <h1>Arquitectura de<br><em>DynForms</em></h1>
+  <p>Análisis profundo del esquema de base de datos, correcciones sugeridas, diagrama ER interactivo y guía completa de construcción.</p>
+  <div class="hero-tags">
+    <span class="tag">7 Módulos</span>
+    <span class="tag">30+ Tablas</span>
+    <span class="tag">Diseñador drag & drop</span>
+    <span class="tag">RBAC completo</span>
+    <span class="tag">Semántica tributaria</span>
+    <span class="tag">Auditoría full</span>
+  </div>
+</div>
+
+
+<!-- ANÁLISIS -->
+<section id="analisis">
+  <div class="section-label">
+    <span class="section-num">§01</span>
+    <div class="section-line"></div>
+  </div>
+  <h2>Análisis del Esquema SQL</h2>
+  <p class="subtitle">Revisión detallada de cada módulo: fortalezas, problemas encontrados y recomendaciones específicas.</p>
+
+  <!-- General -->
+  <div class="alert ok"><span class="alert-icon">✓</span><div><strong>Arquitectura sólida.</strong> El esquema sigue correctamente principios de separación en módulos, uso de IDENTITY para PKs, JSON nativo de Oracle 19c con constraints IS JSON, e historial de estados tanto en plantillas como en declaraciones. Es una base muy bien pensada.</div></div>
+
+  <div class="alert warn"><span class="alert-icon">⚠</span><div><strong>Orden de dependencias.</strong> <code>USUARIO_PLANTILLA_ACCESO</code> referencia <code>PLANTILLA</code> pero se declara en el Módulo 0, antes de que <code>PLANTILLA</code> exista (Módulo 4). Esto provocará un error ORA-00942 al ejecutar el DDL secuencialmente.</div></div>
+
+  <div class="alert warn"><span class="alert-icon">⚠</span><div><strong>Typo en columna.</strong> <code>PUEDE_DISENIAR</code> en la tabla <code>USUARIO_PLANTILLA_ACCESO</code>. El carácter <code>Ñ</code> puede causar problemas de encoding en algunos clientes Oracle. Recomendado: <code>PUEDE_DISENAR</code> o <code>PUEDE_DISENAR</code>.</div></div>
+
+  <div class="alert warn"><span class="alert-icon">⚠</span><div><strong>Ausencia de índice en FK crítica.</strong> <code>CAMPO_PLANTILLA.CODIGO_SECCION</code> existe como FK pero el índice <code>IDX_CP_SECCION</code> debería colocarse también en <code>SECCION_PLANTILLA.CODIGO_SECCION_PADRE</code> para soporte a jerarquías profundas.</div></div>
+
+  <div class="alert info"><span class="alert-icon">ℹ</span><div><strong>DATOS_JSON en FORMULARIO_DECLARACION.</strong> Almacenar todos los valores del formulario en un solo CLOB JSON es válido para flexibilidad, pero coexiste con <code>DETALLE_VALOR_CONCEPTO</code> para cálculos. Deben mantenerse sincronizados; considera un trigger o procedimiento orquestador.</div></div>
+
+  <div class="alert info"><span class="alert-icon">ℹ</span><div><strong>Sin tabla de ADJUNTO_PLANTILLA.</strong> <code>DECLARACION_ADJUNTO</code> referencia campos de plantilla, pero no existe una tabla que defina qué campos de tipo FILE se configuran en el diseñador con reglas de adjunto (tamaño máx, tipos MIME permitidos, etc.).</div></div>
+
+  <div class="alert info"><span class="alert-icon">ℹ</span><div><strong>ASIGNADO_POR en USUARIO_ROL.</strong> La columna <code>ASIGNADO_POR</code> carece de FK hacia <code>USUARIO.CODIGO</code>. Si un usuario administrador es eliminado/desactivado, la referencia queda huérfana.</div></div>
+
+  <div class="alert warn"><span class="alert-icon">⚠</span><div><strong>TAMANIO_BYTES con typo.</strong> La columna <code>TAMANIO_BYTES</code> tiene tilde en la Ñ. En Oracle, los identificadores con caracteres no-ASCII requieren comillas dobles en cada referencia. Mejor usar <code>TAMANO_BYTES</code>.</div></div>
+</section>
+
+
+<!-- CORRECCIONES -->
+<section id="correcciones">
+  <div class="section-label">
+    <span class="section-num">§02</span>
+    <div class="section-line"></div>
+  </div>
+  <h2>Correcciones y Mejoras SQL</h2>
+  <p class="subtitle">Parches específicos aplicables directamente al DDL existente.</p>
+
+  <div class="sql-grid">
+
+    <!-- Fix 1 -->
+    <div class="sql-card">
+      <div class="sql-card-header">
+        <span>FIX · USUARIO_PLANTILLA_ACCESO — mover al Módulo 4</span>
+        <span class="badge badge-fix">CRÍTICO</span>
+      </div>
+<pre><span class="cm">-- Mover esta tabla DESPUÉS de CREATE TABLE PLANTILLA</span>
+<span class="cm">-- Columna corregida: PUEDE_DISENAR (sin ñ especial)</span>
+<span class="kw">CREATE TABLE</span> USUARIO_PLANTILLA_ACCESO (
+    CODIGO             <span class="tp">NUMBER</span> <span class="fn">GENERATED ALWAYS AS IDENTITY</span> <span class="kw">PRIMARY KEY</span>,
+    CODIGO_USUARIO     <span class="tp">NUMBER</span> <span class="kw">NOT NULL</span>,
+    CODIGO_PLANTILLA   <span class="tp">NUMBER</span> <span class="kw">NOT NULL</span>,
+    PUEDE_DISENAR      <span class="tp">NUMBER(1)</span> <span class="kw">DEFAULT</span> <span class="num">0</span>,
+    PUEDE_LLENAR       <span class="tp">NUMBER(1)</span> <span class="kw">DEFAULT</span> <span class="num">0</span>,
+    PUEDE_REVISAR      <span class="tp">NUMBER(1)</span> <span class="kw">DEFAULT</span> <span class="num">0</span>,
+    PUEDE_APROBAR      <span class="tp">NUMBER(1)</span> <span class="kw">DEFAULT</span> <span class="num">0</span>,
+    FECHA_DESDE        <span class="tp">DATE</span>      <span class="kw">DEFAULT</span> SYSDATE,
+    FECHA_HASTA        <span class="tp">DATE</span>,
+    <span class="kw">CONSTRAINT</span> FK_UPA_USR <span class="kw">FOREIGN KEY</span> (CODIGO_USUARIO)
+        <span class="kw">REFERENCES</span> USUARIO(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_UPA_PLT <span class="kw">FOREIGN KEY</span> (CODIGO_PLANTILLA)
+        <span class="kw">REFERENCES</span> PLANTILLA(CODIGO)
+);</pre>
+    </div>
+
+    <!-- Fix 2 -->
+    <div class="sql-card">
+      <div class="sql-card-header">
+        <span>FIX · FK faltante en USUARIO_ROL.ASIGNADO_POR</span>
+        <span class="badge badge-fix">RECOMENDADO</span>
+      </div>
+<pre><span class="cm">-- Agregar constraint FK para integridad referencial</span>
+<span class="kw">ALTER TABLE</span> USUARIO_ROL
+    <span class="kw">ADD CONSTRAINT</span> FK_UR_ASIG
+    <span class="kw">FOREIGN KEY</span> (ASIGNADO_POR)
+    <span class="kw">REFERENCES</span> USUARIO(CODIGO);</pre>
+    </div>
+
+    <!-- Fix 3 -->
+    <div class="sql-card">
+      <div class="sql-card-header">
+        <span>FIX · Índices en jerarquías de secciones</span>
+        <span class="badge badge-fix">RENDIMIENTO</span>
+      </div>
+<pre><span class="cm">-- Cubrir la FK de auto-referencia de SECCION_PLANTILLA</span>
+<span class="kw">CREATE INDEX</span> IDX_SEC_PADRE
+    <span class="kw">ON</span> SECCION_PLANTILLA(CODIGO_SECCION_PADRE);
+
+<span class="cm">-- Índice compuesto para búsqueda por versión + orden (muy frecuente)</span>
+<span class="kw">CREATE INDEX</span> IDX_SEC_VER_ORDEN
+    <span class="kw">ON</span> SECCION_PLANTILLA(CODIGO_VERSION_PLANTILLA, ORDEN);
+
+<span class="cm">-- Mismo patrón en CAMPO_PLANTILLA</span>
+<span class="kw">CREATE INDEX</span> IDX_CP_VER_ORDEN
+    <span class="kw">ON</span> CAMPO_PLANTILLA(CODIGO_VERSION_PLANTILLA, ORDEN);</pre>
+    </div>
+
+    <!-- Fix 4 -->
+    <div class="sql-card">
+      <div class="sql-card-header">
+        <span>FIX · Typo TAMANIO_BYTES → TAMANO_BYTES</span>
+        <span class="badge badge-warn">COMPATIBILIDAD</span>
+      </div>
+<pre><span class="cm">-- En DECLARACION_ADJUNTO, renombrar columna</span>
+<span class="cm">-- (Si la tabla ya existe en producción:)</span>
+<span class="kw">ALTER TABLE</span> DECLARACION_ADJUNTO
+    <span class="kw">RENAME COLUMN</span> <span class="str">"TAMANIO_BYTES"</span> <span class="kw">TO</span> TAMANO_BYTES;
+
+<span class="cm">-- En DDL nuevo, usar directamente:</span>
+TAMANO_BYTES   <span class="tp">NUMBER</span>,</pre>
+    </div>
+
+    <!-- New 1 -->
+    <div class="sql-card">
+      <div class="sql-card-header">
+        <span>NUEVO · Configuración de campo tipo FILE en plantilla</span>
+        <span class="badge badge-new">ADICIÓN</span>
+      </div>
+<pre><span class="cm">-- Define reglas de adjunto por campo FILE en el diseñador</span>
+<span class="kw">CREATE TABLE</span> CAMPO_PLANTILLA_ADJUNTO_CONFIG (
+    CODIGO                   <span class="tp">NUMBER</span> <span class="fn">GENERATED ALWAYS AS IDENTITY</span>
+                             <span class="kw">PRIMARY KEY</span>,
+    CODIGO_CAMPO_PLANTILLA   <span class="tp">NUMBER</span> <span class="kw">NOT NULL</span>,
+    MIME_PERMITIDOS_JSON     <span class="tp">CLOB</span> <span class="kw">CONSTRAINT</span> CK_CPAC_JSON
+                             <span class="kw">CHECK</span> (MIME_PERMITIDOS_JSON <span class="kw">IS JSON</span>),
+    TAMANO_MAX_MB            <span class="tp">NUMBER</span> <span class="kw">DEFAULT</span> <span class="num">10</span>,
+    MULTIPLE                 <span class="tp">NUMBER(1)</span> <span class="kw">DEFAULT</span> <span class="num">0</span>,
+    <span class="kw">CONSTRAINT</span> FK_CPAC_CAMPO <span class="kw">FOREIGN KEY</span> (CODIGO_CAMPO_PLANTILLA)
+        <span class="kw">REFERENCES</span> CAMPO_PLANTILLA(CODIGO) <span class="kw">ON DELETE CASCADE</span>
+);</pre>
+    </div>
+
+    <!-- New 2 -->
+    <div class="sql-card">
+      <div class="sql-card-header">
+        <span>NUEVO · Tabla NOTIFICACION para workflow</span>
+        <span class="badge badge-new">ADICIÓN</span>
+      </div>
+<pre><span class="kw">CREATE TABLE</span> NOTIFICACION (
+    CODIGO            <span class="tp">NUMBER</span> <span class="fn">GENERATED ALWAYS AS IDENTITY</span> <span class="kw">PRIMARY KEY</span>,
+    CODIGO_USUARIO    <span class="tp">NUMBER</span> <span class="kw">NOT NULL</span>,
+    TIPO              <span class="tp">VARCHAR2(50)</span>,  <span class="cm">-- 'NUEVA_DECLARACION', 'REVISION', etc</span>
+    TITULO            <span class="tp">VARCHAR2(200)</span>,
+    MENSAJE           <span class="tp">VARCHAR2(1000)</span>,
+    LEIDO             <span class="tp">NUMBER(1)</span>     <span class="kw">DEFAULT</span> <span class="num">0</span>,
+    FECHA             <span class="tp">TIMESTAMP</span>    <span class="kw">DEFAULT</span> CURRENT_TIMESTAMP,
+    REFERENCIA_TIPO   <span class="tp">VARCHAR2(50)</span>, <span class="cm">-- 'FORMULARIO', 'PLANTILLA'</span>
+    REFERENCIA_ID     <span class="tp">NUMBER</span>,
+    <span class="kw">CONSTRAINT</span> FK_NOT_USR <span class="kw">FOREIGN KEY</span> (CODIGO_USUARIO)
+        <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);
+<span class="kw">CREATE INDEX</span> IDX_NOT_USR_LEIDO
+    <span class="kw">ON</span> NOTIFICACION(CODIGO_USUARIO, LEIDO);</pre>
+    </div>
+
+    <!-- New 3 -->
+    <div class="sql-card">
+      <div class="sql-card-header">
+        <span>NUEVO · Vistas para API (rendimiento)</span>
+        <span class="badge badge-new">OPTIMIZACIÓN</span>
+      </div>
+<pre><span class="cm">-- Vista para cargar el formulario activo de una plantilla</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> V_PLANTILLA_ACTIVA <span class="kw">AS</span>
+<span class="kw">SELECT</span>
+    p.CODIGO        <span class="kw">AS</span> CODIGO_PLANTILLA,
+    p.IDENTIFICADOR,
+    p.NOMBRE,
+    vp.CODIGO       <span class="kw">AS</span> CODIGO_VERSION,
+    vp.NUMERO_VERSION,
+    vp.ESTADO,
+    vp.CONFIG_GLOBAL_JSON
+<span class="kw">FROM</span> PLANTILLA p
+<span class="kw">JOIN</span> VERSION_PLANTILLA vp
+    <span class="kw">ON</span> vp.CODIGO_PLANTILLA = p.CODIGO
+   <span class="kw">AND</span> vp.ESTADO = <span class="str">'PUBLICADO'</span>
+   <span class="kw">AND</span> vp.VIGENCIA_DESDE &lt;= SYSDATE
+   <span class="kw">AND</span> (vp.VIGENCIA_HASTA <span class="kw">IS NULL</span> <span class="kw">OR</span> vp.VIGENCIA_HASTA >= SYSDATE);</pre>
+    </div>
+
+    <!-- New 4 -->
+    <div class="sql-card">
+      <div class="sql-card-header">
+        <span>NUEVO · Índice para búsqueda de declaraciones por contribuyente+periodo</span>
+        <span class="badge badge-new">OPTIMIZACIÓN</span>
+      </div>
+<pre><span class="cm">-- Consulta más frecuente en ejecución: ¿tiene declaración este RUC?</span>
+<span class="kw">CREATE INDEX</span> IDX_DEC_RUC_PERIODO
+    <span class="kw">ON</span> FORMULARIO_DECLARACION(RUC_CONTRIBUYENTE, PERIODO_FISCAL);
+
+<span class="cm">-- Para el panel de revisión: filtrar por estado + fecha</span>
+<span class="kw">CREATE INDEX</span> IDX_DEC_ESTADO_FECHA
+    <span class="kw">ON</span> FORMULARIO_DECLARACION(ESTADO, FECHA_CREACION <span class="kw">DESC</span>);
+
+<span class="cm">-- En AUDITORIA_LOG: búsqueda por tabla+registro es muy común</span>
+<span class="kw">CREATE INDEX</span> IDX_AUDIT_TABLA_REG
+    <span class="kw">ON</span> AUDITORIA_LOG(TABLA_AFECTADA, CODIGO_REGISTRO);</pre>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ER DIAGRAM -->
+<section id="er">
+  <div class="section-label">
+    <span class="section-num">§03</span>
+    <div class="section-line"></div>
+  </div>
+  <h2>Diagrama Entidad-Relación</h2>
+  <p class="subtitle">Representación visual de los 7 módulos del esquema. Pasa el cursor sobre una tabla para resaltarla.</p>
+
+  <div class="legend">
+    <div class="legend-item"><div class="lswatch" style="background:#fb7185"></div> <span>M0 Seguridad/Usuarios</span></div>
+    <div class="legend-item"><div class="lswatch" style="background:#34d399"></div> <span>M1 Componentes UI</span></div>
+    <div class="legend-item"><div class="lswatch" style="background:#fbbf24"></div> <span>M2 Catálogos</span></div>
+    <div class="legend-item"><div class="lswatch" style="background:#fb923c"></div> <span>M3 Semántica Tributaria</span></div>
+    <div class="legend-item"><div class="lswatch" style="background:#818cf8"></div> <span>M4 Diseñador</span></div>
+    <div class="legend-item"><div class="lswatch" style="background:#a78bfa"></div> <span>M5 Ejecución</span></div>
+    <div class="legend-item"><div class="lswatch" style="background:#94a3b8"></div> <span>M6 Auditoría</span></div>
+    <div class="legend-item"><span class="er-col-badge pk-badge">PK</span> Primary Key</div>
+    <div class="legend-item"><span class="er-col-badge fk-badge">FK</span> Foreign Key</div>
+    <div class="legend-item"><span class="er-col-badge idx-badge">IX</span> Índice</div>
+  </div>
+
+  <div class="er-canvas-wrap">
+    <div class="er-canvas">
+
+      <!-- COL 1: Seguridad -->
+      <div class="er-group m0">
+        <div class="er-group-title">M0 · Seguridad</div>
+        <div class="er-table">
+          <div class="er-table-head">USUARIO <span class="er-pk">PK</span></div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type">NUMBER <span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name">USERNAME</span><span class="er-col-type">VARCHAR2(100)</span></div>
+            <div class="er-col"><span class="er-col-name">EMAIL</span><span class="er-col-type">VARCHAR2(200)</span></div>
+            <div class="er-col"><span class="er-col-name">HASH_PASSWORD</span><span class="er-col-type">VARCHAR2(256)</span></div>
+            <div class="er-col"><span class="er-col-name">TIPO_AUTENTICACION</span><span class="er-col-type">VARCHAR2(20)</span></div>
+            <div class="er-col"><span class="er-col-name">ACTIVO / BLOQUEADO</span><span class="er-col-type">NUMBER(1)</span></div>
+          </div>
+        </div>
+        <div class="er-table">
+          <div class="er-table-head">ROL</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type">NUMBER <span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name">CODIGO_UNICO</span><span class="er-col-type">VARCHAR2(50)</span></div>
+            <div class="er-col"><span class="er-col-name">NOMBRE</span><span class="er-col-type">VARCHAR2(100)</span></div>
+          </div>
+        </div>
+        <div class="er-table">
+          <div class="er-table-head">PERMISO</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type">NUMBER <span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name">MODULO · ACCION</span><span class="er-col-type">VARCHAR2(50)</span></div>
+          </div>
+        </div>
+        <div class="er-table">
+          <div class="er-table-head">ROL_PERMISO · USUARIO_ROL</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">CODIGO_ROL</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">CODIGO_PERMISO / USUARIO</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+          </div>
+        </div>
+        <div class="er-table">
+          <div class="er-table-head">SESION_USUARIO</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type">NUMBER <span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name">TOKEN_SESION</span><span class="er-col-type">VARCHAR2(256)</span></div>
+            <div class="er-col"><span class="er-col-name">IP · USER_AGENT</span><span class="er-col-type">VARCHAR2</span></div>
+            <div class="er-col"><span class="er-col-name">ESTADO</span><span class="er-col-type">VARCHAR2(20)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COL 2: Componentes + Catálogos -->
+      <div class="er-group">
+        <div class="er-group-title m1" style="color:#34d399">M1 · Componentes UI</div>
+        <div class="er-table m1">
+          <div class="er-table-head">CATEGORIA_COMPONENTE</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name">IDENTIFICADOR_TECNICO</span><span class="er-col-type">VARCHAR2(50)</span></div>
+            <div class="er-col"><span class="er-col-name">PERMITE_CATALOGO</span><span class="er-col-type">NUMBER(1)</span></div>
+            <div class="er-col"><span class="er-col-name">PERMITE_HIJOS</span><span class="er-col-type">Number(1)</span></div>
+          </div>
+        </div>
+        <div class="er-table m1">
+          <div class="er-table-head">BIBLIOTECA_COMPONENTE</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_CATEGORIA_COMP</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">NOMBRE_UI</span><span class="er-col-type">VARCHAR2(100)</span></div>
+            <div class="er-col"><span class="er-col-name">CONFIGURACION_DEFAULT</span><span class="er-col-type">CLOB/JSON</span></div>
+          </div>
+        </div>
+        <div style="height:.5rem"></div>
+        <div class="er-group-title" style="color:#fbbf24; font-size:.65rem; text-transform:uppercase; letter-spacing:1.5px; padding-bottom:.3rem; border-bottom:1px solid var(--border)">M2 · Catálogos</div>
+        <div class="er-table m2">
+          <div class="er-table-head">CATEGORIA_PLANTILLA</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name">NOMBRE · ORDEN</span><span class="er-col-type">VARCHAR2</span></div>
+          </div>
+        </div>
+        <div class="er-table m2">
+          <div class="er-table-head">CATALOGO_MAESTRO</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name">CODIGO_UNICO</span><span class="er-col-type">VARCHAR2(50)</span></div>
+            <div class="er-col"><span class="er-col-name">METADATA_COLUMNAS</span><span class="er-col-type">CLOB/JSON</span></div>
+            <div class="er-col"><span class="er-col-name">PERMITE_JERARQUIA</span><span class="er-col-type">NUMBER(1)</span></div>
+          </div>
+        </div>
+        <div class="er-table m2">
+          <div class="er-table-head">CATALOGO_DETALLE</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_CATALOGO_MAESTRO</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">CODIGO_ITEM_PADRE</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span> self</span></div>
+            <div class="er-col"><span class="er-col-name">VALOR_CLAVE · ETIQUETA</span><span class="er-col-type">VARCHAR2 <span class="er-col-badge idx-badge">IX</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COL 3: Tributaria + Diseñador base -->
+      <div class="er-group">
+        <div class="er-group-title" style="color:#fb923c;font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;padding-bottom:.3rem;border-bottom:1px solid var(--border)">M3 · Semántica Tributaria</div>
+        <div class="er-table m3">
+          <div class="er-table-head">CONCEPTO_TRIBUTARIO</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">CODIGO_PADRE</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span> self</span></div>
+            <div class="er-col"><span class="er-col-name">CASILLERO_SRI</span><span class="er-col-type">VARCHAR2 <span class="er-col-badge idx-badge">IX</span></span></div>
+            <div class="er-col"><span class="er-col-name">TIPO_DATO</span><span class="er-col-type">VARCHAR2(50)</span></div>
+            <div class="er-col"><span class="er-col-name">ES_CALCULADO</span><span class="er-col-type">NUMBER(1)</span></div>
+            <div class="er-col"><span class="er-col-name">FORMULA_CALCULO</span><span class="er-col-type">VARCHAR2(500)</span></div>
+          </div>
+        </div>
+        <div style="height:.5rem"></div>
+        <div class="er-group-title" style="color:#818cf8;font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;padding-bottom:.3rem;border-bottom:1px solid var(--border)">M4 · Diseñador — Base</div>
+        <div class="er-table m4">
+          <div class="er-table-head">PLANTILLA</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_CATEGORIA_PLT</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">IDENTIFICADOR</span><span class="er-col-type">VARCHAR2(50)</span></div>
+            <div class="er-col"><span class="er-col-name">NOMBRE</span><span class="er-col-type">VARCHAR2(200)</span></div>
+          </div>
+        </div>
+        <div class="er-table m4">
+          <div class="er-table-head">VERSION_PLANTILLA</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">CODIGO_PLANTILLA</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">NUMERO_VERSION</span><span class="er-col-type">VARCHAR2(20)</span></div>
+            <div class="er-col"><span class="er-col-name">ESTADO</span><span class="er-col-type">BORRADOR|PUBLICADO</span></div>
+            <div class="er-col"><span class="er-col-name">CONFIG_GLOBAL_JSON</span><span class="er-col-type">CLOB/JSON</span></div>
+          </div>
+        </div>
+        <div class="er-table m4">
+          <div class="er-table-head">VERSION_PLT_HISTORIAL</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">COD_VERSION_PLT</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">ESTADO_ANT → NUEVO</span><span class="er-col-type">VARCHAR2(20)</span></div>
+            <div class="er-col"><span class="er-col-name">FECHA_CAMBIO</span><span class="er-col-type">TIMESTAMP</span></div>
+          </div>
+        </div>
+        <div class="er-table m0" style="--border:#2a2f40">
+          <div class="er-table-head">USR_PLANTILLA_ACCESO</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">COD_USUARIO</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_PLANTILLA</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">DISENAR/LLENAR</span><span class="er-col-type">NUMBER(1)</span></div>
+            <div class="er-col"><span class="er-col-name">REVISAR/APROBAR</span><span class="er-col-type">NUMBER(1)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COL 4: Diseñador detalle -->
+      <div class="er-group m4">
+        <div class="er-group-title">M4 · Diseñador — Estructura</div>
+        <div class="er-table">
+          <div class="er-table-head">SECCION_PLANTILLA</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_VERSION_PLT</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_SECCION_PADRE</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span> self</span></div>
+            <div class="er-col"><span class="er-col-name">TIPO · CLAVE_UI</span><span class="er-col-type">VARCHAR2</span></div>
+            <div class="er-col"><span class="er-col-name">ORDEN</span><span class="er-col-type">NUMBER <span class="er-col-badge idx-badge">IX</span></span></div>
+          </div>
+        </div>
+        <div class="er-table">
+          <div class="er-table-head">CAMPO_PLANTILLA</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_VERSION_PLT</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_SECCION</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_BIBLIOTECA_COMP</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_CATALOGO_MAESTRO</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">CLAVE_UI</span><span class="er-col-type">VARCHAR2 UNIQUE</span></div>
+            <div class="er-col"><span class="er-col-name">CATEGORIA_COMPONENTE</span><span class="er-col-type">VARCHAR2(50)</span></div>
+            <div class="er-col"><span class="er-col-name">PROPIEDADES_UI_JSON</span><span class="er-col-type">CLOB/JSON</span></div>
+          </div>
+        </div>
+        <div class="er-table">
+          <div class="er-table-head">REGLA_VALIDACION</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name">TIPO · EXPRESION</span><span class="er-col-type">VARCHAR2</span></div>
+            <div class="er-col"><span class="er-col-name">MENSAJE_ERROR</span><span class="er-col-type">VARCHAR2(300)</span></div>
+          </div>
+        </div>
+        <div class="er-table">
+          <div class="er-table-head">CAMPO_REGLA_VALIDACION</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">COD_CAMPO_PLT</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_REGLA_VAL</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">PARAMETROS_JSON</span><span class="er-col-type">CLOB/JSON</span></div>
+          </div>
+        </div>
+        <div class="er-table">
+          <div class="er-table-head">REGLA_CONDICIONAL</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">COD_CAMPO_PLT</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">ACCION · CONECTOR</span><span class="er-col-type">VARCHAR2</span></div>
+          </div>
+        </div>
+        <div class="er-table">
+          <div class="er-table-head">CAMPO_PLT_CONCEPTO</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">COD_CAMPO_PLT</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_CONCEPTO_TRIB</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COL 5: Ejecución + Auditoría -->
+      <div class="er-group">
+        <div class="er-group-title" style="color:#a78bfa;font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;padding-bottom:.3rem;border-bottom:1px solid var(--border)">M5 · Ejecución</div>
+        <div class="er-table m5">
+          <div class="er-table-head">FORMULARIO_DECLARACION</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name pk">CODIGO</span><span class="er-col-type"><span class="er-col-badge pk-badge">PK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_VERSION_PLT</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">RUC_CONTRIBUYENTE</span><span class="er-col-type">VARCHAR2 <span class="er-col-badge idx-badge">IX</span></span></div>
+            <div class="er-col"><span class="er-col-name">PERIODO_FISCAL</span><span class="er-col-type">VARCHAR2 <span class="er-col-badge idx-badge">IX</span></span></div>
+            <div class="er-col"><span class="er-col-name">ESTADO</span><span class="er-col-type">VARCHAR2 <span class="er-col-badge idx-badge">IX</span></span></div>
+            <div class="er-col"><span class="er-col-name">DATOS_JSON</span><span class="er-col-type">CLOB/JSON</span></div>
+          </div>
+        </div>
+        <div class="er-table m5">
+          <div class="er-table-head">DECL_HISTORIAL_ESTADO</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">COD_FORM_DECL</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">ESTADO_ANT → NUEVO</span><span class="er-col-type">VARCHAR2</span></div>
+          </div>
+        </div>
+        <div class="er-table m5">
+          <div class="er-table-head">DETALLE_VALOR_CONCEPTO</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">COD_FORM_DECL</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_CONCEPTO_TRIB</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">VALOR_CALCULADO</span><span class="er-col-type">NUMBER(19,4)</span></div>
+          </div>
+        </div>
+        <div class="er-table m5">
+          <div class="er-table-head">DECLARACION_OBSERVACION</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">COD_FORM_DECL</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name fk">COD_CAMPO_PLT</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">MENSAJE</span><span class="er-col-type">VARCHAR2(1000)</span></div>
+            <div class="er-col"><span class="er-col-name">RESUELTO</span><span class="er-col-type">NUMBER(1)</span></div>
+          </div>
+        </div>
+        <div class="er-table m5">
+          <div class="er-table-head">DECLARACION_ADJUNTO</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name fk">COD_FORM_DECL</span><span class="er-col-type"><span class="er-col-badge fk-badge">FK</span></span></div>
+            <div class="er-col"><span class="er-col-name">NOMBRE_ORIGINAL</span><span class="er-col-type">VARCHAR2(255)</span></div>
+            <div class="er-col"><span class="er-col-name">RUTA / MIME / HASH</span><span class="er-col-type">VARCHAR2</span></div>
+          </div>
+        </div>
+        <div style="height:.5rem"></div>
+        <div class="er-group-title" style="color:#94a3b8;font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;padding-bottom:.3rem;border-bottom:1px solid var(--border)">M6 · Auditoría</div>
+        <div class="er-table m6">
+          <div class="er-table-head">AUDITORIA_LOG</div>
+          <div class="er-table-body">
+            <div class="er-col"><span class="er-col-name">TABLA_AFECTADA</span><span class="er-col-type">VARCHAR2 <span class="er-col-badge idx-badge">IX</span></span></div>
+            <div class="er-col"><span class="er-col-name">OPERACION</span><span class="er-col-type">INS/UPD/DEL</span></div>
+            <div class="er-col"><span class="er-col-name">DATOS_ANTES/DESPUES</span><span class="er-col-type">CLOB/JSON</span></div>
+            <div class="er-col"><span class="er-col-name">IP · SESION_ID</span><span class="er-col-type">VARCHAR2 <span class="er-col-badge idx-badge">IX</span></span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- STACK -->
+<section id="stack">
+  <div class="section-label">
+    <span class="section-num">§04</span>
+    <div class="section-line"></div>
+  </div>
+  <h2>Stack Tecnológico Recomendado</h2>
+  <p class="subtitle">Tecnologías seleccionadas para máxima compatibilidad con el esquema Oracle 19c y el ecosistema Vue 3.</p>
+
+  <div class="stack-grid">
+    <div class="stack-card"><div class="stack-card-icon">🗄</div><div class="stack-card-name">Oracle 19c</div><div class="stack-card-desc">BD principal. JSON nativo, PL/SQL para lógica de negocio, particionamiento para AUDITORIA_LOG.</div></div>
+    <div class="stack-card"><div class="stack-card-icon">☕</div><div class="stack-card-name">Spring Boot 3</div><div class="stack-card-desc">API REST. Oracle JDBC + Spring Data JPA. Spring Security para JWT. Opcionalmente ORDS de Oracle.</div></div>
+    <div class="stack-card"><div class="stack-card-icon">⚡</div><div class="stack-card-name">Vue 3 + Vite</div><div class="stack-card-desc">Frontend. Composition API, TypeScript, Vue Router 4, Pinia para estado global del formulario.</div></div>
+    <div class="stack-card"><div class="stack-card-icon">🎨</div><div class="stack-card-name">PrimeVue / Vuetify</div><div class="stack-card-desc">Componentes UI. DnD con vuedraggable o dnd-kit. Grid system para el canvas del diseñador.</div></div>
+    <div class="stack-card"><div class="stack-card-icon">📋</div><div class="stack-card-name">VeeValidate + Zod</div><div class="stack-card-desc">Validaciones dinámicas del formulario. Las reglas vienen de REGLA_VALIDACION y se compilan en runtime.</div></div>
+    <div class="stack-card"><div class="stack-card-icon">🔐</div><div class="stack-card-name">JWT + Refresh Token</div><div class="stack-card-desc">Autenticación stateless. Tokens almacenados en SESION_USUARIO. Soporte para LDAP/SSO futuro.</div></div>
+    <div class="stack-card"><div class="stack-card-icon">📤</div><div class="stack-card-name">MinIO / S3</div><div class="stack-card-desc">Almacenamiento de adjuntos. DECLARACION_ADJUNTO guarda la RUTA_ALMACENAMIENTO y HASH_SHA256.</div></div>
+    <div class="stack-card"><div class="stack-card-icon">🔔</div><div class="stack-card-name">WebSockets / SSE</div><div class="stack-card-desc">Notificaciones en tiempo real para revisores/aprobadores. Integra con tabla NOTIFICACION (nueva).</div></div>
+  </div>
+</section>
+
+
+<!-- GUÍA PASO A PASO -->
+<section id="guia">
+  <div class="section-label">
+    <span class="section-num">§05</span>
+    <div class="section-line"></div>
+  </div>
+  <h2>Guía de Construcción Paso a Paso</h2>
+  <p class="subtitle">Fases ordenadas de implementación. Haz clic en cada fase para expandir el detalle.</p>
+
+  <div class="phases">
+
+    <!-- FASE 1 -->
+    <div class="phase open">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <div class="phase-num" style="color:#fb7185">1</div>
+        <div class="phase-meta">
+          <div class="phase-title">Infraestructura y Base de Datos</div>
+          <div class="phase-sub">DDL completo, datos semilla, conexión JDBC</div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">1.1</div>
+            <div class="step-content">
+              <strong>Aplicar correcciones al DDL</strong>
+              <p>Reordenar <code>USUARIO_PLANTILLA_ACCESO</code> al final del Módulo 4, corregir typos (<code>TAMANO_BYTES</code>, <code>PUEDE_DISENAR</code>), agregar FK de <code>ASIGNADO_POR</code>, añadir los índices compuestos y las nuevas tablas sugeridas. Ejecutar en un PDB limpio de Oracle 19c.</p>
+              <div class="tech-chips"><span class="tech-chip">SQL*Plus</span><span class="tech-chip">Flyway</span><span class="tech-chip">Oracle SQL Developer</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">1.2</div>
+            <div class="step-content">
+              <strong>Datos semilla (SEED DATA)</strong>
+              <p>Insertar <code>CATEGORIA_COMPONENTE</code> con todos los tipos (INPUT_TEXT, INPUT_NUMBER, SELECT, DATE, FILE, GRID, PANEL, TEXTAREA, CHECKBOX, RADIO). Luego crear widgets en <code>BIBLIOTECA_COMPONENTE</code> con sus JSON de configuración por defecto. Agregar <code>CONCEPTO_TRIBUTARIO</code> base del SRI. Crear roles y permisos iniciales.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">1.3</div>
+            <div class="step-content">
+              <strong>Triggers de auditoría</strong>
+              <p>Crear trigger genérico en PL/SQL para <code>FORMULARIO_DECLARACION</code>, <code>PLANTILLA</code>, <code>VERSION_PLANTILLA</code> y <code>CAMPO_PLANTILLA</code> que inserte en <code>AUDITORIA_LOG</code> con <code>:OLD</code> y <code>:NEW</code> serializados a JSON con <code>JSON_OBJECT</code> de Oracle 19c.</p>
+              <div class="tech-chips"><span class="tech-chip">PL/SQL Triggers</span><span class="tech-chip">JSON_OBJECT()</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">1.4</div>
+            <div class="step-content">
+              <strong>Procedimientos almacenados clave</strong>
+              <p>Crear: <code>PKG_FORMULARIO.CALCULAR_CONCEPTOS(p_codigo_form)</code> que lea <code>DATOS_JSON</code>, aplique fórmulas de <code>CONCEPTO_TRIBUTARIO.FORMULA_CALCULO</code> y actualice <code>DETALLE_VALOR_CONCEPTO</code>. Crear <code>PKG_DECLARACION.CAMBIAR_ESTADO</code> con validaciones de transición y registro en <code>DECLARACION_HISTORIAL_ESTADO</code>.</p>
+              <div class="tech-chips"><span class="tech-chip">PL/SQL Packages</span><span class="tech-chip">JSON_TABLE()</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 2 -->
+    <div class="phase">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <div class="phase-num" style="color:#fb923c">2</div>
+        <div class="phase-meta">
+          <div class="phase-title">API Backend — Seguridad y Catálogos</div>
+          <div class="phase-sub">Autenticación JWT, RBAC, endpoints de catálogo</div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">2.1</div>
+            <div class="step-content">
+              <strong>Módulo de autenticación</strong>
+              <p><code>POST /api/auth/login</code>: recibe usuario/contraseña, verifica <code>HASH_PASSWORD</code> con PBKDF2, verifica <code>INTENTOS_FALLIDOS</code> y <code>BLOQUEADO_HASTA</code>, crea entrada en <code>SESION_USUARIO</code>, retorna JWT + refresh token. <code>POST /api/auth/refresh</code> y <code>POST /api/auth/logout</code>.</p>
+              <div class="tech-chips"><span class="tech-chip">Spring Security</span><span class="tech-chip">JJWT</span><span class="tech-chip">PBKDF2</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">2.2</div>
+            <div class="step-content">
+              <strong>RBAC middleware</strong>
+              <p>Interceptor que valida el JWT, carga permisos del usuario vía <code>USUARIO → USUARIO_ROL → ROL → ROL_PERMISO → PERMISO</code>, y también verifica <code>USUARIO_PLANTILLA_ACCESO</code> para operaciones sobre plantillas específicas. Cache en Redis por 15 min.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">2.3</div>
+            <div class="step-content">
+              <strong>API de Catálogos y Componentes</strong>
+              <p><code>GET /api/catalogo/{codigoUnico}/items</code> con soporte a jerarquía. <code>GET /api/componentes/biblioteca</code> agrupado por <code>CATEGORIA_UI</code>. <code>GET /api/componentes/categorias</code>. Estos endpoints son los que alimentan la caja de herramientas del diseñador.</p>
+              <div class="tech-chips"><span class="tech-chip">Spring Data JPA</span><span class="tech-chip">Projections</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 3 -->
+    <div class="phase">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <div class="phase-num" style="color:#fbbf24">3</div>
+        <div class="phase-meta">
+          <div class="phase-title">API Backend — Diseñador de Plantillas</div>
+          <div class="phase-sub">CRUD completo de plantillas, versiones, secciones y campos</div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">3.1</div>
+            <div class="step-content">
+              <strong>CRUD de Plantillas y Versiones</strong>
+              <p><code>POST /api/plantillas</code>, <code>GET /api/plantillas/{id}/versiones</code>, <code>POST /api/plantillas/{id}/versiones</code> (crea nueva versión en BORRADOR). <code>PUT /api/versiones/{id}/publicar</code> valida que no haya otra versión PUBLICADA activa y registra en <code>VERSION_PLANTILLA_HISTORIAL</code>.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">3.2</div>
+            <div class="step-content">
+              <strong>API de Secciones y Campos</strong>
+              <p><code>GET /api/versiones/{id}/estructura</code> devuelve árbol completo de secciones + campos con sus <code>PROPIEDADES_UI_JSON</code>, reglas de validación y reglas condicionales. <code>PATCH /api/versiones/{id}/campos/reordenar</code> para drag & drop. <code>POST /api/versiones/{id}/campos</code> toma el snapshot del widget de biblioteca y lo personaliza.</p>
+              <div class="tech-chips"><span class="tech-chip">Bulk update</span><span class="tech-chip">Transaccional</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">3.3</div>
+            <div class="step-content">
+              <strong>Endpoint de clonar versión</strong>
+              <p><code>POST /api/versiones/{id}/clonar</code>: copia profunda de secciones, campos, reglas de validación y reglas condicionales a una nueva versión en BORRADOR. Esencial para editar sin romper formularios ya enviados.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">3.4</div>
+            <div class="step-content">
+              <strong>Mapeo a Conceptos Tributarios</strong>
+              <p><code>POST /api/campos/{id}/conceptos</code> vincula un campo a uno o más <code>CONCEPTO_TRIBUTARIO</code> vía <code>CAMPO_PLANTILLA_CONCEPTO</code>. <code>GET /api/conceptos-tributarios</code> con búsqueda por casillero SRI o nombre.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 4 -->
+    <div class="phase">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <div class="phase-num" style="color:#34d399">4</div>
+        <div class="phase-meta">
+          <div class="phase-title">API Backend — Ejecución y Workflow</div>
+          <div class="phase-sub">Declaraciones, estados, adjuntos, observaciones</div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">4.1</div>
+            <div class="step-content">
+              <strong>Crear y guardar declaración (borrador)</strong>
+              <p><code>POST /api/declaraciones</code>: recibe <code>CODIGO_VERSION_PLANTILLA</code> + <code>RUC_CONTRIBUYENTE</code> + <code>PERIODO_FISCAL</code>. Valida que no exista duplicado. <code>PUT /api/declaraciones/{id}/datos</code>: guarda <code>DATOS_JSON</code> y dispara el cálculo de conceptos tributarios en background (via <code>PKG_FORMULARIO.CALCULAR_CONCEPTOS</code>).</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">4.2</div>
+            <div class="step-content">
+              <strong>Validación dinámica server-side</strong>
+              <p>Al enviar la declaración, ejecutar todas las <code>REGLA_VALIDACION</code> asociadas a los campos. Soportar tipos: REQUIRED, REGEX, MIN_MAX, CUSTOM_PL_SQL. Las que fallen se insertan como <code>DECLARACION_OBSERVACION</code> de tipo VALIDACION.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">4.3</div>
+            <div class="step-content">
+              <strong>Workflow de estados</strong>
+              <p>Máquina de estados: <code>BORRADOR → ENVIADO → EN_REVISION → OBSERVADO → APROBADO</code> (y <code>RECHAZADO</code>). Cada transición: valida permisos vía <code>USUARIO_PLANTILLA_ACCESO</code>, inserta en <code>DECLARACION_HISTORIAL_ESTADO</code>, crea <code>NOTIFICACION</code> para los involucrados.</p>
+              <div class="tech-chips"><span class="tech-chip">State Machine</span><span class="tech-chip">Spring Events</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">4.4</div>
+            <div class="step-content">
+              <strong>Gestión de adjuntos</strong>
+              <p><code>POST /api/declaraciones/{id}/adjuntos</code>: sube al bucket MinIO/S3, calcula SHA256, inserta en <code>DECLARACION_ADJUNTO</code> con <code>RUTA_ALMACENAMIENTO</code>. <code>GET /api/adjuntos/{id}/presigned</code>: genera URL temporal para descarga. Validar MIME y tamaño contra <code>CAMPO_PLANTILLA_ADJUNTO_CONFIG</code>.</p>
+              <div class="tech-chips"><span class="tech-chip">MinIO SDK</span><span class="tech-chip">Apache Tika</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 5 -->
+    <div class="phase">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <div class="phase-num" style="color:#818cf8">5</div>
+        <div class="phase-meta">
+          <div class="phase-title">Frontend Vue 3 — Módulo Diseñador</div>
+          <div class="phase-sub">Canvas drag & drop, panel de propiedades, vista previa</div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">5.1</div>
+            <div class="step-content">
+              <strong>Store del Diseñador (Pinia)</strong>
+              <p>Store <code>useDesignerStore</code>: estado del árbol de secciones y campos, historial de cambios (undo/redo), campo seleccionado, modo preview. Al cargar carga <code>GET /api/versiones/{id}/estructura</code>. Al guardar hace <code>PATCH</code> incremental. Throttle de 2 s para autosave.</p>
+              <div class="tech-chips"><span class="tech-chip">Pinia</span><span class="tech-chip">immer.js</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">5.2</div>
+            <div class="step-content">
+              <strong>Canvas del Diseñador</strong>
+              <p>Tres paneles: izquierda (biblioteca de componentes agrupada), centro (canvas con secciones/campos arrastables, grid de 12 columnas), derecha (panel de propiedades del campo seleccionado). Usar <code>vuedraggable</code> para DnD entre biblioteca y canvas y entre campos. Al soltar desde biblioteca, hacer snapshot de <code>CONFIGURACION_DEFAULT_JSON</code>.</p>
+              <div class="tech-chips"><span class="tech-chip">vuedraggable v4</span><span class="tech-chip">CSS Grid</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">5.3</div>
+            <div class="step-content">
+              <strong>Panel de Propiedades dinámico</strong>
+              <p>Componente <code>PropertyPanel.vue</code> que recibe el campo seleccionado y genera controles según el tipo: etiqueta, placeholder, obligatorio, ancho (1-12 col), catálogo asociado (si <code>PERMITE_CATALOGO=1</code>). Tab "Validaciones" muestra las reglas asignadas. Tab "Condicionales" muestra cuando se muestra/oculta el campo. Tab "Tributario" para vincular conceptos SRI.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">5.4</div>
+            <div class="step-content">
+              <strong>Modo Vista Previa</strong>
+              <p>Toggle en el diseñador que renderiza el formulario real usando el <strong>mismo componente</strong> que usa el módulo de llenado. Pasa los datos de la versión en edición localmente sin guardar. Permite probar validaciones y condicionales en tiempo real.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 6 -->
+    <div class="phase">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <div class="phase-num" style="color:#a78bfa">6</div>
+        <div class="phase-meta">
+          <div class="phase-title">Frontend Vue 3 — Motor de Formularios</div>
+          <div class="phase-sub">Renderizado dinámico, validaciones, condicionales en runtime</div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">6.1</div>
+            <div class="step-content">
+              <strong>DynamicField.vue — componente raíz del motor</strong>
+              <p>Componente que recibe un objeto campo (<code>CAMPO_PLANTILLA</code> + <code>PROPIEDADES_UI_JSON</code>) y renderiza dinámicamente usando <code>:is</code> de Vue. Mapeo: <code>INPUT_TEXT → TextInput.vue</code>, <code>SELECT → SelectField.vue</code>, <code>INPUT_NUMBER → NumberInput.vue</code>, etc. Cada componente de hoja emite <code>update:modelValue</code>.</p>
+              <div class="tech-chips"><span class="tech-chip">defineAsyncComponent</span><span class="tech-chip">v-model</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">6.2</div>
+            <div class="step-content">
+              <strong>Motor de condicionales</strong>
+              <p>Composable <code>useCondicionales(campos, formData)</code>: evalúa <code>REGLA_CONDICIONAL</code> de cada campo contra el estado actual de <code>formData</code> y retorna un objeto <code>{ [clave_ui]: boolean }</code> de visibilidad. Reactivo: cualquier cambio en <code>formData</code> re-evalúa. Soporta <code>AND/OR</code> y operadores <code>EQ, NEQ, GT, LT, IN, NOT_IN, EMPTY, NOT_EMPTY</code>.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">6.3</div>
+            <div class="step-content">
+              <strong>Motor de validaciones (VeeValidate + Zod)</strong>
+              <p>Composable <code>useValidaciones(campos)</code>: convierte <code>REGLA_VALIDACION</code> de cada campo a un schema Zod en runtime. Tipos soportados: REQUIRED, REGEX, MIN, MAX, MIN_LENGTH, MAX_LENGTH. Las validaciones CUSTOM llaman a <code>POST /api/validaciones/custom</code>. Errores mapean a <code>DECLARACION_OBSERVACION</code>.</p>
+              <div class="tech-chips"><span class="tech-chip">VeeValidate 4</span><span class="tech-chip">Zod</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">6.4</div>
+            <div class="step-content">
+              <strong>Autosave y sincronización</strong>
+              <p>Composable <code>useAutosave(declaracionId, formData)</code>: debounce de 3 s. Indica estado "guardando…" / "guardado" / "error al guardar". Manejo de conflicto: si la sesión expiró, muestra modal antes de perder cambios. Usa <code>localStorage</code> como backup local de emergencia.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 7 -->
+    <div class="phase">
+      <div class="phase-header" onclick="togglePhase(this)">
+        <div class="phase-num" style="color:#94a3b8">7</div>
+        <div class="phase-meta">
+          <div class="phase-title">Reporting, Deploy y Pruebas</div>
+          <div class="phase-sub">Exportación, CI/CD, testing E2E</div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">7.1</div>
+            <div class="step-content">
+              <strong>Exportación de declaraciones</strong>
+              <p>Endpoint <code>GET /api/declaraciones/{id}/exportar?formato=pdf|xlsx</code>. Para PDF: JasperReports o iText, genera a partir de <code>DATOS_JSON</code> con la estructura de <code>VERSION_PLANTILLA</code>. Para XLSX: Apache POI. Ambos respetan el orden de secciones y campos del diseñador.</p>
+              <div class="tech-chips"><span class="tech-chip">JasperReports</span><span class="tech-chip">Apache POI</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">7.2</div>
+            <div class="step-content">
+              <strong>Dashboard de métricas</strong>
+              <p>Vista de administrador con declaraciones por estado, por plantilla, por periodo fiscal. Consultas contra <code>DETALLE_VALOR_CONCEPTO</code> para sumarizar por concepto tributario. Gráficos con Chart.js o ECharts en Vue.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">7.3</div>
+            <div class="step-content">
+              <strong>CI/CD y particionamiento Oracle</strong>
+              <p>Flyway para migraciones versionadas. Pipeline GitLab/GitHub Actions: lint → test → build → deploy. Particionar <code>AUDITORIA_LOG</code> por <code>FECHA</code> (RANGE MONTHLY) para rendimiento a largo plazo. Configurar Oracle AWR para monitoreo de queries lentos.</p>
+              <div class="tech-chips"><span class="tech-chip">Flyway</span><span class="tech-chip">Docker</span><span class="tech-chip">Oracle partitioning</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">7.4</div>
+            <div class="step-content">
+              <strong>Testing</strong>
+              <p>Unit: Vitest para composables del motor de formularios. Integración: JUnit + Testcontainers con imagen Oracle XE. E2E: Playwright → flujo completo diseñador → llenado → aprobación. Performance: JMeter sobre endpoints de carga de estructura de plantillas.</p>
+              <div class="tech-chips"><span class="tech-chip">Vitest</span><span class="tech-chip">Playwright</span><span class="tech-chip">Testcontainers</span><span class="tech-chip">JMeter</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  DynForms · Oracle 19c + Vue 3 · Análisis generado por Claude · Febrero 2026
+</footer>
+
+<script>
+function togglePhase(header) {
+  const phase = header.parentElement;
+  phase.classList.toggle('open');
+}
+
+// Smooth nav highlight on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-tabs a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 100) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+}, { passive: true });
+</script>
+</body>
+</html>

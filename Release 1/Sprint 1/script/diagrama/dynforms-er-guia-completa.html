@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DynForms · ER + Guía Completa</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #060810;
+  --bg2:      #0b0e18;
+  --surface:  #111420;
+  --surface2: #181c2e;
+  --border:   #232840;
+  --border2:  #2d3350;
+
+  /* módulo colors */
+  --c1: #00d4aa;   /* M1 Componentes */
+  --c2: #f5c542;   /* M2 Catálogos */
+  --c3: #ff7b4f;   /* M3 Tributaria */
+  --c4: #6ea8fe;   /* M4 Diseñador */
+  --c5: #c084fc;   /* M5 Ejecución */
+
+  --text:  #dde3f5;
+  --text2: #7a83a6;
+  --text3: #3d4460;
+
+  --font-h: 'Playfair Display', serif;
+  --font-b: 'Plus Jakarta Sans', sans-serif;
+  --font-m: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-b);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* ══════════ NAV ══════════ */
+nav {
+  position: sticky; top:0; z-index:200;
+  background: rgba(6,8,16,.95);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 1.5rem; height: 52px; gap: 2rem;
+}
+.nav-brand {
+  font-family: var(--font-m);
+  font-size: .8rem; font-weight: 600;
+  color: var(--c4); letter-spacing: 2px;
+  text-transform: uppercase; white-space: nowrap;
+}
+.nav-links { display: flex; gap: 0; list-style: none; height: 100%; overflow-x: auto; scrollbar-width: none; }
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-links a {
+  display: flex; align-items: center; gap: 6px; height: 100%;
+  padding: 0 1rem; font-size: .78rem; font-weight: 500;
+  color: var(--text2); text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: all .18s; white-space: nowrap;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--text); border-bottom-color: var(--c4); }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* ══════════ HERO ══════════ */
+.hero {
+  padding: 5rem 2rem 3.5rem;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content:'';
+  position: absolute; inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,212,170,.08) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 35% at 80% 30%, rgba(110,168,254,.09) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 60% 80%, rgba(192,132,252,.07) 0%, transparent 55%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text2); padding: 4px 14px;
+  border-radius: 100px; font-size: .72rem;
+  font-family: var(--font-m); letter-spacing: .5px;
+  margin-bottom: 1.5rem;
+  animation: fadeUp .5s ease both;
+}
+.hero h1 {
+  font-family: var(--font-h);
+  font-size: clamp(2.2rem, 5.5vw, 4rem);
+  line-height: 1.1; margin-bottom: .8rem;
+  animation: fadeUp .55s .08s ease both;
+}
+.hero h1 em { font-style: italic; color: var(--c4); }
+.hero p {
+  color: var(--text2); font-size: 1rem;
+  max-width: 580px; margin: 0 auto 2rem;
+  animation: fadeUp .55s .16s ease both;
+}
+.hero-stats {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;
+  animation: fadeUp .55s .24s ease both;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .6rem 1.2rem;
+  text-align: center;
+}
+.stat-num { font-family: var(--font-h); font-size: 1.6rem; line-height: 1; }
+.stat-label { font-size: .68rem; color: var(--text2); margin-top: 2px; font-family: var(--font-m); letter-spacing: .5px; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(18px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ══════════ SECTIONS ══════════ */
+.section-wrap { max-width: 1380px; margin: 0 auto; padding: 3rem 1.5rem; }
+.section-header { margin-bottom: 2rem; }
+.section-tag {
+  font-family: var(--font-m); font-size: .68rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text3); margin-bottom: .4rem;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-tag::after { content:''; flex:1; height:1px; background: var(--border); }
+h2 {
+  font-family: var(--font-h);
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  margin-bottom: .4rem;
+}
+.section-sub { color: var(--text2); font-size: .9rem; max-width: 680px; }
+
+/* ══════════ ER DIAGRAM ══════════ */
+.er-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2rem;
+  overflow-x: auto;
+  position: relative;
+}
+.er-scene {
+  position: relative;
+  width: 1280px;
+  height: 1020px;
+}
+
+/* SVG connector lines */
+.er-svg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; overflow: visible;
+}
+.er-svg line, .er-svg path {
+  stroke: var(--border2); stroke-width: 1.5;
+  fill: none;
+  stroke-dasharray: 4 3;
+  opacity: .7;
+}
+.er-svg .solid { stroke-dasharray: none; stroke-width: 2; opacity:1; }
+.er-svg .m1c { stroke: var(--c1); }
+.er-svg .m2c { stroke: var(--c2); }
+.er-svg .m3c { stroke: var(--c3); }
+.er-svg .m4c { stroke: var(--c4); }
+.er-svg .m5c { stroke: var(--c5); }
+
+/* TABLE CARDS */
+.er-tbl {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  overflow: hidden;
+  font-size: .7rem;
+  transition: border-color .2s, box-shadow .2s, transform .15s;
+  cursor: default;
+  min-width: 188px;
+}
+.er-tbl:hover {
+  border-color: currentColor;
+  box-shadow: 0 0 20px rgba(110,168,254,.15);
+  transform: translateY(-3px);
+  z-index: 50;
+}
+.er-head {
+  padding: .5rem .8rem;
+  font-family: var(--font-m); font-size: .68rem; font-weight: 600;
+  display: flex; justify-content: space-between; align-items: center;
+  letter-spacing: .3px;
+}
+.er-body { border-top: 1px solid var(--border); }
+.er-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .25rem .8rem; gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+}
+.er-row:last-child { border-bottom: none; }
+.er-col-n { font-family: var(--font-m); color: var(--text2); font-size: .65rem; }
+.er-col-n.pk { color: #fbbf24; }
+.er-col-n.fk { color: var(--c4); }
+.er-col-n.uk { color: var(--c1); }
+.er-col-t { font-size: .6rem; color: var(--text3); white-space: nowrap; }
+.er-badge { font-size: .52rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; font-family: var(--font-m); }
+.pk-b { background: rgba(251,191,36,.15); color: #fbbf24; }
+.fk-b { background: rgba(110,168,254,.15); color: #93c5fd; }
+.uk-b { background: rgba(0,212,170,.15); color: var(--c1); }
+.ix-b { background: rgba(100,110,150,.12); color: var(--text3); }
+
+/* module color themes */
+.m1 .er-head { background: rgba(0,212,170,.1); color: var(--c1); }
+.m2 .er-head { background: rgba(245,197,66,.1); color: var(--c2); }
+.m3 .er-head { background: rgba(255,123,79,.1); color: var(--c3); }
+.m4 .er-head { background: rgba(110,168,254,.1); color: var(--c4); }
+.m5 .er-head { background: rgba(192,132,252,.1); color: var(--c5); }
+
+/* positions */
+.t-cat-comp  { top:  20px; left:  20px; }
+.t-bib-comp  { top: 175px; left:  20px; }
+.t-cat-plt   { top:  20px; left: 240px; }
+.t-cat-mae   { top: 180px; left: 240px; }
+.t-cat-det   { top: 355px; left: 240px; }
+.t-conc-trib { top:  20px; left: 490px; }
+.t-plantilla { top: 235px; left: 490px; }
+.t-ver-plt   { top: 395px; left: 490px; }
+.t-ver-hist  { top: 575px; left: 490px; }
+.t-upa       { top: 700px; left: 490px; }
+.t-sec-plt   { top:  20px; left: 730px; }
+.t-campo-plt { top: 250px; left: 730px; }
+.t-regla-val { top:  20px; left: 980px; }
+.t-campo-rv  { top: 195px; left: 980px; }
+.t-regla-con { top: 340px; left: 980px; }
+.t-regla-cd  { top: 470px; left: 980px; }
+.t-campo-con { top: 595px; left: 980px; }
+.t-form-decl { top:  20px; left: 1100px; }  
+.t-decl-hist { top: 260px; left: 1100px; }
+.t-det-val   { top: 390px; left: 1100px; }
+.t-decl-obs  { top: 530px; left: 1100px; }
+.t-decl-adj  { top: 700px; left: 1100px; }
+
+/* ══════════ LEGEND ══════════ */
+.er-legend {
+  display: flex; flex-wrap: wrap; gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  font-size: .75rem;
+}
+.leg-item { display: flex; align-items: center; gap: 7px; color: var(--text2); }
+.leg-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink:0; }
+.leg-line-solid { width: 24px; height: 2px; border-radius: 1px; flex-shrink:0; }
+.leg-line-dash  { width: 24px; height: 0; border-top: 2px dashed var(--border2); flex-shrink:0; }
+
+/* ══════════ GUÍA ══════════ */
+.guide-grid {
+  display: flex; flex-direction: column; gap: 1.2rem;
+}
+
+.phase-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.phase-head {
+  display: flex; align-items: stretch;
+  cursor: pointer; user-select: none;
+}
+.phase-num-block {
+  width: 72px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border-right: 1px solid var(--border);
+  gap: 4px; padding: .8rem 0;
+}
+.phase-num {
+  font-family: var(--font-h);
+  font-size: 2rem; line-height: 1;
+}
+.phase-module-tag {
+  font-family: var(--font-m);
+  font-size: .55rem; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text3);
+}
+.phase-info { flex: 1; padding: .9rem 1.2rem; }
+.phase-title { font-weight: 600; font-size: .95rem; margin-bottom: 3px; }
+.phase-desc { font-size: .78rem; color: var(--text2); }
+.phase-meta-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: .5rem; }
+.phase-toggle {
+  width: 52px; display: flex; align-items: center; justify-content: center;
+  color: var(--text3); font-size: 1.1rem;
+  transition: transform .2s;
+}
+.phase-card.open .phase-toggle { transform: rotate(180deg); }
+.phase-body { display: none; border-top: 1px solid var(--border); }
+.phase-card.open .phase-body { display: block; }
+
+/* step timeline */
+.steps-timeline {
+  padding: 1.5rem 1.5rem 1.5rem 2rem;
+  display: flex; flex-direction: column; gap: 0;
+  position: relative;
+}
+.steps-timeline::before {
+  content:'';
+  position: absolute;
+  left: 2.8rem; top: 2rem; bottom: 2rem;
+  width: 1px; background: var(--border);
+}
+.step-item {
+  display: flex; gap: 1.2rem; align-items: flex-start;
+  position: relative; padding-bottom: 1.4rem;
+}
+.step-item:last-child { padding-bottom: 0; }
+.step-bullet {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 2px solid var(--border2);
+  background: var(--bg2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-m); font-size: .65rem; font-weight: 600;
+  flex-shrink: 0; z-index: 1;
+  color: var(--text2);
+  transition: border-color .2s, background .2s;
+}
+.step-item:hover .step-bullet {
+  border-color: currentColor;
+  background: var(--surface);
+}
+.step-content { flex: 1; padding-top: 5px; }
+.step-title { font-weight: 600; font-size: .88rem; margin-bottom: .3rem; }
+.step-text { font-size: .8rem; color: var(--text2); margin-bottom: .6rem; line-height: 1.6; }
+.step-text code {
+  font-family: var(--font-m);
+  background: rgba(110,168,254,.1);
+  color: #93c5fd;
+  padding: 1px 6px; border-radius: 4px;
+  font-size: .78em;
+}
+
+/* code blocks */
+.code-block {
+  background: #040608;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .9rem 1.1rem;
+  font-family: var(--font-m);
+  font-size: .72rem;
+  line-height: 1.75;
+  color: #b8c4e0;
+  overflow-x: auto;
+  margin: .6rem 0;
+}
+.kw  { color: #79c0ff; }
+.fn  { color: #d2a8ff; }
+.str { color: #a5d6ff; }
+.cm  { color: #4a5568; font-style: italic; }
+.tp  { color: #ffa657; }
+.op  { color: #6ee7b7; }
+.num { color: #f97316; }
+.at  { color: #fb923c; }
+
+/* chips */
+.chip-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: .5rem; }
+.chip {
+  padding: 2px 9px; border-radius: 5px;
+  font-size: .68rem; font-family: var(--font-m);
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.chip.oracle { border-color: rgba(255,123,79,.3); color: #fb923c; background: rgba(255,123,79,.06); }
+.chip.spring { border-color: rgba(0,212,170,.3); color: var(--c1); background: rgba(0,212,170,.06); }
+.chip.vue    { border-color: rgba(110,168,254,.3); color: var(--c4); background: rgba(110,168,254,.06); }
+.chip.test   { border-color: rgba(192,132,252,.3); color: var(--c5); background: rgba(192,132,252,.06); }
+
+/* sub-blocks inside steps */
+.sub-block {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .8rem 1rem;
+  margin: .5rem 0;
+}
+.sub-block-title {
+  font-family: var(--font-m);
+  font-size: .68rem; font-weight: 600;
+  color: var(--text2); margin-bottom: .5rem;
+  letter-spacing: .3px; text-transform: uppercase;
+}
+.sub-list { list-style: none; display: flex; flex-direction: column; gap: .35rem; }
+.sub-list li { font-size: .78rem; color: var(--text2); padding-left: .9rem; position: relative; }
+.sub-list li::before { content: '→'; position: absolute; left: 0; color: var(--text3); }
+.sub-list li strong { color: var(--text); }
+
+/* callout */
+.callout {
+  border-radius: 8px; padding: .7rem 1rem;
+  font-size: .78rem; display: flex; gap: 9px; align-items: flex-start;
+  margin: .5rem 0;
+}
+.callout.warn { background: rgba(245,197,66,.07); border: 1px solid rgba(245,197,66,.25); color: #fde68a; }
+.callout.tip  { background: rgba(0,212,170,.07);  border: 1px solid rgba(0,212,170,.25);  color: #99f6e4; }
+.callout.info { background: rgba(110,168,254,.07); border: 1px solid rgba(110,168,254,.25); color: #bfdbfe; }
+.callout-icon { flex-shrink:0; font-size: .9rem; margin-top:1px; }
+
+/* ══════════ SCROLLBAR ══════════ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  font-family: var(--font-m);
+  font-size: .7rem; color: var(--text3);
+  margin-top: 4rem;
+}
+</style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<nav>
+  <div class="nav-brand">⬡ DynForms</div>
+  <ul class="nav-links">
+    <li><a href="#er"><span class="nav-dot" style="background:var(--c4)"></span>Diagrama ER</a></li>
+    <li><a href="#fase1"><span class="nav-dot" style="background:var(--c3)"></span>F1 · BD & DDL</a></li>
+    <li><a href="#fase2"><span class="nav-dot" style="background:var(--c2)"></span>F2 · API Core</a></li>
+    <li><a href="#fase3"><span class="nav-dot" style="background:var(--c4)"></span>F3 · API Diseñador</a></li>
+    <li><a href="#fase4"><span class="nav-dot" style="background:var(--c5)"></span>F4 · API Ejecución</a></li>
+    <li><a href="#fase5"><span class="nav-dot" style="background:var(--c1)"></span>F5 · Vue Diseñador</a></li>
+    <li><a href="#fase6"><span class="nav-dot" style="background:var(--c4)"></span>F6 · Vue Motor</a></li>
+    <li><a href="#fase7"><span class="nav-dot" style="background:var(--c5)"></span>F7 · Deploy</a></li>
+  </ul>
+</nav>
+
+<!-- ════ HERO ════ -->
+<div class="hero">
+  <div class="hero-eyebrow">Módulos M1 → M5 · Sin Seguridad ni Auditoría</div>
+  <h1>Diagrama ER & Guía<br><em>de Construcción</em></h1>
+  <p>Vista limpia del núcleo funcional del sistema: componentes, catálogos, semántica tributaria, diseñador y ejecución. Con guía técnica exhaustiva.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num" style="color:var(--c1)">5</div><div class="stat-label">Módulos</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--c2)">22</div><div class="stat-label">Tablas</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--c4)">7</div><div class="stat-label">Fases</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--c5)">40+</div><div class="stat-label">Pasos detallados</div></div>
+  </div>
+</div>
+
+
+<!-- ════ ER DIAGRAM ════ -->
+<div class="section-wrap" id="er">
+  <div class="section-header">
+    <div class="section-tag">§ 01 · Diagrama Entidad-Relación</div>
+    <h2>Relaciones del Núcleo Funcional</h2>
+    <p class="section-sub">Líneas sólidas = relación directa obligatoria. Líneas punteadas = relación opcional / referencia. Hover sobre una tabla para resaltarla.</p>
+  </div>
+
+  <div class="er-legend">
+    <div class="leg-item"><div class="leg-swatch" style="background:var(--c1)"></div>M1 · Componentes UI</div>
+    <div class="leg-item"><div class="leg-swatch" style="background:var(--c2)"></div>M2 · Catálogos</div>
+    <div class="leg-item"><div class="leg-swatch" style="background:var(--c3)"></div>M3 · Tributaria</div>
+    <div class="leg-item"><div class="leg-swatch" style="background:var(--c4)"></div>M4 · Diseñador</div>
+    <div class="leg-item"><div class="leg-swatch" style="background:var(--c5)"></div>M5 · Ejecución</div>
+    <div class="leg-item" style="margin-left:.5rem"><div class="leg-line-solid" style="background:var(--c4)"></div>FK obligatoria</div>
+    <div class="leg-item"><div class="leg-line-dash"></div>FK opcional</div>
+    <div class="leg-item"><span class="er-badge pk-b">PK</span> Primary Key</div>
+    <div class="leg-item"><span class="er-badge fk-b">FK</span> Foreign Key</div>
+    <div class="leg-item"><span class="er-badge uk-b">UK</span> Unique Key</div>
+    <div class="leg-item"><span class="er-badge ix-b">IX</span> Índice</div>
+  </div>
+
+  <div class="er-wrap">
+    <div class="er-scene">
+
+      <!-- SVG CONNECTORS -->
+      <svg class="er-svg" xmlns="http://www.w3.org/2000/svg">
+        <!-- M1: CATEGORIA_COMPONENTE → BIBLIOTECA_COMPONENTE -->
+        <line class="solid m1c" x1="114" y1="100" x2="114" y2="175"/>
+        <!-- M2: CATEGORIA_PLANTILLA → PLANTILLA (via M4) -->
+        <path class="solid m2c" d="M330 65 Q330 240 490 240"/>
+        <!-- M2: CATALOGO_MAESTRO → CATALOGO_DETALLE -->
+        <line class="solid m2c" x1="330" y1="295" x2="330" y2="355"/>
+        <!-- M2: CATALOGO_DETALLE self-ref -->
+        <path class="m2c" d="M240 410 Q210 410 210 440 Q210 470 240 470"/>
+        <!-- M3: CONCEPTO_TRIBUTARIO self-ref -->
+        <path class="m3c" d="M490 70 Q462 70 462 100 Q462 130 490 130"/>
+        <!-- M3: CONCEPTO_TRIBUTARIO → CAMPO_PLANTILLA_CONCEPTO -->
+        <path class="solid m3c" d="M680 105 Q850 105 980 630"/>
+        <!-- M4: PLANTILLA → VERSION_PLANTILLA -->
+        <line class="solid m4c" x1="586" y1="310" x2="586" y2="395"/>
+        <!-- M4: VERSION_PLANTILLA → VERSION_HISTORIAL -->
+        <line class="solid m4c" x1="586" y1="480" x2="586" y2="575"/>
+        <!-- M4: VERSION_PLANTILLA → SECCION_PLANTILLA -->
+        <path class="solid m4c" d="M730 445 Q730 140 730 115"/>
+        <!-- M4: VERSION_PLANTILLA → CAMPO_PLANTILLA -->
+        <line class="solid m4c" x1="730" y1="455" x2="730" y2="350"/>
+        <!-- M4: SECCION_PLANTILLA → CAMPO_PLANTILLA -->
+        <line class="solid m4c" x1="820" y1="200" x2="820" y2="250"/>
+        <!-- M4: SECCION self-ref -->
+        <path class="m4c" d="M730 60 Q705 60 705 90 Q705 120 730 120"/>
+        <!-- M1: BIBLIOTECA_COMPONENTE → CAMPO_PLANTILLA -->
+        <path class="m1c" d="M210 265 Q468 265 730 360"/>
+        <!-- M2: CATALOGO_MAESTRO → CAMPO_PLANTILLA -->
+        <path class="m2c" d="M430 235 Q580 235 730 370"/>
+        <!-- CAMPO_PLANTILLA → REGLA_VALIDACION (via junction) -->
+        <path class="solid m4c" d="M928 365 Q955 365 980 230"/>
+        <!-- CAMPO_PLANTILLA → REGLA_CONDICIONAL -->
+        <path class="solid m4c" d="M928 375 Q955 375 980 360"/>
+        <!-- CAMPO_PLANTILLA_CONCEPTO self -->
+        <line class="solid m4c" x1="928" y1="620" x2="980" y2="620"/>
+        <!-- M5: VERSION_PLANTILLA → FORMULARIO_DECLARACION -->
+        <path class="solid m5c" d="M730 445 Q1040 445 1100 115"/>
+        <!-- M5: FORMULARIO_DECLARACION → DECL_HISTORIAL -->
+        <line class="solid m5c" x1="1190" y1="220" x2="1190" y2="260"/>
+        <!-- M5: FORMULARIO_DECLARACION → DETALLE_VALOR -->
+        <line class="solid m5c" x1="1190" y1="230" x2="1190" y2="390"/>
+        <!-- M5: FORMULARIO_DECLARACION → DECL_OBSERVACION -->
+        <line class="solid m5c" x1="1190" y1="235" x2="1190" y2="530"/>
+        <!-- M5: FORMULARIO_DECLARACION → DECL_ADJUNTO -->
+        <line class="solid m5c" x1="1190" y1="245" x2="1190" y2="700"/>
+        <!-- DETALLE_VALOR → CONCEPTO_TRIBUTARIO -->
+        <path class="m3c" d="M1100 440 Q900 440 680 120"/>
+        <!-- DECL_OBS → CAMPO_PLANTILLA -->
+        <path class="m4c" d="M1100 570 Q1014 570 1014 395"/>
+        <!-- REGLA_CONDICIONAL → REGLA_COND_DETALLE -->
+        <line class="solid m4c" x1="1070" y1="410" x2="1070" y2="470"/>
+        <!-- UPA → PLANTILLA -->
+        <path class="m4c" d="M490 730 Q460 730 460 265 Q460 240 490 240"/>
+      </svg>
+
+      <!-- ═══ M1: COMPONENTES ═══ -->
+      <div class="er-tbl m1 t-cat-comp" style="color:var(--c1); width:200px">
+        <div class="er-head">CATEGORIA_COMPONENTE <span class="er-badge pk-b">PK</span></div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n uk">IDENTIFICADOR_TECNICO</span><span class="er-col-t">VARCHAR2(50) <span class="er-badge uk-b">UK</span></span></div>
+          <div class="er-row"><span class="er-col-n">NOMBRE_AMIGABLE</span><span class="er-col-t">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="er-col-n">PERMITE_CATALOGO</span><span class="er-col-t">NUMBER(1)</span></div>
+          <div class="er-row"><span class="er-col-n">PERMITE_HIJOS</span><span class="er-col-t">NUMBER(1)</span></div>
+          <div class="er-row"><span class="er-col-n">PERMITE_ADJUNTO</span><span class="er-col-t">NUMBER(1)</span></div>
+          <div class="er-row"><span class="er-col-n">ACTIVO</span><span class="er-col-t">NUMBER(1)</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m1 t-bib-comp" style="color:var(--c1); width:200px">
+        <div class="er-head">BIBLIOTECA_COMPONENTE <span class="er-badge pk-b">PK</span></div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_CATEGORIA_COMP</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n">NOMBRE_UI</span><span class="er-col-t">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="er-col-n">CATEGORIA_UI</span><span class="er-col-t">VARCHAR2(50)</span></div>
+          <div class="er-row"><span class="er-col-n">CONFIG_DEFAULT_JSON</span><span class="er-col-t">CLOB JSON</span></div>
+          <div class="er-row"><span class="er-col-n">ORDEN_CATALOGO</span><span class="er-col-t">NUMBER</span></div>
+        </div>
+      </div>
+
+      <!-- ═══ M2: CATÁLOGOS ═══ -->
+      <div class="er-tbl m2 t-cat-plt" style="color:var(--c2); width:185px">
+        <div class="er-head">CATEGORIA_PLANTILLA <span class="er-badge pk-b">PK</span></div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n">NOMBRE</span><span class="er-col-t">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="er-col-n">DESCRIPCION</span><span class="er-col-t">VARCHAR2(300)</span></div>
+          <div class="er-row"><span class="er-col-n">ORDEN</span><span class="er-col-t">NUMBER</span></div>
+          <div class="er-row"><span class="er-col-n">ACTIVO</span><span class="er-col-t">NUMBER(1)</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m2 t-cat-mae" style="color:var(--c2); width:185px">
+        <div class="er-head">CATALOGO_MAESTRO <span class="er-badge pk-b">PK</span></div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n uk">CODIGO_UNICO</span><span class="er-col-t">VARCHAR2(50) <span class="er-badge uk-b">UK</span></span></div>
+          <div class="er-row"><span class="er-col-n">NOMBRE</span><span class="er-col-t">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="er-col-n">METADATA_COLS_JSON</span><span class="er-col-t">CLOB JSON</span></div>
+          <div class="er-row"><span class="er-col-n">PERMITE_JERARQUIA</span><span class="er-col-t">NUMBER(1)</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m2 t-cat-det" style="color:var(--c2); width:185px">
+        <div class="er-head">CATALOGO_DETALLE <span class="er-badge pk-b">PK</span></div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_CATALOGO_MAESTRO</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> <span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">CODIGO_ITEM_PADRE</span><span class="er-col-t">self <span class="er-badge fk-b">FK</span> <span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n uk">VALOR_CLAVE</span><span class="er-col-t">VARCHAR2 <span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n">ETIQUETA</span><span class="er-col-t">VARCHAR2(200)</span></div>
+          <div class="er-row"><span class="er-col-n">ATRIBUTOS_EXTRA_JSON</span><span class="er-col-t">CLOB JSON</span></div>
+        </div>
+      </div>
+
+      <!-- ═══ M3: TRIBUTARIA ═══ -->
+      <div class="er-tbl m3 t-conc-trib" style="color:var(--c3); width:220px">
+        <div class="er-head">CONCEPTO_TRIBUTARIO <span class="er-badge pk-b">PK</span></div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">CODIGO_PADRE</span><span class="er-col-t">self <span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n uk">CASILLERO_SRI</span><span class="er-col-t">VARCHAR2(20) <span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n">NOMBRE</span><span class="er-col-t">VARCHAR2(300)</span></div>
+          <div class="er-row"><span class="er-col-n">TIPO_DATO</span><span class="er-col-t">VARCHAR2(50)</span></div>
+          <div class="er-row"><span class="er-col-n">ES_CALCULADO</span><span class="er-col-t">NUMBER(1)</span></div>
+          <div class="er-row"><span class="er-col-n">FORMULA_CALCULO</span><span class="er-col-t">VARCHAR2(500)</span></div>
+          <div class="er-row"><span class="er-col-n">VIGENCIA_DESDE/HASTA</span><span class="er-col-t">DATE</span></div>
+        </div>
+      </div>
+
+      <!-- ═══ M4: PLANTILLA ═══ -->
+      <div class="er-tbl m4 t-plantilla" style="color:var(--c4); width:215px">
+        <div class="er-head">PLANTILLA</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_CATEGORIA_PLT</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n uk">IDENTIFICADOR</span><span class="er-col-t">VARCHAR2(50) <span class="er-badge uk-b">UK</span></span></div>
+          <div class="er-row"><span class="er-col-n">NOMBRE</span><span class="er-col-t">VARCHAR2(200)</span></div>
+          <div class="er-row"><span class="er-col-n">DESCRIPCION</span><span class="er-col-t">VARCHAR2(500)</span></div>
+          <div class="er-row"><span class="er-col-n">FECHA_CREACION</span><span class="er-col-t">TIMESTAMP</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m4 t-ver-plt" style="color:var(--c4); width:215px">
+        <div class="er-head">VERSION_PLANTILLA</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">CODIGO_PLANTILLA</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n uk">NUMERO_VERSION</span><span class="er-col-t">VARCHAR2(20) <span class="er-badge uk-b">UK</span></span></div>
+          <div class="er-row"><span class="er-col-n">VIGENCIA_DESDE/HASTA</span><span class="er-col-t">DATE</span></div>
+          <div class="er-row"><span class="er-col-n">ESTADO</span><span class="er-col-t">BORRADOR|PUBLICADO</span></div>
+          <div class="er-row"><span class="er-col-n">CONFIG_GLOBAL_JSON</span><span class="er-col-t">CLOB JSON</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m4 t-ver-hist" style="color:var(--c4); width:215px">
+        <div class="er-head">VERSION_PLT_HISTORIAL</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_VERSION_PLANTILLA</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n">ESTADO_ANTERIOR</span><span class="er-col-t">VARCHAR2(20)</span></div>
+          <div class="er-row"><span class="er-col-n">ESTADO_NUEVO</span><span class="er-col-t">VARCHAR2(20)</span></div>
+          <div class="er-row"><span class="er-col-n">COMENTARIO</span><span class="er-col-t">VARCHAR2(500)</span></div>
+          <div class="er-row"><span class="er-col-n">FECHA_CAMBIO</span><span class="er-col-t">TIMESTAMP</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m4 t-upa" style="color:var(--c4); width:215px">
+        <div class="er-head">USUARIO_PLANTILLA_ACCESO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">CODIGO_USUARIO</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">CODIGO_PLANTILLA</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n">PUEDE_DISENAR</span><span class="er-col-t">NUMBER(1)</span></div>
+          <div class="er-row"><span class="er-col-n">PUEDE_LLENAR</span><span class="er-col-t">NUMBER(1)</span></div>
+          <div class="er-row"><span class="er-col-n">PUEDE_REVISAR</span><span class="er-col-t">NUMBER(1)</span></div>
+          <div class="er-row"><span class="er-col-n">PUEDE_APROBAR</span><span class="er-col-t">NUMBER(1)</span></div>
+          <div class="er-row"><span class="er-col-n">FECHA_DESDE/HASTA</span><span class="er-col-t">DATE</span></div>
+        </div>
+      </div>
+
+      <!-- ═══ M4: ESTRUCTURA ═══ -->
+      <div class="er-tbl m4 t-sec-plt" style="color:var(--c4); width:220px">
+        <div class="er-head">SECCION_PLANTILLA</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_VERSION_PLANTILLA</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> <span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_SECCION_PADRE</span><span class="er-col-t">self <span class="er-badge fk-b">FK</span> <span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n">TIPO</span><span class="er-col-t">VARCHAR2(30)</span></div>
+          <div class="er-row"><span class="er-col-n uk">CLAVE_UI</span><span class="er-col-t">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="er-col-n">ETIQUETA</span><span class="er-col-t">VARCHAR2(200)</span></div>
+          <div class="er-row"><span class="er-col-n">ORDEN</span><span class="er-col-t">NUMBER <span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n">CONFIG_LAYOUT_JSON</span><span class="er-col-t">CLOB JSON</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m4 t-campo-plt" style="color:var(--c4); width:220px">
+        <div class="er-head">CAMPO_PLANTILLA</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_VERSION_PLANTILLA</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> <span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">CODIGO_SECCION</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> <span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_BIBLIOTECA_COMP</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_CATALOGO_MAESTRO</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n uk">CLAVE_UI</span><span class="er-col-t">VARCHAR2 <span class="er-badge uk-b">UK</span></span></div>
+          <div class="er-row"><span class="er-col-n">CATEGORIA_COMPONENTE</span><span class="er-col-t">VARCHAR2(50)</span></div>
+          <div class="er-row"><span class="er-col-n">ETIQUETA_UI</span><span class="er-col-t">VARCHAR2(200)</span></div>
+          <div class="er-row"><span class="er-col-n">ES_OBLIGATORIO</span><span class="er-col-t">NUMBER(1)</span></div>
+          <div class="er-row"><span class="er-col-n">ANCHO_COLUMNAS</span><span class="er-col-t">NUMBER (1-12)</span></div>
+          <div class="er-row"><span class="er-col-n">PROPIEDADES_UI_JSON</span><span class="er-col-t">CLOB JSON</span></div>
+        </div>
+      </div>
+
+      <!-- ═══ M4: REGLAS ═══ -->
+      <div class="er-tbl m4 t-regla-val" style="color:var(--c4); width:190px">
+        <div class="er-head">REGLA_VALIDACION</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n">NOMBRE</span><span class="er-col-t">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="er-col-n">TIPO</span><span class="er-col-t">VARCHAR2(30)</span></div>
+          <div class="er-row"><span class="er-col-n">EXPRESION</span><span class="er-col-t">VARCHAR2(500)</span></div>
+          <div class="er-row"><span class="er-col-n">MENSAJE_ERROR</span><span class="er-col-t">VARCHAR2(300)</span></div>
+          <div class="er-row"><span class="er-col-n">REUTILIZABLE</span><span class="er-col-t">NUMBER(1)</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m4 t-campo-rv" style="color:var(--c4); width:190px">
+        <div class="er-head">CAMPO_REGLA_VALIDACION</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n fk">COD_CAMPO_PLANTILLA</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_REGLA_VALIDACION</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="er-col-n">ORDEN_EJECUCION</span><span class="er-col-t">NUMBER</span></div>
+          <div class="er-row"><span class="er-col-n">PARAMETROS_JSON</span><span class="er-col-t">CLOB JSON</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m4 t-regla-con" style="color:var(--c4); width:190px">
+        <div class="er-head">REGLA_CONDICIONAL</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_CAMPO_PLANTILLA</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n">ACCION</span><span class="er-col-t">SHOW|HIDE|REQ|DISABLE</span></div>
+          <div class="er-row"><span class="er-col-n">CONECTOR_LOGICO</span><span class="er-col-t">AND|OR</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m4 t-regla-cd" style="color:var(--c4); width:190px">
+        <div class="er-head">REGLA_COND_DETALLE</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_REGLA_CONDICIONAL</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n">CLAVE_UI_CAMPO_EVAL</span><span class="er-col-t">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="er-col-n">OPERADOR</span><span class="er-col-t">EQ|NEQ|GT|IN…</span></div>
+          <div class="er-row"><span class="er-col-n">VALOR_REFERENCIA</span><span class="er-col-t">VARCHAR2(200)</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m4 t-campo-con" style="color:var(--c4); width:190px">
+        <div class="er-head">CAMPO_PLT_CONCEPTO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n fk">COD_CAMPO_PLANTILLA</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_CONCEPTO_TRIB</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="er-col-n">TIPO_OPERACION</span><span class="er-col-t">ASIGNACION|SUMA…</span></div>
+        </div>
+      </div>
+
+      <!-- ═══ M5: EJECUCIÓN ═══ -->
+      <div class="er-tbl m5 t-form-decl" style="color:var(--c5); width:170px">
+        <div class="er-head">FORMULARIO_DECL</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_VERSION_PLT</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n">RUC_CONTRIBUYENTE</span><span class="er-col-t"><span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n">PERIODO_FISCAL</span><span class="er-col-t"><span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n uk">NRO_DECLARACION</span><span class="er-col-t">VARCHAR2 <span class="er-badge uk-b">UK</span></span></div>
+          <div class="er-row"><span class="er-col-n">ESTADO</span><span class="er-col-t"><span class="er-badge ix-b">IX</span></span></div>
+          <div class="er-row"><span class="er-col-n">DATOS_JSON</span><span class="er-col-t">CLOB JSON</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m5 t-decl-hist" style="color:var(--c5); width:170px">
+        <div class="er-head">DECL_HISTORIAL_ESTADO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_FORM_DECL</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n">ESTADO_ANT → NUEVO</span><span class="er-col-t">VARCHAR2</span></div>
+          <div class="er-row"><span class="er-col-n">COMENTARIO</span><span class="er-col-t">VARCHAR2(1000)</span></div>
+          <div class="er-row"><span class="er-col-n">FECHA_CAMBIO</span><span class="er-col-t">TIMESTAMP</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m5 t-det-val" style="color:var(--c5); width:170px">
+        <div class="er-head">DETALLE_VALOR_CONCEPTO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n fk">COD_FORM_DECL</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_CONCEPTO_TRIB</span><span class="er-col-t"><span class="er-badge fk-b">FK</span> PK</span></div>
+          <div class="er-row"><span class="er-col-n">VALOR_CALCULADO</span><span class="er-col-t">NUMBER(19,4)</span></div>
+          <div class="er-row"><span class="er-col-n">FECHA_CALCULO</span><span class="er-col-t">TIMESTAMP</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m5 t-decl-obs" style="color:var(--c5); width:170px">
+        <div class="er-head">DECLARACION_OBSERVACION</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_FORM_DECL</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_CAMPO_PLT</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n">TIPO</span><span class="er-col-t">GENERAL|VALIDACION</span></div>
+          <div class="er-row"><span class="er-col-n">MENSAJE</span><span class="er-col-t">VARCHAR2(1000)</span></div>
+          <div class="er-row"><span class="er-col-n">RESUELTO</span><span class="er-col-t">NUMBER(1)</span></div>
+        </div>
+      </div>
+
+      <div class="er-tbl m5 t-decl-adj" style="color:var(--c5); width:170px">
+        <div class="er-head">DECLARACION_ADJUNTO</div>
+        <div class="er-body">
+          <div class="er-row"><span class="er-col-n pk">CODIGO</span><span class="er-col-t">NUMBER <span class="er-badge pk-b">PK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_FORM_DECL</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n fk">COD_CAMPO_PLT</span><span class="er-col-t"><span class="er-badge fk-b">FK</span></span></div>
+          <div class="er-row"><span class="er-col-n">NOMBRE_ORIGINAL</span><span class="er-col-t">VARCHAR2(255)</span></div>
+          <div class="er-row"><span class="er-col-n">RUTA_ALMACENAMIENTO</span><span class="er-col-t">VARCHAR2(500)</span></div>
+          <div class="er-row"><span class="er-col-n">MIME_TYPE</span><span class="er-col-t">VARCHAR2(100)</span></div>
+          <div class="er-row"><span class="er-col-n">HASH_SHA256</span><span class="er-col-t">VARCHAR2(64)</span></div>
+        </div>
+      </div>
+
+    </div><!-- er-scene -->
+  </div><!-- er-wrap -->
+</div>
+
+
+<!-- ════════════ GUÍA ════════════ -->
+<div class="section-wrap">
+  <div class="section-header">
+    <div class="section-tag">§ 02 · Guía de Construcción</div>
+    <h2>Paso a Paso Completo</h2>
+    <p class="section-sub">7 fases ordenadas. Cada paso contiene código real, decisiones de diseño y herramientas concretas. Haz clic en cada fase para expandirla.</p>
+  </div>
+
+  <div class="guide-grid">
+
+    <!-- ═══ FASE 1 ═══ -->
+    <div class="phase-card open" id="fase1">
+      <div class="phase-head" onclick="toggle(this)">
+        <div class="phase-num-block" style="color:var(--c3)">
+          <div class="phase-num">1</div>
+          <div class="phase-module-tag">ORACLE · DDL</div>
+        </div>
+        <div class="phase-info">
+          <div class="phase-title">Base de Datos — DDL, Datos Semilla y PL/SQL</div>
+          <div class="phase-desc">Crear el esquema completo, poblar catálogos iniciales y escribir los paquetes PL/SQL que son el núcleo del negocio.</div>
+          <div class="phase-meta-chips">
+            <span class="chip oracle">Oracle 19c</span>
+            <span class="chip oracle">PL/SQL</span>
+            <span class="chip oracle">Flyway</span>
+            <span class="chip oracle">JSON_TABLE</span>
+          </div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps-timeline">
+
+          <div class="step-item" style="color:var(--c3)">
+            <div class="step-bullet">1.1</div>
+            <div class="step-content">
+              <div class="step-title">Estructura de carpetas del proyecto de BD</div>
+              <div class="step-text">Organiza el proyecto con Flyway para migraciones versionadas. Nunca modifiques scripts ya aplicados en producción.</div>
+              <div class="code-block"><span class="cm">db/
+├── migrations/
+│   ├── V01__modulo_componentes.sql
+│   ├── V02__modulo_catalogos.sql
+│   ├── V03__modulo_tributaria.sql
+│   ├── V04__modulo_disenador.sql
+│   ├── V05__modulo_ejecucion.sql
+│   ├── V06__seed_categorias_componente.sql
+│   ├── V07__seed_biblioteca_componentes.sql
+│   ├── V08__seed_conceptos_tributarios.sql
+│   └── V09__pkg_formulario.sql
+└── flyway.conf</span></div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c3)">
+            <div class="step-bullet">1.2</div>
+            <div class="step-content">
+              <div class="step-title">Seed: CATEGORIA_COMPONENTE — tipos de campo que el frontend puede renderizar</div>
+              <div class="step-text">Estas filas son el contrato entre backend y frontend. El <code>IDENTIFICADOR_TECNICO</code> es lo que Vue usará para decidir qué componente renderizar.</div>
+              <div class="code-block"><span class="kw">INSERT INTO</span> CATEGORIA_COMPONENTE
+    (IDENTIFICADOR_TECNICO, NOMBRE_AMIGABLE, PERMITE_CATALOGO, PERMITE_HIJOS, PERMITE_ADJUNTO)
+<span class="kw">VALUES</span>
+    (<span class="str">'INPUT_TEXT'</span>,    <span class="str">'Texto corto'</span>,       <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>),
+    (<span class="str">'TEXTAREA'</span>,      <span class="str">'Texto largo'</span>,       <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>),
+    (<span class="str">'INPUT_NUMBER'</span>,  <span class="str">'Número'</span>,            <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>),
+    (<span class="str">'DATE_PICKER'</span>,   <span class="str">'Fecha'</span>,             <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>),
+    (<span class="str">'SELECT'</span>,        <span class="str">'Lista desplegable'</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>),
+    (<span class="str">'RADIO'</span>,         <span class="str">'Selección única'</span>,   <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>),
+    (<span class="str">'CHECKBOX_GROUP'</span>,<span class="str">'Selección múltiple'</span>,<span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>),
+    (<span class="str">'CHECKBOX'</span>,      <span class="str">'Casilla booleana'</span>,  <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>),
+    (<span class="str">'FILE_UPLOAD'</span>,   <span class="str">'Adjunto'</span>,           <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>),
+    (<span class="str">'PANEL'</span>,         <span class="str">'Contenedor panel'</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>),
+    (<span class="str">'GRID_TABLE'</span>,    <span class="str">'Tabla editable'</span>,   <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>),
+    (<span class="str">'DIVIDER'</span>,       <span class="str">'Separador'</span>,        <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>);
+<span class="kw">COMMIT</span>;</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c3)">
+            <div class="step-bullet">1.3</div>
+            <div class="step-content">
+              <div class="step-title">Seed: BIBLIOTECA_COMPONENTE — widgets preconfigurados</div>
+              <div class="step-text">Cada widget es una variante lista para usar. El <code>CONFIG_DEFAULT_JSON</code> se copiará como snapshot cuando el diseñador arrastre el widget al canvas.</div>
+              <div class="code-block"><span class="kw">INSERT INTO</span> BIBLIOTECA_COMPONENTE
+    (CODIGO_CATEGORIA_COMPONENTE, NOMBRE_UI, CATEGORIA_UI, ORDEN_CATALOGO, CONFIGURACION_DEFAULT_JSON)
+<span class="kw">SELECT</span> c.CODIGO, w.NOMBRE_UI, w.CATEGORIA_UI, w.ORDEN, w.JSON_DEFAULT
+<span class="kw">FROM</span> CATEGORIA_COMPONENTE c
+<span class="kw">JOIN</span> (
+    <span class="kw">SELECT</span> <span class="str">'INPUT_NUMBER'</span> IDENT, <span class="str">'Monto en USD'</span> NOMBRE_UI,
+           <span class="str">'Numéricos'</span> CATEGORIA_UI, <span class="num">1</span> ORDEN,
+           <span class="str">'{"mask":"currency","prefix":"$","decimals":2,"placeholder":"0.00"}'</span> JSON_DEFAULT
+    <span class="kw">FROM</span> DUAL
+    <span class="kw">UNION ALL SELECT</span> <span class="str">'INPUT_NUMBER'</span>, <span class="str">'Porcentaje'</span>, <span class="str">'Numéricos'</span>, <span class="num">2</span>,
+           <span class="str">'{"mask":"percent","suffix":"%","decimals":2,"min":0,"max":100}'</span> <span class="kw">FROM</span> DUAL
+    <span class="kw">UNION ALL SELECT</span> <span class="str">'DATE_PICKER'</span>, <span class="str">'Fecha corta'</span>, <span class="str">'Fechas'</span>, <span class="num">1</span>,
+           <span class="str">'{"format":"DD/MM/YYYY","showToday":true}'</span> <span class="kw">FROM</span> DUAL
+    <span class="kw">UNION ALL SELECT</span> <span class="str">'SELECT'</span>, <span class="str">'Lista simple'</span>, <span class="str">'Selección'</span>, <span class="num">1</span>,
+           <span class="str">'{"filterable":true,"placeholder":"Seleccione..."}'</span> <span class="kw">FROM</span> DUAL
+) w <span class="kw">ON</span> c.IDENTIFICADOR_TECNICO = w.IDENT;
+<span class="kw">COMMIT</span>;</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c3)">
+            <div class="step-bullet">1.4</div>
+            <div class="step-content">
+              <div class="step-title">Paquete PL/SQL: PKG_FORMULARIO — cálculo de conceptos tributarios</div>
+              <div class="step-text">Este procedimiento es llamado cada vez que el usuario guarda datos. Lee <code>DATOS_JSON</code>, evalúa las fórmulas de <code>CONCEPTO_TRIBUTARIO</code> y actualiza <code>DETALLE_VALOR_CONCEPTO</code>.</div>
+              <div class="code-block"><span class="kw">CREATE OR REPLACE PACKAGE BODY</span> <span class="fn">PKG_FORMULARIO</span> <span class="kw">AS</span>
+
+  <span class="kw">PROCEDURE</span> <span class="fn">CALCULAR_CONCEPTOS</span>(
+      p_codigo_form <span class="kw">IN</span> <span class="tp">NUMBER</span>
+  ) <span class="kw">IS</span>
+      v_datos_json  <span class="tp">CLOB</span>;
+      v_valor       <span class="tp">NUMBER</span>;
+  <span class="kw">BEGIN</span>
+      <span class="cm">-- 1. Obtener el JSON de datos del formulario</span>
+      <span class="kw">SELECT</span> DATOS_JSON <span class="kw">INTO</span> v_datos_json
+      <span class="kw">FROM</span> FORMULARIO_DECLARACION
+      <span class="kw">WHERE</span> CODIGO = p_codigo_form;
+
+      <span class="cm">-- 2. Por cada campo mapeado a concepto tributario</span>
+      <span class="kw">FOR</span> rec <span class="kw">IN</span> (
+          <span class="kw">SELECT</span>
+              cpc.CODIGO_CONCEPTO_TRIBUTARIO,
+              cp.CLAVE_UI,
+              ct.FORMULA_CALCULO,
+              ct.ES_CALCULADO
+          <span class="kw">FROM</span> CAMPO_PLANTILLA_CONCEPTO cpc
+          <span class="kw">JOIN</span> CAMPO_PLANTILLA cp <span class="kw">ON</span> cp.CODIGO = cpc.CODIGO_CAMPO_PLANTILLA
+          <span class="kw">JOIN</span> CONCEPTO_TRIBUTARIO ct <span class="kw">ON</span> ct.CODIGO = cpc.CODIGO_CONCEPTO_TRIBUTARIO
+          <span class="kw">JOIN</span> FORMULARIO_DECLARACION fd <span class="kw">ON</span>
+               fd.CODIGO_VERSION_PLANTILLA = cp.CODIGO_VERSION_PLANTILLA
+          <span class="kw">WHERE</span> fd.CODIGO = p_codigo_form
+      ) <span class="kw">LOOP</span>
+          <span class="kw">IF</span> rec.ES_CALCULADO = <span class="num">0</span> <span class="kw">THEN</span>
+              <span class="cm">-- Leer valor directo del JSON</span>
+              <span class="kw">SELECT</span> <span class="fn">JSON_VALUE</span>(v_datos_json,
+                     <span class="str">'$.'</span> || rec.CLAVE_UI RETURNING <span class="tp">NUMBER</span>)
+              <span class="kw">INTO</span> v_valor <span class="kw">FROM</span> DUAL;
+          <span class="kw">ELSE</span>
+              <span class="cm">-- Evaluar fórmula (simplificado; usar DBMS_SQL para dinámica)</span>
+              <span class="kw">EXECUTE IMMEDIATE</span>
+                  <span class="str">'SELECT '</span> || rec.FORMULA_CALCULO ||
+                  <span class="str">' FROM FORMULARIO_DECLARACION WHERE CODIGO=:1'</span>
+                  <span class="kw">INTO</span> v_valor <span class="kw">USING</span> p_codigo_form;
+          <span class="kw">END IF</span>;
+
+          <span class="cm">-- Upsert en DETALLE_VALOR_CONCEPTO</span>
+          <span class="kw">MERGE INTO</span> DETALLE_VALOR_CONCEPTO dvc
+          <span class="kw">USING DUAL ON</span> (
+              dvc.CODIGO_FORMULARIO_DECLARACION = p_codigo_form
+              <span class="kw">AND</span> dvc.CODIGO_CONCEPTO_TRIBUTARIO = rec.CODIGO_CONCEPTO_TRIBUTARIO
+          )
+          <span class="kw">WHEN MATCHED THEN UPDATE SET</span>
+              dvc.VALOR_CALCULADO = v_valor,
+              dvc.FECHA_CALCULO   = CURRENT_TIMESTAMP
+          <span class="kw">WHEN NOT MATCHED THEN INSERT</span>
+              (CODIGO_FORMULARIO_DECLARACION, CODIGO_CONCEPTO_TRIBUTARIO, VALOR_CALCULADO)
+          <span class="kw">VALUES</span> (p_codigo_form, rec.CODIGO_CONCEPTO_TRIBUTARIO, v_valor);
+      <span class="kw">END LOOP</span>;
+      <span class="kw">COMMIT</span>;
+  <span class="kw">END</span> CALCULAR_CONCEPTOS;
+
+<span class="kw">END</span> PKG_FORMULARIO;</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c3)">
+            <div class="step-bullet">1.5</div>
+            <div class="step-content">
+              <div class="step-title">Paquete PL/SQL: PKG_DECLARACION — máquina de estados</div>
+              <div class="step-text">Centraliza todas las transiciones de estado con validación de permisos y registro automático en historial.</div>
+              <div class="code-block"><span class="kw">PROCEDURE</span> <span class="fn">CAMBIAR_ESTADO</span>(
+    p_form_id        <span class="kw">IN</span> <span class="tp">NUMBER</span>,
+    p_nuevo_estado   <span class="kw">IN</span> <span class="tp">VARCHAR2</span>,
+    p_usuario_id     <span class="kw">IN</span> <span class="tp">NUMBER</span>,
+    p_comentario     <span class="kw">IN</span> <span class="tp">VARCHAR2</span> <span class="kw">DEFAULT NULL</span>
+) <span class="kw">IS</span>
+    v_estado_actual   <span class="tp">VARCHAR2(20)</span>;
+    v_transicion_ok   <span class="tp">BOOLEAN</span> := <span class="kw">FALSE</span>;
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> ESTADO <span class="kw">INTO</span> v_estado_actual
+    <span class="kw">FROM</span> FORMULARIO_DECLARACION <span class="kw">WHERE</span> CODIGO = p_form_id
+    <span class="kw">FOR UPDATE</span>; <span class="cm">-- lock optimista</span>
+
+    <span class="cm">-- Validar transición permitida</span>
+    v_transicion_ok := (
+        (v_estado_actual = <span class="str">'BORRADOR'</span>   <span class="kw">AND</span> p_nuevo_estado = <span class="str">'ENVIADO'</span>)   <span class="kw">OR</span>
+        (v_estado_actual = <span class="str">'ENVIADO'</span>    <span class="kw">AND</span> p_nuevo_estado <span class="kw">IN</span> (<span class="str">'EN_REVISION'</span>,<span class="str">'RECHAZADO'</span>)) <span class="kw">OR</span>
+        (v_estado_actual = <span class="str">'EN_REVISION'</span> <span class="kw">AND</span> p_nuevo_estado <span class="kw">IN</span> (<span class="str">'OBSERVADO'</span>,<span class="str">'APROBADO'</span>)) <span class="kw">OR</span>
+        (v_estado_actual = <span class="str">'OBSERVADO'</span>  <span class="kw">AND</span> p_nuevo_estado = <span class="str">'EN_REVISION'</span>)
+    );
+
+    <span class="kw">IF NOT</span> v_transicion_ok <span class="kw">THEN</span>
+        <span class="fn">RAISE_APPLICATION_ERROR</span>(<span class="num">-20001</span>,
+            <span class="str">'Transición inválida: '</span>||v_estado_actual||<span class="str">' → '</span>||p_nuevo_estado);
+    <span class="kw">END IF</span>;
+
+    <span class="kw">UPDATE</span> FORMULARIO_DECLARACION
+    <span class="kw">SET</span> ESTADO = p_nuevo_estado <span class="kw">WHERE</span> CODIGO = p_form_id;
+
+    <span class="kw">INSERT INTO</span> DECLARACION_HISTORIAL_ESTADO
+        (CODIGO_FORMULARIO_DECLARACION, ESTADO_ANTERIOR, ESTADO_NUEVO,
+         COMENTARIO, USUARIO_RESPONSABLE)
+    <span class="kw">VALUES</span> (p_form_id, v_estado_actual, p_nuevo_estado,
+             p_comentario, p_usuario_id);
+    <span class="kw">COMMIT</span>;
+<span class="kw">END</span>;</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c3)">
+            <div class="step-bullet">1.6</div>
+            <div class="step-content">
+              <div class="step-title">Vista V_ESTRUCTURA_PLANTILLA para el API</div>
+              <div class="step-text">Esta vista es la que el backend consulta para cargar la estructura completa del diseñador en una sola query.</div>
+              <div class="code-block"><span class="kw">CREATE OR REPLACE VIEW</span> V_ESTRUCTURA_PLANTILLA <span class="kw">AS</span>
+<span class="kw">SELECT</span>
+    cp.CODIGO             <span class="kw">AS</span> ID_CAMPO,
+    cp.CLAVE_UI,
+    cp.ETIQUETA_UI,
+    cp.CATEGORIA_COMPONENTE,
+    cp.ORDEN,
+    cp.ES_OBLIGATORIO,
+    cp.ES_VISIBLE,
+    cp.ANCHO_COLUMNAS,
+    cp.PROPIEDADES_UI_JSON,
+    cp.CODIGO_SECCION,
+    sp.CLAVE_UI           <span class="kw">AS</span> CLAVE_UI_SECCION,
+    sp.ETIQUETA           <span class="kw">AS</span> ETIQUETA_SECCION,
+    sp.TIPO               <span class="kw">AS</span> TIPO_SECCION,
+    sp.ORDEN              <span class="kw">AS</span> ORDEN_SECCION,
+    sp.CODIGO_SECCION_PADRE,
+    cm.CODIGO_UNICO       <span class="kw">AS</span> CATALOGO_CODIGO_UNICO,
+    vp.CODIGO             <span class="kw">AS</span> ID_VERSION,
+    vp.NUMERO_VERSION,
+    vp.ESTADO             <span class="kw">AS</span> ESTADO_VERSION
+<span class="kw">FROM</span> CAMPO_PLANTILLA cp
+<span class="kw">LEFT JOIN</span> SECCION_PLANTILLA sp  <span class="kw">ON</span> sp.CODIGO  = cp.CODIGO_SECCION
+<span class="kw">LEFT JOIN</span> CATALOGO_MAESTRO  cm  <span class="kw">ON</span> cm.CODIGO  = cp.CODIGO_CATALOGO_MAESTRO
+<span class="kw">JOIN</span>      VERSION_PLANTILLA  vp  <span class="kw">ON</span> vp.CODIGO  = cp.CODIGO_VERSION_PLANTILLA;</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FASE 2 ═══ -->
+    <div class="phase-card" id="fase2">
+      <div class="phase-head" onclick="toggle(this)">
+        <div class="phase-num-block" style="color:var(--c2)">
+          <div class="phase-num">2</div>
+          <div class="phase-module-tag">SPRING · API CORE</div>
+        </div>
+        <div class="phase-info">
+          <div class="phase-title">Backend Spring Boot — Estructura del Proyecto y API Base</div>
+          <div class="phase-desc">Setup de Spring Boot 3 con Oracle, estructura de capas, DTOs y endpoints de catálogos y componentes que alimentan el diseñador.</div>
+          <div class="phase-meta-chips">
+            <span class="chip spring">Spring Boot 3.3</span>
+            <span class="chip spring">Spring Data JPA</span>
+            <span class="chip spring">MapStruct</span>
+            <span class="chip spring">Oracle JDBC</span>
+          </div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps-timeline">
+
+          <div class="step-item" style="color:var(--c2)">
+            <div class="step-bullet">2.1</div>
+            <div class="step-content">
+              <div class="step-title">Estructura del proyecto Spring Boot</div>
+              <div class="code-block"><span class="cm">src/main/java/com/empresa/dynforms/
+├── config/
+│   ├── OracleConfig.java          <span class="cm">// DataSource + JPA Oracle dialect</span>
+│   ├── SecurityConfig.java        <span class="cm">// JWT filter chain</span>
+│   └── CorsConfig.java
+├── domain/                        <span class="cm">// Entidades JPA</span>
+│   ├── componentes/
+│   ├── catalogos/
+│   ├── tributaria/
+│   ├── disenador/
+│   └── ejecucion/
+├── application/                   <span class="cm">// Servicios de aplicación (use cases)</span>
+├── infrastructure/
+│   ├── persistence/               <span class="cm">// Repositories</span>
+│   └── storage/                   <span class="cm">// MinIO adapter</span>
+└── api/
+    ├── v1/                        <span class="cm">// REST Controllers</span>
+    └── dto/                       <span class="cm">// Request/Response DTOs</span></span></div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c2)">
+            <div class="step-bullet">2.2</div>
+            <div class="step-content">
+              <div class="step-title">Entidad JPA: CampoPlantilla con JSON nativo</div>
+              <div class="step-text">Oracle 19c permite leer/escribir CLOB como JSON. Usar <code>@Column(columnDefinition = "CLOB")</code> con conversión via Jackson.</div>
+              <div class="code-block"><span class="at">@Entity</span>
+<span class="at">@Table</span>(name = <span class="str">"CAMPO_PLANTILLA"</span>)
+<span class="kw">public class</span> CampoPlantilla {
+
+    <span class="at">@Id @GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">private</span> Long codigo;
+
+    <span class="at">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="at">@JoinColumn</span>(name = <span class="str">"CODIGO_VERSION_PLANTILLA"</span>)
+    <span class="kw">private</span> VersionPlantilla versionPlantilla;
+
+    <span class="at">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="at">@JoinColumn</span>(name = <span class="str">"CODIGO_SECCION"</span>)
+    <span class="kw">private</span> SeccionPlantilla seccion;
+
+    <span class="at">@Column</span>(name = <span class="str">"CLAVE_UI"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">private</span> String claveUi;
+
+    <span class="at">@Column</span>(name = <span class="str">"CATEGORIA_COMPONENTE"</span>)
+    <span class="kw">private</span> String categoriaComponente;
+
+    <span class="at">@Column</span>(name = <span class="str">"PROPIEDADES_UI_JSON"</span>, columnDefinition = <span class="str">"CLOB"</span>)
+    <span class="at">@Convert</span>(converter = JsonNodeConverter.class)
+    <span class="kw">private</span> JsonNode propiedadesUi;  <span class="cm">// Jackson JsonNode</span>
+
+    <span class="at">@Column</span>(name = <span class="str">"ES_OBLIGATORIO"</span>)
+    <span class="kw">private</span> Boolean esObligatorio = <span class="kw">false</span>;
+
+    <span class="at">@Column</span>(name = <span class="str">"ANCHO_COLUMNAS"</span>)
+    <span class="kw">private</span> Integer anchoColumnas = <span class="num">12</span>;
+
+    <span class="cm">// + OneToMany: reglas, condicionales, conceptos</span>
+}</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c2)">
+            <div class="step-bullet">2.3</div>
+            <div class="step-content">
+              <div class="step-title">API: GET /api/v1/componentes/biblioteca</div>
+              <div class="step-text">Devuelve todos los widgets agrupados por <code>categoriaUi</code>. Cacheado en Redis 30 min (datos casi estáticos).</div>
+              <div class="code-block"><span class="cm">// Response DTO</span>
+<span class="kw">public record</span> BibliotecaGrupoDTO(
+    String categoriaUi,
+    List&lt;WidgetDTO&gt; widgets
+) {}
+
+<span class="kw">public record</span> WidgetDTO(
+    Long   codigo,
+    String nombreUi,
+    String identificadorTecnico,
+    String iconoCss,
+    Boolean permiteHijos,
+    Boolean permiteCatalogo,
+    Boolean permiteAdjunto,
+    Object  configDefaultJson   <span class="cm">// Raw JSON</span>
+) {}
+
+<span class="cm">// En el Controller:</span>
+<span class="at">@GetMapping</span>(<span class="str">"/componentes/biblioteca"</span>)
+<span class="at">@Cacheable</span>(<span class="str">"biblioteca-componentes"</span>)
+<span class="kw">public</span> List&lt;BibliotecaGrupoDTO&gt; getBiblioteca() {
+    <span class="kw">return</span> bibliotecaService.getAgrupada();
+}</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c2)">
+            <div class="step-bullet">2.4</div>
+            <div class="step-content">
+              <div class="step-title">API: GET /api/v1/catalogos/{codigoUnico}/items</div>
+              <div class="step-text">Soporta paginación, búsqueda por texto, filtro por padre (para jerárquicos). Retorna estructura apta para PrimeVue TreeSelect o Dropdown.</div>
+              <div class="code-block"><span class="at">@GetMapping</span>(<span class="str">"/catalogos/{codigoUnico}/items"</span>)
+<span class="kw">public</span> ResponseEntity&lt;?&gt; getItems(
+    <span class="at">@PathVariable</span> String codigoUnico,
+    <span class="at">@RequestParam</span>(defaultValue = <span class="str">""</span>) String q,
+    <span class="at">@RequestParam</span>(required = <span class="kw">false</span>) Long padreId,
+    Pageable pageable
+) {
+    CatalogoMaestro cat = catalogoRepo.findByCodigo(codigoUnico)
+        .orElseThrow(() -> new NotFoundException(<span class="str">"Catálogo no existe"</span>));
+
+    <span class="kw">if</span> (cat.isPermiteJerarquia()) {
+        <span class="kw">return</span> ok(catalogoService.getArbol(cat, padreId));
+    }
+    <span class="kw">return</span> ok(catalogoService.getFlat(cat, q, pageable));
+}</div>
+              <div class="callout tip"><span class="callout-icon">💡</span> Para catálogos jerárquicos usa una CTE recursiva en Oracle: <code>WITH RECURSIVE</code> o bien <code>CONNECT BY PRIOR</code>. Esto evita N+1 queries al cargar árboles.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FASE 3 ═══ -->
+    <div class="phase-card" id="fase3">
+      <div class="phase-head" onclick="toggle(this)">
+        <div class="phase-num-block" style="color:var(--c4)">
+          <div class="phase-num">3</div>
+          <div class="phase-module-tag">SPRING · API DISEÑADOR</div>
+        </div>
+        <div class="phase-info">
+          <div class="phase-title">API Diseñador — Plantillas, Versiones, Secciones, Campos y Reglas</div>
+          <div class="phase-desc">El conjunto de endpoints que el módulo Vue del diseñador consume para construir, reordenar y publicar formularios.</div>
+          <div class="phase-meta-chips">
+            <span class="chip spring">Spring Tx</span>
+            <span class="chip spring">Bulk Save</span>
+            <span class="chip oracle">Deep Clone PL/SQL</span>
+          </div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps-timeline">
+
+          <div class="step-item" style="color:var(--c4)">
+            <div class="step-bullet">3.1</div>
+            <div class="step-content">
+              <div class="step-title">Endpoint: cargar estructura completa de una versión</div>
+              <div class="step-text">Esta es la query más crítica del diseñador. Debe devolver el árbol completo en una sola respuesta.</div>
+              <div class="code-block"><span class="cm">// GET /api/v1/versiones/{id}/estructura</span>
+<span class="kw">public</span> EstructuraVersionDTO getEstructura(Long versionId) {
+    <span class="cm">// 1. Cargar secciones en árbol</span>
+    List&lt;SeccionPlantilla&gt; secciones = seccionRepo
+        .findByVersionOrderByOrden(versionId);
+
+    <span class="cm">// 2. Cargar todos los campos con sus reglas en batch (evitar N+1)</span>
+    List&lt;CampoPlantilla&gt; campos = campoRepo
+        .findByVersionWithReglas(versionId); <span class="cm">// @EntityGraph</span>
+
+    <span class="cm">// 3. Cargar condicionales de todos los campos</span>
+    List&lt;ReglaCondicional&gt; conds = condRepo
+        .findByVersionId(versionId);
+
+    <span class="cm">// 4. Mapear a DTO árbol</span>
+    <span class="kw">return</span> estructuraMapper.toDTO(secciones, campos, conds);
+}
+
+<span class="cm">// Repository con EntityGraph para evitar N+1:</span>
+<span class="at">@Query</span>(<span class="str">"SELECT cp FROM CampoPlantilla cp"</span> +
+       <span class="str">" LEFT JOIN FETCH cp.reglasValidacion rv"</span> +
+       <span class="str">" WHERE cp.versionPlantilla.codigo = :versionId"</span>)
+List&lt;CampoPlantilla&gt; findByVersionWithReglas(<span class="at">@Param</span>(<span class="str">"versionId"</span>) Long id);</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c4)">
+            <div class="step-bullet">3.2</div>
+            <div class="step-content">
+              <div class="step-title">Endpoint: agregar campo desde biblioteca (snapshot)</div>
+              <div class="step-text">Al arrastrar un widget al canvas, el backend crea el campo copiando el <code>configDefaultJson</code> del widget como punto de partida de <code>PROPIEDADES_UI_JSON</code>.</div>
+              <div class="code-block"><span class="cm">// POST /api/v1/versiones/{versionId}/campos</span>
+<span class="at">@Transactional</span>
+<span class="kw">public</span> CampoDTO agregarCampo(Long versionId, AgregarCampoRequest req) {
+    BibliotecaComponente widget = bibliotecaRepo
+        .findById(req.codigoBiblioteca())
+        .orElseThrow();
+
+    <span class="cm">// Snapshot: copia del JSON del widget como base</span>
+    JsonNode configBase = widget.getConfiguracionDefaultJson();
+
+    <span class="cm">// Generar CLAVE_UI única (no editable después de crear)</span>
+    String claveUi = widget.getCategoria().getIdentificadorTecnico().toLowerCase()
+        + <span class="str">"_"</span> + UUID.randomUUID().toString().substring(0, 8);
+
+    CampoPlantilla campo = CampoPlantilla.builder()
+        .versionPlantilla(versionRepo.getReferenceById(versionId))
+        .seccion(req.codigoSeccion() != null
+            ? seccionRepo.getReferenceById(req.codigoSeccion()) : null)
+        .codigoBibliotecaComponente(widget.getCodigo())
+        .claveUi(claveUi)
+        .etiquetaUi(widget.getNombreUi())
+        .categoriaComponente(widget.getCategoria().getIdentificadorTecnico())
+        .orden(req.orden())
+        .propiedadesUi(configBase)  <span class="cm">// Snapshot</span>
+        .build();
+
+    <span class="kw">return</span> campoMapper.toDTO(campoRepo.save(campo));
+}</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c4)">
+            <div class="step-bullet">3.3</div>
+            <div class="step-content">
+              <div class="step-title">Endpoint: reordenar campos en bulk (drag & drop)</div>
+              <div class="step-text">Cuando el usuario reordena en el canvas se envía el nuevo orden completo. Se actualiza en una sola transacción.</div>
+              <div class="code-block"><span class="cm">// PATCH /api/v1/versiones/{id}/campos/reordenar</span>
+<span class="cm">// Body: [{"codigoCampo": 5, "orden": 1, "codigoSeccion": 12}, ...]</span>
+<span class="at">@Transactional</span>
+<span class="kw">public void</span> reordenar(Long versionId, List&lt;ReordenarItemDTO&gt; items) {
+    <span class="cm">// Batch update eficiente con @Modifying</span>
+    items.forEach(item ->
+        campoRepo.updateOrdenYSeccion(
+            item.codigoCampo(), item.orden(), item.codigoSeccion(), versionId)
+    );
+}
+
+<span class="cm">// En el Repository:</span>
+<span class="at">@Modifying</span>
+<span class="at">@Query</span>(<span class="str">"UPDATE CampoPlantilla cp SET cp.orden = :orden,"</span> +
+       <span class="str">" cp.seccion.codigo = :seccionId"</span> +
+       <span class="str">" WHERE cp.codigo = :id AND cp.versionPlantilla.codigo = :ver"</span>)
+<span class="kw">void</span> updateOrdenYSeccion(
+    <span class="at">@Param</span>(<span class="str">"id"</span>) Long id, <span class="at">@Param</span>(<span class="str">"orden"</span>) Integer orden,
+    <span class="at">@Param</span>(<span class="str">"seccionId"</span>) Long seccionId, <span class="at">@Param</span>(<span class="str">"ver"</span>) Long ver);</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c4)">
+            <div class="step-bullet">3.4</div>
+            <div class="step-content">
+              <div class="step-title">Endpoint: clonar versión completa</div>
+              <div class="step-text">Imprescindible para editar sin afectar formularios ya enviados. Implementar como procedure PL/SQL para máximo rendimiento.</div>
+              <div class="code-block"><span class="cm">-- En Oracle: deep clone de una versión completa</span>
+<span class="kw">CREATE OR REPLACE PROCEDURE</span> <span class="fn">CLONAR_VERSION</span>(
+    p_version_origen  <span class="kw">IN</span>  <span class="tp">NUMBER</span>,
+    p_numero_version  <span class="kw">IN</span>  <span class="tp">VARCHAR2</span>,
+    p_usuario_id      <span class="kw">IN</span>  <span class="tp">NUMBER</span>,
+    p_nueva_version   <span class="kw">OUT</span> <span class="tp">NUMBER</span>
+) <span class="kw">IS</span>
+    v_plantilla_id <span class="tp">NUMBER</span>;
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> CODIGO_PLANTILLA <span class="kw">INTO</span> v_plantilla_id
+    <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> CODIGO = p_version_origen;
+
+    <span class="cm">-- 1. Nueva versión en BORRADOR</span>
+    <span class="kw">INSERT INTO</span> VERSION_PLANTILLA
+        (CODIGO_PLANTILLA, NUMERO_VERSION, VIGENCIA_DESDE, ESTADO, USUARIO_CREADOR)
+    <span class="kw">VALUES</span> (v_plantilla_id, p_numero_version, SYSDATE, <span class="str">'BORRADOR'</span>, p_usuario_id)
+    <span class="kw">RETURNING</span> CODIGO <span class="kw">INTO</span> p_nueva_version;
+
+    <span class="cm">-- 2. Clonar secciones (con mapa de IDs viejos → nuevos)</span>
+    <span class="kw">INSERT INTO</span> SECCION_PLANTILLA
+        (CODIGO_VERSION_PLANTILLA, TIPO, CLAVE_UI, ETIQUETA, ORDEN, CONFIG_LAYOUT_JSON)
+    <span class="kw">SELECT</span> p_nueva_version, TIPO, CLAVE_UI, ETIQUETA, ORDEN, CONFIG_LAYOUT_JSON
+    <span class="kw">FROM</span> SECCION_PLANTILLA <span class="kw">WHERE</span> CODIGO_VERSION_PLANTILLA = p_version_origen;
+
+    <span class="cm">-- 3. Clonar campos con mapeo de secciones</span>
+    <span class="kw">INSERT INTO</span> CAMPO_PLANTILLA
+        (CODIGO_VERSION_PLANTILLA, CODIGO_SECCION, CLAVE_UI, ETIQUETA_UI,
+         CATEGORIA_COMPONENTE, ORDEN, ES_OBLIGATORIO, ANCHO_COLUMNAS,
+         CODIGO_CATALOGO_MAESTRO, PROPIEDADES_UI_JSON)
+    <span class="kw">SELECT</span>
+        p_nueva_version,
+        <span class="cm">-- mapear seccion_id antigua → nueva via CLAVE_UI</span>
+        (SELECT s2.CODIGO FROM SECCION_PLANTILLA s2
+         WHERE s2.CODIGO_VERSION_PLANTILLA = p_nueva_version
+           AND s2.CLAVE_UI = s1.CLAVE_UI),
+        cp.CLAVE_UI, cp.ETIQUETA_UI, cp.CATEGORIA_COMPONENTE, cp.ORDEN,
+        cp.ES_OBLIGATORIO, cp.ANCHO_COLUMNAS,
+        cp.CODIGO_CATALOGO_MAESTRO, cp.PROPIEDADES_UI_JSON
+    <span class="kw">FROM</span> CAMPO_PLANTILLA cp
+    <span class="kw">LEFT JOIN</span> SECCION_PLANTILLA s1 <span class="kw">ON</span> s1.CODIGO = cp.CODIGO_SECCION
+    <span class="kw">WHERE</span> cp.CODIGO_VERSION_PLANTILLA = p_version_origen;
+
+    <span class="cm">-- 4. Clonar reglas de validación y condicionales (similar)</span>
+    <span class="kw">COMMIT</span>;
+<span class="kw">END</span>;</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c4)">
+            <div class="step-bullet">3.5</div>
+            <div class="step-content">
+              <div class="step-title">Endpoint: publicar versión con validaciones previas</div>
+              <div class="code-block"><span class="cm">// PUT /api/v1/versiones/{id}/publicar</span>
+<span class="at">@Transactional</span>
+<span class="kw">public</span> VersionDTO publicar(Long versionId, Long usuarioId) {
+    VersionPlantilla version = versionRepo.findById(versionId)
+        .orElseThrow();
+
+    <span class="cm">// Validaciones previas:</span>
+    <span class="kw">if</span> (!version.getEstado().equals(<span class="str">"BORRADOR"</span>))
+        <span class="kw">throw new</span> BusinessException(<span class="str">"Solo borradores pueden publicarse"</span>);
+
+    List&lt;CampoPlantilla&gt; campos = campoRepo.findByVersion(versionId);
+    <span class="kw">if</span> (campos.isEmpty())
+        <span class="kw">throw new</span> BusinessException(<span class="str">"La versión debe tener al menos 1 campo"</span>);
+
+    <span class="cm">// Cerrar versión anterior publicada</span>
+    versionRepo.cerrarVersionPublicada(version.getPlantilla().getCodigo());
+
+    version.setEstado(<span class="str">"PUBLICADO"</span>);
+    version.setVigenciaDesde(LocalDate.now());
+
+    <span class="cm">// Registrar en historial</span>
+    historialRepo.save(VersionHistorial.builder()
+        .version(version).estadoAnterior(<span class="str">"BORRADOR"</span>)
+        .estadoNuevo(<span class="str">"PUBLICADO"</span>).usuarioId(usuarioId).build());
+
+    <span class="kw">return</span> mapper.toDTO(versionRepo.save(version));
+}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FASE 4 ═══ -->
+    <div class="phase-card" id="fase4">
+      <div class="phase-head" onclick="toggle(this)">
+        <div class="phase-num-block" style="color:var(--c5)">
+          <div class="phase-num">4</div>
+          <div class="phase-module-tag">SPRING · API EJECUCIÓN</div>
+        </div>
+        <div class="phase-info">
+          <div class="phase-title">API Ejecución — Declaraciones, Validación y Workflow</div>
+          <div class="phase-desc">Crear, guardar, validar y tramitar formularios de declaración. Gestión de adjuntos y observaciones.</div>
+          <div class="phase-meta-chips">
+            <span class="chip spring">State Machine</span>
+            <span class="chip spring">MinIO</span>
+            <span class="chip oracle">PKG_FORMULARIO</span>
+          </div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps-timeline">
+
+          <div class="step-item" style="color:var(--c5)">
+            <div class="step-bullet">4.1</div>
+            <div class="step-content">
+              <div class="step-title">Crear declaración y guardar datos</div>
+              <div class="code-block"><span class="cm">// POST /api/v1/declaraciones</span>
+<span class="at">@Transactional</span>
+<span class="kw">public</span> DeclaracionDTO crear(CrearDeclaracionRequest req, Long usuarioId) {
+    <span class="cm">// Verificar no duplicado RUC + Periodo + Version</span>
+    <span class="kw">if</span> (decRepo.existsByRucYPeriodo(req.ruc(), req.periodo(), req.versionId()))
+        <span class="kw">throw new</span> ConflictException(<span class="str">"Ya existe declaración para ese RUC y periodo"</span>);
+
+    FormularioDeclaracion dec = FormularioDeclaracion.builder()
+        .versionPlantilla(versionRepo.getReferenceById(req.versionId()))
+        .rucContribuyente(req.ruc())
+        .periodoFiscal(req.periodo())
+        .estado(<span class="str">"BORRADOR"</span>)
+        .usuarioCreador(usuarioId)
+        .datosJson(EMPTY_JSON)
+        .build();
+    <span class="kw">return</span> mapper.toDTO(decRepo.save(dec));
+}
+
+<span class="cm">// PUT /api/v1/declaraciones/{id}/datos</span>
+<span class="at">@Transactional</span>
+<span class="kw">public void</span> guardarDatos(Long decId, JsonNode datos, Long usuarioId) {
+    FormularioDeclaracion dec = decRepo.findByIdParaEdicion(decId);
+
+    <span class="kw">if</span> (!dec.getEstado().equals(<span class="str">"BORRADOR"</span>) && !dec.getEstado().equals(<span class="str">"OBSERVADO"</span>))
+        <span class="kw">throw new</span> BusinessException(<span class="str">"Solo se puede editar en BORRADOR u OBSERVADO"</span>);
+
+    dec.setDatosJson(datos);
+    dec.setUsuarioModificador(usuarioId);
+    dec.setFechaModificacion(LocalDateTime.now());
+    decRepo.save(dec);
+
+    <span class="cm">// Calcular conceptos tributarios en background</span>
+    eventoPublisher.publishEvent(new CalcularConceptosEvent(decId));
+}</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c5)">
+            <div class="step-bullet">4.2</div>
+            <div class="step-content">
+              <div class="step-title">Validación server-side al enviar</div>
+              <div class="step-text">Antes de pasar a estado ENVIADO, se ejecutan todas las reglas de validación de la versión sobre los datos del JSON.</div>
+              <div class="code-block"><span class="kw">public</span> List&lt;ValidationError&gt; validarDeclaracion(Long decId) {
+    FormularioDeclaracion dec = decRepo.findWithVersion(decId);
+    JsonNode datos = dec.getDatosJson();
+    List&lt;CampoConReglas&gt; campos = campoRepo.findConReglas(
+        dec.getVersionPlantilla().getCodigo());
+
+    List&lt;ValidationError&gt; errores = new ArrayList&lt;&gt;();
+
+    <span class="kw">for</span> (CampoConReglas campo : campos) {
+        JsonNode valor = datos.get(campo.getClaveUi());
+
+        <span class="kw">for</span> (ReglaValidacion regla : campo.getReglas()) {
+            <span class="kw">switch</span> (regla.getTipo()) {
+                <span class="kw">case</span> <span class="str">"REQUIRED"</span> ->  {
+                    <span class="kw">if</span> (campo.isObligatorio() && (valor == null || valor.isNull()))
+                        errores.add(new ValidationError(
+                            campo.getClaveUi(), regla.getMensajeError()));
+                }
+                <span class="kw">case</span> <span class="str">"REGEX"</span> -> {
+                    <span class="kw">if</span> (valor != null && !valor.asText().matches(regla.getExpresion()))
+                        errores.add(new ValidationError(
+                            campo.getClaveUi(), regla.getMensajeError()));
+                }
+                <span class="kw">case</span> <span class="str">"MIN_VALUE"</span> -> {
+                    JsonNode params = regla.getParametros();
+                    <span class="kw">double</span> min = params.get(<span class="str">"min"</span>).asDouble();
+                    <span class="kw">if</span> (valor != null && valor.asDouble() < min)
+                        errores.add(new ValidationError(
+                            campo.getClaveUi(), regla.getMensajeError()));
+                }
+            }
+        }
+    }
+    <span class="kw">return</span> errores;
+}</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c5)">
+            <div class="step-bullet">4.3</div>
+            <div class="step-content">
+              <div class="step-title">Subida de adjuntos a MinIO/S3</div>
+              <div class="code-block"><span class="cm">// POST /api/v1/declaraciones/{id}/adjuntos</span>
+<span class="cm">// Multipart: campo "archivo" + "codigoCampoPlantilla"</span>
+<span class="at">@Transactional</span>
+<span class="kw">public</span> AdjuntoDTO subirAdjunto(
+    Long decId, Long campoPltId, MultipartFile archivo
+) {
+    <span class="cm">// 1. Validar MIME y tamaño contra la configuración del campo</span>
+    AdjuntoConfig cfg = adjuntoConfigRepo.findByCampo(campoPltId)
+        .orElse(AdjuntoConfig.defaults());
+
+    String mime = tikaDetector.detect(archivo.getInputStream());
+    <span class="kw">if</span> (!cfg.getMimesPermitidos().contains(mime))
+        <span class="kw">throw new</span> ValidationException(<span class="str">"Tipo de archivo no permitido: "</span> + mime);
+    <span class="kw">if</span> (archivo.getSize() > cfg.getTamanoMaxMb() * 1024 * 1024)
+        <span class="kw">throw new</span> ValidationException(<span class="str">"Archivo supera el tamaño máximo"</span>);
+
+    <span class="cm">// 2. Calcular SHA-256</span>
+    String hash = DigestUtils.sha256Hex(archivo.getInputStream());
+
+    <span class="cm">// 3. Subir a MinIO</span>
+    String ruta = <span class="str">"declaraciones/"</span> + decId + <span class="str">"/"</span> +
+                  campoPltId + <span class="str">"/"</span> + UUID.randomUUID() + <span class="str">"_"</span> + archivo.getOriginalFilename();
+    minioClient.putObject(PutObjectArgs.builder()
+        .bucket(<span class="str">"dynforms"</span>).object(ruta)
+        .stream(archivo.getInputStream(), archivo.getSize(), -1)
+        .contentType(mime).build());
+
+    <span class="cm">// 4. Guardar en BD</span>
+    DeclaracionAdjunto adj = DeclaracionAdjunto.builder()
+        .declaracion(decRepo.getReferenceById(decId))
+        .campoPlantilla(campoRepo.getReferenceById(campoPltId))
+        .nombreOriginal(archivo.getOriginalFilename())
+        .nombreAlmacenado(ruta.substring(ruta.lastIndexOf(<span class="str">"/"</span>) + 1))
+        .rutaAlmacenamiento(ruta).mimeType(mime)
+        .tamanioBytes(archivo.getSize()).hashSha256(hash)
+        .build();
+    <span class="kw">return</span> mapper.toDTO(adjuntoRepo.save(adj));
+}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FASE 5 ═══ -->
+    <div class="phase-card" id="fase5">
+      <div class="phase-head" onclick="toggle(this)">
+        <div class="phase-num-block" style="color:var(--c1)">
+          <div class="phase-num">5</div>
+          <div class="phase-module-tag">VUE 3 · DISEÑADOR</div>
+        </div>
+        <div class="phase-info">
+          <div class="phase-title">Frontend Vue 3 — Módulo Diseñador Visual</div>
+          <div class="phase-desc">Canvas drag & drop, panel de propiedades reactivo, editor de validaciones y condicionales. Estructura de stores Pinia.</div>
+          <div class="phase-meta-chips">
+            <span class="chip vue">Vue 3 Composition API</span>
+            <span class="chip vue">Pinia</span>
+            <span class="chip vue">vuedraggable</span>
+            <span class="chip vue">PrimeVue</span>
+          </div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps-timeline">
+
+          <div class="step-item" style="color:var(--c1)">
+            <div class="step-bullet">5.1</div>
+            <div class="step-content">
+              <div class="step-title">Estructura de archivos del módulo Diseñador</div>
+              <div class="code-block"><span class="cm">src/modules/designer/
+├── stores/
+│   ├── designer.store.ts        <span class="cm">// árbol de secciones + campos</span>
+│   └── biblioteca.store.ts      <span class="cm">// widgets cacheados</span>
+├── composables/
+│   ├── useAutosave.ts
+│   └── useUndoRedo.ts
+├── components/
+│   ├── DesignerLayout.vue       <span class="cm">// wrapper 3 paneles</span>
+│   ├── WidgetLibrary/
+│   │   ├── LibraryPanel.vue     <span class="cm">// panel izquierdo</span>
+│   │   └── WidgetCard.vue
+│   ├── Canvas/
+│   │   ├── DesignCanvas.vue     <span class="cm">// panel central</span>
+│   │   ├── SeccionDropzone.vue
+│   │   ├── CampoItem.vue        <span class="cm">// campo en canvas</span>
+│   │   └── CampoResizer.vue     <span class="cm">// ajustar ancho cols</span>
+│   └── PropertyPanel/
+│       ├── PropertyPanel.vue    <span class="cm">// panel derecho</span>
+│       ├── tabs/
+│       │   ├── PropGenerales.vue
+│       │   ├── PropValidaciones.vue
+│       │   ├── PropCondicionales.vue
+│       │   └── PropTributario.vue
+│       └── editors/
+│           ├── ReglaEditor.vue
+│           └── CondicionalEditor.vue
+└── views/
+    ├── DesignerView.vue
+    └── TemplateListView.vue</span></div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c1)">
+            <div class="step-bullet">5.2</div>
+            <div class="step-content">
+              <div class="step-title">Store del Diseñador (Pinia) con undo/redo</div>
+              <div class="code-block"><span class="cm">// stores/designer.store.ts</span>
+<span class="kw">import</span> { defineStore } from <span class="str">'pinia'</span>
+<span class="kw">import type</span> { CampoDTO, SeccionDTO } from <span class="str">'@/types'</span>
+
+<span class="kw">export const</span> useDesignerStore = <span class="fn">defineStore</span>(<span class="str">'designer'</span>, () => {
+  <span class="cm">// Estado</span>
+  <span class="kw">const</span> secciones = ref&lt;SeccionDTO[]&gt;([])
+  <span class="kw">const</span> campos    = ref&lt;CampoDTO[]&gt;([])
+  <span class="kw">const</span> campoSeleccionado = ref&lt;CampoDTO | null&gt;(null)
+  <span class="kw">const</span> modoPreview = ref(<span class="kw">false</span>)
+  <span class="kw">const</span> historial   = ref&lt;string[]&gt;([])   <span class="cm">// snapshots JSON</span>
+  <span class="kw">const</span> histIdx     = ref(<span class="num">-1</span>)
+  <span class="kw">const</span> hayPendientes = ref(<span class="kw">false</span>)
+
+  <span class="cm">// Árbol computado: secciones con sus campos anidados</span>
+  <span class="kw">const</span> arbol = <span class="fn">computed</span>(() => {
+    <span class="kw">return</span> secciones.value
+      .sort((a, b) => a.orden - b.orden)
+      .map(sec => ({
+        ...sec,
+        campos: campos.value
+          .filter(c => c.codigoSeccion === sec.codigo)
+          .sort((a, b) => a.orden - b.orden)
+      }))
+  })
+
+  <span class="cm">// Snapshot para undo</span>
+  <span class="kw">function</span> <span class="fn">snapshot</span>() {
+    <span class="kw">const</span> snap = JSON.stringify({ secciones: secciones.value, campos: campos.value })
+    historial.value = historial.value.slice(0, histIdx.value + 1)
+    historial.value.push(snap)
+    histIdx.value = historial.value.length - 1
+    hayPendientes.value = <span class="kw">true</span>
+  }
+
+  <span class="kw">function</span> <span class="fn">undo</span>() {
+    <span class="kw">if</span> (histIdx.value > 0) {
+      histIdx.value--
+      <span class="kw">const</span> prev = JSON.parse(historial.value[histIdx.value])
+      secciones.value = prev.secciones
+      campos.value    = prev.campos
+    }
+  }
+
+  <span class="kw">function</span> <span class="fn">actualizarPropiedades</span>(campoId: number, props: Partial&lt;CampoDTO&gt;) {
+    <span class="kw">const</span> idx = campos.value.findIndex(c => c.codigo === campoId)
+    <span class="kw">if</span> (idx !== -1) {
+      campos.value[idx] = { ...campos.value[idx], ...props }
+      <span class="fn">snapshot</span>()
+    }
+  }
+
+  <span class="kw">return</span> { secciones, campos, campoSeleccionado, modoPreview,
+           arbol, hayPendientes, snapshot, undo, actualizarPropiedades }
+})</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c1)">
+            <div class="step-bullet">5.3</div>
+            <div class="step-content">
+              <div class="step-title">Canvas con vuedraggable — arrastrar desde biblioteca al canvas</div>
+              <div class="code-block"><span class="cm">&lt;!-- DesignCanvas.vue --&gt;</span>
+&lt;<span class="kw">template</span>&gt;
+  &lt;<span class="fn">div</span> class=<span class="str">"canvas-root"</span>&gt;
+    &lt;<span class="fn">draggable</span>
+      v-model=<span class="str">"seccionesOrdenadas"</span>
+      group=<span class="str">"secciones"</span>
+      item-key=<span class="str">"codigo"</span>
+      handle=<span class="str">".sec-drag-handle"</span>
+      @end=<span class="str">"onSeccionReordenada"</span>
+    &gt;
+      &lt;<span class="kw">template</span> #item=<span class="str">"{ element: sec }"</span>&gt;
+        &lt;<span class="fn">SeccionDropzone</span> :seccion=<span class="str">"sec"</span>&gt;
+          <span class="cm">&lt;!-- Campos dentro de la sección --&gt;</span>
+          &lt;<span class="fn">draggable</span>
+            v-model=<span class="str">"sec.campos"</span>
+            group=<span class="str">"campos"</span>
+            item-key=<span class="str">"codigo"</span>
+            @add=<span class="str">"onCampoAgregado($event, sec.codigo)"</span>
+            @end=<span class="str">"onCamposReordenados(sec)"</span>
+          &gt;
+            &lt;<span class="kw">template</span> #item=<span class="str">"{ element: campo }"</span>&gt;
+              &lt;<span class="fn">CampoItem</span>
+                :campo=<span class="str">"campo"</span>
+                :selected=<span class="str">"campoSeleccionado?.codigo === campo.codigo"</span>
+                @click=<span class="str">"seleccionar(campo)"</span>
+                @delete=<span class="str">"eliminar(campo)"</span>
+              /&gt;
+            &lt;/<span class="kw">template</span>&gt;
+          &lt;/<span class="fn">draggable</span>&gt;
+        &lt;/<span class="fn">SeccionDropzone</span>&gt;
+      &lt;/<span class="kw">template</span>&gt;
+    &lt;/<span class="fn">draggable</span>&gt;
+  &lt;/<span class="fn">div</span>&gt;
+&lt;/<span class="kw">template</span>&gt;</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c1)">
+            <div class="step-bullet">5.4</div>
+            <div class="step-content">
+              <div class="step-title">Panel de propiedades con editor de Condicionales</div>
+              <div class="code-block"><span class="cm">&lt;!-- PropCondicionales.vue --&gt;</span>
+&lt;<span class="kw">script setup lang="ts"</span>&gt;
+<span class="kw">const</span> store = <span class="fn">useDesignerStore</span>()
+<span class="kw">const</span> campo = <span class="fn">computed</span>(() => store.campoSeleccionado)
+
+<span class="kw">const</span> acciones = [
+  { label: <span class="str">'Mostrar campo'</span>, value: <span class="str">'SHOW'</span> },
+  { label: <span class="str">'Ocultar campo'</span>, value: <span class="str">'HIDE'</span> },
+  { label: <span class="str">'Hacer obligatorio'</span>, value: <span class="str">'REQUIRED'</span> },
+  { label: <span class="str">'Deshabilitar'</span>, value: <span class="str">'DISABLE'</span> }
+]
+
+<span class="kw">const</span> operadores = [
+  { label: <span class="str">'Es igual a'</span>, value: <span class="str">'EQ'</span> },
+  { label: <span class="str">'Es diferente a'</span>, value: <span class="str">'NEQ'</span> },
+  { label: <span class="str">'Está vacío'</span>, value: <span class="str">'EMPTY'</span> },
+  { label: <span class="str">'No está vacío'</span>, value: <span class="str">'NOT_EMPTY'</span> },
+  { label: <span class="str">'Contiene'</span>, value: <span class="str">'CONTAINS'</span> }
+]
+
+<span class="kw">function</span> <span class="fn">agregarCondicion</span>(regla) {
+  regla.condiciones.push({
+    claveUiCampoEvaluado: <span class="str">''</span>,
+    operador: <span class="str">'EQ'</span>, valorReferencia: <span class="str">''</span>
+  })
+}
+&lt;/<span class="kw">script</span>&gt;</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c1)">
+            <div class="step-bullet">5.5</div>
+            <div class="step-content">
+              <div class="step-title">Autosave con throttle y recuperación offline</div>
+              <div class="code-block"><span class="cm">// composables/useAutosave.ts</span>
+<span class="kw">export function</span> <span class="fn">useAutosave</span>(versionId: Ref&lt;number&gt;) {
+  <span class="kw">const</span> store  = <span class="fn">useDesignerStore</span>()
+  <span class="kw">const</span> status = ref&lt;<span class="str">'idle'</span>|<span class="str">'saving'</span>|<span class="str">'saved'</span>|<span class="str">'error'</span>&gt;(<span class="str">'idle'</span>)
+
+  <span class="kw">const</span> guardar = <span class="fn">useDebounceFn</span>(async () => {
+    <span class="kw">if</span> (!store.hayPendientes) return
+    status.value = <span class="str">'saving'</span>
+    <span class="kw">try</span> {
+      <span class="kw">await</span> api.patch(`/versiones/${versionId.value}/estructura`, {
+        secciones: store.secciones,
+        campos: store.campos
+      })
+      status.value = <span class="str">'saved'</span>
+      store.hayPendientes = <span class="kw">false</span>
+      <span class="cm">// Limpiar backup local</span>
+      localStorage.removeItem(`draft_${versionId.value}`)
+    } catch {
+      status.value = <span class="str">'error'</span>
+      <span class="cm">// Backup local de emergencia</span>
+      localStorage.setItem(`draft_${versionId.value}`,
+        JSON.stringify({ secciones: store.secciones, campos: store.campos }))
+    }
+  }, 2500)  <span class="cm">// 2.5 segundos de debounce</span>
+
+  <span class="cm">// Vigilar cambios</span>
+  watch(() => store.hayPendientes, (v) => { if (v) guardar() })
+
+  <span class="cm">// Recuperar draft al montar</span>
+  onMounted(() => {
+    <span class="kw">const</span> draft = localStorage.getItem(`draft_${versionId.value}`)
+    <span class="kw">if</span> (draft) {
+      <span class="cm">// Mostrar modal: ¿restaurar cambios no guardados?</span>
+    }
+  })
+
+  <span class="kw">return</span> { status, guardar }
+}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FASE 6 ═══ -->
+    <div class="phase-card" id="fase6">
+      <div class="phase-head" onclick="toggle(this)">
+        <div class="phase-num-block" style="color:var(--c4)">
+          <div class="phase-num">6</div>
+          <div class="phase-module-tag">VUE 3 · MOTOR</div>
+        </div>
+        <div class="phase-info">
+          <div class="phase-title">Frontend Vue 3 — Motor de Formularios Dinámicos</div>
+          <div class="phase-desc">El renderizador que toma la estructura de BD y genera formularios interactivos con validaciones y condicionales en runtime.</div>
+          <div class="phase-meta-chips">
+            <span class="chip vue">DynamicField.vue</span>
+            <span class="chip vue">VeeValidate 4</span>
+            <span class="chip vue">Zod runtime</span>
+            <span class="chip vue">Composables</span>
+          </div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps-timeline">
+
+          <div class="step-item" style="color:var(--c4)">
+            <div class="step-bullet">6.1</div>
+            <div class="step-content">
+              <div class="step-title">DynamicField.vue — componente raíz del motor</div>
+              <div class="step-text">El corazón del sistema: mapea el <code>categoriaComponente</code> de BD a un componente Vue específico.</div>
+              <div class="code-block"><span class="cm">&lt;!-- DynamicField.vue --&gt;</span>
+&lt;<span class="kw">script setup lang="ts"</span>&gt;
+<span class="kw">import</span> { defineAsyncComponent, computed } from <span class="str">'vue'</span>
+
+<span class="cm">// Mapa de tipo → componente (lazy load para code splitting)</span>
+<span class="kw">const</span> COMPONENTE_MAP: Record&lt;string, any&gt; = {
+  INPUT_TEXT:    <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/TextInput.vue'</span>)),
+  TEXTAREA:      <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/TextArea.vue'</span>)),
+  INPUT_NUMBER:  <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/NumberInput.vue'</span>)),
+  DATE_PICKER:   <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/DatePicker.vue'</span>)),
+  SELECT:        <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/SelectField.vue'</span>)),
+  RADIO:         <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/RadioGroup.vue'</span>)),
+  CHECKBOX_GROUP:<span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/CheckboxGroup.vue'</span>)),
+  CHECKBOX:      <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/CheckboxField.vue'</span>)),
+  FILE_UPLOAD:   <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/FileUpload.vue'</span>)),
+  GRID_TABLE:    <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/GridTable.vue'</span>)),
+  PANEL:         <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/PanelField.vue'</span>)),
+  DIVIDER:       <span class="fn">defineAsyncComponent</span>(() => import(<span class="str">'./fields/DividerField.vue'</span>)),
+}
+
+<span class="kw">const</span> props = <span class="fn">defineProps</span>&lt;{
+  campo: CampoDTO
+  modelValue: any
+  error?: string
+  readonly?: boolean
+}&gt;()
+
+<span class="kw">const</span> emit = <span class="fn">defineEmits</span>([<span class="str">'update:modelValue'</span>])
+<span class="kw">const</span> componente = <span class="fn">computed</span>(() =>
+  COMPONENTE_MAP[props.campo.categoriaComponente] ?? COMPONENTE_MAP.INPUT_TEXT
+)
+&lt;/<span class="kw">script</span>&gt;
+
+&lt;<span class="kw">template</span>&gt;
+  &lt;<span class="fn">div</span> :class=<span class="str">`col-span-${campo.anchoColumnas}`</span>&gt;
+    &lt;<span class="fn">label</span> :for=<span class="str">"campo.claveUi"</span>&gt;
+      {{ campo.etiquetaUi }}
+      &lt;<span class="fn">span</span> v-if=<span class="str">"campo.esObligatorio"</span> class=<span class="str">"required-star"</span>&gt;*&lt;/<span class="fn">span</span>&gt;
+    &lt;/<span class="fn">label</span>&gt;
+
+    &lt;<span class="fn">component</span>
+      :is=<span class="str">"componente"</span>
+      :id=<span class="str">"campo.claveUi"</span>
+      :config=<span class="str">"campo.propiedadesUi"</span>
+      :model-value=<span class="str">"modelValue"</span>
+      :readonly=<span class="str">"readonly"</span>
+      @update:model-value=<span class="str">"emit('update:modelValue', $event)"</span>
+    /&gt;
+
+    &lt;<span class="fn">p</span> v-if=<span class="str">"error"</span> class=<span class="str">"field-error"</span>&gt;{{ error }}&lt;/<span class="fn">p</span>&gt;
+  &lt;/<span class="fn">div</span>&gt;
+&lt;/<span class="kw">template</span>&gt;</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c4)">
+            <div class="step-bullet">6.2</div>
+            <div class="step-content">
+              <div class="step-title">Composable: useCondicionales — visibilidad reactiva</div>
+              <div class="code-block"><span class="cm">// composables/useCondicionales.ts</span>
+<span class="kw">export function</span> <span class="fn">useCondicionales</span>(
+  campos: Ref&lt;CampoDTO[]&gt;,
+  formData: Ref&lt;Record&lt;string, any&gt;&gt;
+) {
+  <span class="cm">// Mapa: claveUi → es visible/obligatorio/etc</span>
+  <span class="kw">const</span> visibilidad = <span class="fn">computed</span>(() => {
+    <span class="kw">const</span> mapa: Record&lt;string, boolean&gt; = {}
+
+    campos.value.forEach(campo => {
+      <span class="cm">// Por defecto visible</span>
+      mapa[campo.claveUi] = campo.esVisible ?? <span class="kw">true</span>
+
+      campo.reglasCondicionales?.forEach(regla => {
+        <span class="kw">const</span> cumple = <span class="fn">evaluarCondiciones</span>(
+          regla.condiciones, formData.value, regla.conectorLogico
+        )
+        <span class="kw">if</span> (cumple) {
+          <span class="kw">switch</span> (regla.accion) {
+            <span class="kw">case</span> <span class="str">'SHOW'</span>: mapa[campo.claveUi] = <span class="kw">true</span>; <span class="kw">break</span>
+            <span class="kw">case</span> <span class="str">'HIDE'</span>: mapa[campo.claveUi] = <span class="kw">false</span>; <span class="kw">break</span>
+          }
+        }
+      })
+    })
+    <span class="kw">return</span> mapa
+  })
+
+  <span class="kw">function</span> <span class="fn">evaluarCondiciones</span>(
+    conds: CondicionalDetalle[], datos: Record&lt;string, any&gt;, conector: <span class="str">'AND'</span>|<span class="str">'OR'</span>
+  ) {
+    <span class="kw">const</span> resultados = conds.map(c => {
+      <span class="kw">const</span> val = datos[c.claveUiCampoEvaluado]
+      <span class="kw">switch</span> (c.operador) {
+        <span class="kw">case</span> <span class="str">'EQ'</span>:        <span class="kw">return</span> String(val) === c.valorReferencia
+        <span class="kw">case</span> <span class="str">'NEQ'</span>:       <span class="kw">return</span> String(val) !== c.valorReferencia
+        <span class="kw">case</span> <span class="str">'EMPTY'</span>:     <span class="kw">return</span> !val || val === <span class="str">''</span>
+        <span class="kw">case</span> <span class="str">'NOT_EMPTY'</span>: <span class="kw">return</span> !!val && val !== <span class="str">''</span>
+        <span class="kw">case</span> <span class="str">'CONTAINS'</span>:  <span class="kw">return</span> String(val).includes(c.valorReferencia)
+        <span class="kw">case</span> <span class="str">'GT'</span>:        <span class="kw">return</span> Number(val) > Number(c.valorReferencia)
+        <span class="kw">case</span> <span class="str">'LT'</span>:        <span class="kw">return</span> Number(val) < Number(c.valorReferencia)
+        <span class="kw">default</span>:         <span class="kw">return</span> <span class="kw">false</span>
+      }
+    })
+    <span class="kw">return</span> conector === <span class="str">'AND'</span>
+      ? resultados.every(Boolean)
+      : resultados.some(Boolean)
+  }
+
+  <span class="kw">return</span> { visibilidad }
+}</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c4)">
+            <div class="step-bullet">6.3</div>
+            <div class="step-content">
+              <div class="step-title">Composable: useValidaciones — esquema Zod en runtime</div>
+              <div class="code-block"><span class="cm">// composables/useValidaciones.ts</span>
+<span class="kw">import</span> { z } from <span class="str">'zod'</span>
+
+<span class="kw">export function</span> <span class="fn">useValidaciones</span>(campos: Ref&lt;CampoDTO[]&gt;) {
+
+  <span class="kw">const</span> schema = <span class="fn">computed</span>(() => {
+    <span class="kw">const</span> shape: Record&lt;string, z.ZodType&gt; = {}
+
+    campos.value.forEach(campo => {
+      <span class="kw">let</span> rule: z.ZodType = z.any()
+
+      <span class="kw">switch</span> (campo.categoriaComponente) {
+        <span class="kw">case</span> <span class="str">'INPUT_NUMBER'</span>: rule = z.number(); <span class="kw">break</span>
+        <span class="kw">case</span> <span class="str">'DATE_PICKER'</span>:  rule = z.string().date(); <span class="kw">break</span>
+        <span class="kw">default</span>: rule = z.string()
+      }
+
+      <span class="cm">// Aplicar reglas de la BD</span>
+      campo.reglasValidacion?.forEach(regla => {
+        <span class="kw">const</span> params = regla.parametros ?? {}
+        <span class="kw">switch</span> (regla.tipo) {
+          <span class="kw">case</span> <span class="str">'MIN_LENGTH'</span>:
+            rule = (rule as z.ZodString).min(params.min, regla.mensajeError); <span class="kw">break</span>
+          <span class="kw">case</span> <span class="str">'MAX_LENGTH'</span>:
+            rule = (rule as z.ZodString).max(params.max, regla.mensajeError); <span class="kw">break</span>
+          <span class="kw">case</span> <span class="str">'REGEX'</span>:
+            rule = (rule as z.ZodString)
+              .regex(new RegExp(regla.expresion), regla.mensajeError); <span class="kw">break</span>
+          <span class="kw">case</span> <span class="str">'MIN_VALUE'</span>:
+            rule = (rule as z.ZodNumber).min(params.min, regla.mensajeError); <span class="kw">break</span>
+        }
+      })
+
+      shape[campo.claveUi] = campo.esObligatorio
+        ? rule
+        : rule.optional()
+    })
+
+    <span class="kw">return</span> z.object(shape)
+  })
+
+  <span class="kw">async function</span> <span class="fn">validar</span>(datos: Record&lt;string, any&gt;) {
+    <span class="kw">const</span> result = await schema.value.safeParseAsync(datos)
+    <span class="kw">if</span> (!result.success) {
+      <span class="kw">return</span> result.error.flatten().fieldErrors
+    }
+    <span class="kw">return</span> {}
+  }
+
+  <span class="kw">return</span> { schema, validar }
+}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FASE 7 ═══ -->
+    <div class="phase-card" id="fase7">
+      <div class="phase-head" onclick="toggle(this)">
+        <div class="phase-num-block" style="color:var(--c5)">
+          <div class="phase-num">7</div>
+          <div class="phase-module-tag">DEPLOY · TESTING</div>
+        </div>
+        <div class="phase-info">
+          <div class="phase-title">Testing, CI/CD y Deploy a Producción</div>
+          <div class="phase-desc">Estrategia de pruebas por capa, pipeline GitLab/GitHub Actions, Docker Compose de desarrollo, configuración Oracle de producción.</div>
+          <div class="phase-meta-chips">
+            <span class="chip test">Vitest</span>
+            <span class="chip test">Playwright</span>
+            <span class="chip test">Testcontainers</span>
+            <span class="chip test">JMeter</span>
+            <span class="chip spring">Docker</span>
+          </div>
+        </div>
+        <div class="phase-toggle">▾</div>
+      </div>
+      <div class="phase-body">
+        <div class="steps-timeline">
+
+          <div class="step-item" style="color:var(--c5)">
+            <div class="step-bullet">7.1</div>
+            <div class="step-content">
+              <div class="step-title">Tests unitarios Vue: motor de formularios</div>
+              <div class="step-text">Los composables <code>useCondicionales</code> y <code>useValidaciones</code> son pura lógica, perfectos para tests unitarios rápidos.</div>
+              <div class="code-block"><span class="cm">// tests/useCondicionales.spec.ts</span>
+<span class="kw">import</span> { describe, it, expect } from <span class="str">'vitest'</span>
+<span class="kw">import</span> { useCondicionales } from <span class="str">'@/composables/useCondicionales'</span>
+
+<span class="fn">describe</span>(<span class="str">'useCondicionales'</span>, () => {
+  <span class="fn">it</span>(<span class="str">'oculta campo cuando condición HIDE se cumple'</span>, () => {
+    <span class="kw">const</span> campos = ref([{
+      claveUi: <span class="str">'campo_b'</span>, esVisible: true,
+      reglasCondicionales: [{
+        accion: <span class="str">'HIDE'</span>, conectorLogico: <span class="str">'AND'</span>,
+        condiciones: [{
+          claveUiCampoEvaluado: <span class="str">'campo_a'</span>,
+          operador: <span class="str">'EQ'</span>, valorReferencia: <span class="str">'NO'</span>
+        }]
+      }]
+    }])
+    <span class="kw">const</span> formData = ref({ campo_a: <span class="str">'NO'</span> })
+    <span class="kw">const</span> { visibilidad } = <span class="fn">useCondicionales</span>(campos, formData)
+    <span class="fn">expect</span>(visibilidad.value[<span class="str">'campo_b'</span>]).toBe(<span class="kw">false</span>)
+  })
+})</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c5)">
+            <div class="step-bullet">7.2</div>
+            <div class="step-content">
+              <div class="step-title">Tests de integración Spring con Testcontainers + Oracle XE</div>
+              <div class="code-block"><span class="at">@SpringBootTest</span>
+<span class="at">@Testcontainers</span>
+<span class="kw">class</span> VersionPlantillaServiceIT {
+
+    <span class="at">@Container</span>
+    <span class="kw">static</span> OracleContainer oracle =
+        new OracleContainer(<span class="str">"gvenzl/oracle-xe:21-slim-faststart"</span>)
+            .withInitScript(<span class="str">"db/migrations/V01__modulo_componentes.sql"</span>);
+
+    <span class="at">@DynamicPropertySource</span>
+    <span class="kw">static void</span> <span class="fn">props</span>(DynamicPropertyRegistry r) {
+        r.add(<span class="str">"spring.datasource.url"</span>, oracle::getJdbcUrl);
+        r.add(<span class="str">"spring.datasource.username"</span>, oracle::getUsername);
+        r.add(<span class="str">"spring.datasource.password"</span>, oracle::getPassword);
+    }
+
+    <span class="at">@Autowired</span> VersionPlantillaService service;
+
+    <span class="at">@Test</span>
+    <span class="kw">void</span> <span class="fn">clonarVersion_debeCrearCopiaCompleta</span>() {
+        <span class="cm">// dado: una versión con 3 campos</span>
+        Long versionOrigen = crearVersionConCampos(3);
+        <span class="cm">// cuando: clono</span>
+        Long versionClonada = service.clonarVersion(versionOrigen, <span class="str">"2.0"</span>, 1L);
+        <span class="cm">// entonces: tiene los mismos campos</span>
+        <span class="fn">assertEquals</span>(3, campoRepo.countByVersion(versionClonada));
+        <span class="cm">// y estado BORRADOR</span>
+        <span class="fn">assertEquals</span>(<span class="str">"BORRADOR"</span>, versionRepo.findById(versionClonada).getEstado());
+    }
+}</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c5)">
+            <div class="step-bullet">7.3</div>
+            <div class="step-content">
+              <div class="step-title">Test E2E Playwright: flujo completo diseñador → declaración</div>
+              <div class="code-block"><span class="cm">// tests/e2e/flujo-completo.spec.ts</span>
+<span class="fn">test</span>(<span class="str">'Diseñar plantilla y llenar declaración'</span>, async ({ page }) => {
+  <span class="cm">// 1. Login</span>
+  await page.<span class="fn">goto</span>(<span class="str">'/login'</span>)
+  await page.<span class="fn">fill</span>(<span class="str">'[name=username]'</span>, <span class="str">'diseñador@empresa.com'</span>)
+  await page.<span class="fn">fill</span>(<span class="str">'[name=password]'</span>, <span class="str">'secreto123'</span>)
+  await page.<span class="fn">click</span>(<span class="str">'button[type=submit]'</span>)
+
+  <span class="cm">// 2. Crear plantilla</span>
+  await page.<span class="fn">goto</span>(<span class="str">'/diseñador/nueva'</span>)
+  await page.<span class="fn">fill</span>(<span class="str">'[data-testid=nombre-plantilla]'</span>, <span class="str">'IVA Mensual 2024'</span>)
+
+  <span class="cm">// 3. Arrastrar campo desde biblioteca</span>
+  await page.<span class="fn">dragAndDrop</span>(
+    <span class="str">'[data-widget="INPUT_NUMBER"]'</span>,
+    <span class="str">'[data-dropzone="seccion_0"]'</span>
+  )
+  await <span class="fn">expect</span>(page.<span class="fn">locator</span>(<span class="str">'[data-campo]'</span>)).toHaveCount(1)
+
+  <span class="cm">// 4. Publicar versión</span>
+  await page.<span class="fn">click</span>(<span class="str">'[data-testid=btn-publicar]'</span>)
+  await <span class="fn">expect</span>(page.<span class="fn">locator</span>(<span class="str">'.estado-badge'</span>)).toHaveText(<span class="str">'PUBLICADO'</span>)
+
+  <span class="cm">// 5. Llenar declaración</span>
+  await page.<span class="fn">goto</span>(<span class="str">'/declaraciones/nueva'</span>)
+  await page.<span class="fn">selectOption</span>(<span class="str">'[name=plantilla]'</span>, <span class="str">'IVA Mensual 2024'</span>)
+  await page.<span class="fn">fill</span>(<span class="str">'[name=ruc]'</span>, <span class="str">'1712345678001'</span>)
+  await <span class="fn">expect</span>(page.<span class="fn">locator</span>(<span class="str">'[data-campo="input_number"]'</span>)).toBeVisible()
+})</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c5)">
+            <div class="step-bullet">7.4</div>
+            <div class="step-content">
+              <div class="step-title">Docker Compose de desarrollo local</div>
+              <div class="code-block"><span class="cm"># docker-compose.yml</span>
+<span class="at">version</span>: <span class="str">'3.9'</span>
+<span class="at">services</span>:
+  <span class="at">oracle</span>:
+    image: gvenzl/oracle-xe:21-slim-faststart
+    environment:
+      ORACLE_PASSWORD: <span class="str">"DevPass123"</span>
+      ORACLE_DATABASE: <span class="str">"DYNFORMS"</span>
+    ports: [<span class="str">"1521:1521"</span>]
+    volumes: [oracle_data:/opt/oracle/oradata]
+
+  <span class="at">minio</span>:
+    image: minio/minio
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports: [<span class="str">"9000:9000"</span>, <span class="str">"9001:9001"</span>]
+
+  <span class="at">redis</span>:
+    image: redis:7-alpine
+    ports: [<span class="str">"6379:6379"</span>]
+
+  <span class="at">backend</span>:
+    build: ./backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:<span class="at">@oracle</span>:1521/DYNFORMS
+      MINIO_ENDPOINT: http://minio:9000
+      SPRING_REDIS_HOST: redis
+    ports: [<span class="str">"8080:8080"</span>]
+    depends_on: [oracle, minio, redis]
+
+  <span class="at">frontend</span>:
+    build: ./frontend
+    ports: [<span class="str">"5173:5173"</span>]
+    depends_on: [backend]
+
+<span class="at">volumes</span>:
+  oracle_data:</div>
+            </div>
+          </div>
+
+          <div class="step-item" style="color:var(--c5)">
+            <div class="step-bullet">7.5</div>
+            <div class="step-content">
+              <div class="step-title">Optimizaciones Oracle para producción</div>
+              <div class="sub-block">
+                <div class="sub-block-title">Configuraciones clave</div>
+                <ul class="sub-list">
+                  <li><strong>Particionamiento:</strong> <code>FORMULARIO_DECLARACION</code> por <code>PERIODO_FISCAL</code> (RANGE MONTHLY) para consultas por año fiscal.</li>
+                  <li><strong>JSON Index:</strong> Crear <code>JSON_EXISTS</code> index sobre <code>DATOS_JSON</code> para campos frecuentemente filtrados.</li>
+                  <li><strong>Result Cache:</strong> Aplicar <code>/*+ RESULT_CACHE */</code> en la consulta de estructura de plantillas publicadas (cambia poco).</li>
+                  <li><strong>Connection Pool:</strong> HikariCP con <code>maximumPoolSize=20</code> y <code>connectionTimeout=5000ms</code>.</li>
+                  <li><strong>AWR Reports:</strong> Ejecutar semanalmente para identificar queries TOP por tiempo acumulado.</li>
+                </ul>
+              </div>
+              <div class="callout warn"><span class="callout-icon">⚠</span> En producción Oracle, crear el usuario de la aplicación con <strong>mínimos privilegios</strong>: solo CRUD sobre las tablas del esquema. No usar SYS ni SYSTEM como usuario de conexión del backend.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div><!-- guide-grid -->
+</div>
+
+<footer>
+  DynForms · Diagrama ER M1–M5 + Guía Exhaustiva · Oracle 19c + Vue 3 + Spring Boot 3<br>
+  Generado por Claude · Febrero 2026
+</footer>
+
+<script>
+function toggle(header) {
+  const card = header.closest('.phase-card')
+  card.classList.toggle('open')
+}
+
+// Nav highlight
+const sections = [...document.querySelectorAll('[id]')]
+const links = [...document.querySelectorAll('.nav-links a')]
+window.addEventListener('scroll', () => {
+  let cur = ''
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 90) cur = s.id })
+  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + cur))
+}, { passive: true })
+
+// Abrir primera fase por defecto ya está en HTML (open class)
+</script>
+</body>
+</html>
