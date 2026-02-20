@@ -1,0 +1,2390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía: Diseñador Dinámico de Formularios — Oracle 19c + Quarkus + Vue 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0f;
+    --paper: #f5f2eb;
+    --cream: #ede9df;
+    --accent: #c8441b;
+    --accent2: #1b6bc8;
+    --accent3: #1b8c4b;
+    --gold: #b8860b;
+    --muted: #6b6560;
+    --border: #d5cfc3;
+    --code-bg: #1a1a2e;
+    --code-fg: #e0e0f0;
+    --code-kw: #ff8c42;
+    --code-str: #7ec8a0;
+    --code-cmt: #7a7a9a;
+    --code-fn: #79b8ff;
+    --code-num: #f9c74f;
+    --tag-bg: rgba(200,68,27,0.12);
+    --tag-border: rgba(200,68,27,0.3);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.75;
+    background: var(--paper);
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 270px;
+    height: 100vh;
+    background: var(--ink);
+    color: var(--paper);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  #sidebar-header .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  #sidebar-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--paper);
+    line-height: 1.4;
+  }
+  #sidebar nav { padding: 16px 0; flex: 1; }
+  #sidebar nav a {
+    display: block;
+    padding: 7px 24px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: .04em;
+    color: rgba(245,242,235,0.65);
+    text-decoration: none;
+    transition: all .2s;
+    border-left: 2px solid transparent;
+  }
+  #sidebar nav a:hover,
+  #sidebar nav a.active {
+    color: var(--paper);
+    border-left-color: var(--accent);
+    background: rgba(255,255,255,0.05);
+    padding-left: 28px;
+  }
+  #sidebar nav .nav-section {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(245,242,235,0.3);
+    padding: 18px 24px 6px;
+  }
+
+  /* ── MAIN CONTENT ── */
+  #main {
+    margin-left: 270px;
+    min-height: 100vh;
+  }
+
+  /* ── HERO ── */
+  #hero {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 80px 80px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  #hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,68,27,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  #hero::after {
+    content: 'FORM\ADESIGNER';
+    white-space: pre;
+    position: absolute;
+    bottom: -20px; right: 60px;
+    font-family: 'Syne', sans-serif;
+    font-size: 120px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.03);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  #hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1.1;
+    margin-bottom: 24px;
+    max-width: 700px;
+  }
+  #hero h1 span { color: var(--accent); }
+  .hero-desc {
+    font-size: 17px;
+    color: rgba(245,242,235,0.7);
+    max-width: 600px;
+    margin-bottom: 36px;
+    font-family: 'Crimson Pro', serif;
+  }
+  .stack-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    padding: 6px 14px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--paper);
+  }
+  .badge.accent { background: rgba(200,68,27,0.25); border-color: var(--accent); color: var(--accent); }
+
+  /* ── CONTENT SECTIONS ── */
+  .content-section {
+    padding: 60px 80px;
+    border-bottom: 1px solid var(--border);
+  }
+  .content-section:last-child { border-bottom: none; }
+  .content-section.alt-bg { background: var(--cream); }
+
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  h2.section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    margin: 36px 0 14px;
+    color: var(--ink);
+  }
+  h3.step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  h3.step .step-num {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  h4 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    margin: 24px 0 10px;
+    color: var(--ink);
+    letter-spacing: .03em;
+  }
+
+  p { margin-bottom: 16px; max-width: 780px; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ── CODE BLOCKS ── */
+  .code-wrap {
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #12122a;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .code-filename {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(200,200,220,0.6);
+  }
+  .code-lang {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.07);
+    color: rgba(200,200,220,0.5);
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 22px 24px;
+    overflow-x: auto;
+    margin: 0;
+  }
+  pre .kw  { color: var(--code-kw); font-weight: 500; }
+  pre .str { color: var(--code-str); }
+  pre .cmt { color: var(--code-cmt); font-style: italic; }
+  pre .fn  { color: var(--code-fn); }
+  pre .num { color: var(--code-num); }
+  pre .cls { color: #ffb3de; }
+  pre .ann { color: #c792ea; }
+  pre .tag { color: #89ddff; }
+  pre .atr { color: #ffcb6b; }
+
+  /* ── CARDS ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 24px 0;
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+  .card.blue::before  { background: var(--accent2); }
+  .card.green::before { background: var(--accent3); }
+  .card.gold::before  { background: var(--gold); }
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .card h4 { margin: 0 0 8px; font-size: 15px; }
+  .card p { font-size: 14px; color: var(--muted); margin: 0; max-width: 100%; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-family: 'Syne', sans-serif;
+  }
+  thead tr { background: var(--ink); color: var(--paper); }
+  thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:nth-child(even) { background: var(--cream); }
+  tbody td { padding: 11px 16px; vertical-align: top; }
+  td code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(200,68,27,0.1);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  /* ── ALERTS ── */
+  .alert {
+    padding: 16px 20px;
+    border-radius: 6px;
+    margin: 20px 0;
+    font-size: 15px;
+    border-left: 4px solid;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .alert.info    { background: rgba(27,107,200,0.08); border-color: var(--accent2); }
+  .alert.warn    { background: rgba(184,134,11,0.08); border-color: var(--gold); }
+  .alert.success { background: rgba(27,140,75,0.08);  border-color: var(--accent3); }
+  .alert.danger  { background: rgba(200,68,27,0.08);  border-color: var(--accent); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 28px 0;
+    font-family: 'Syne', sans-serif;
+  }
+  .flow-box {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 100px;
+  }
+  .flow-box.accent { background: var(--accent); }
+  .flow-box.blue   { background: var(--accent2); }
+  .flow-box.green  { background: var(--accent3); }
+  .flow-arrow {
+    padding: 0 6px;
+    color: var(--muted);
+    font-size: 20px;
+    font-weight: 300;
+  }
+
+  /* ── DIAGRAM VISUAL ── */
+  .diagram-container {
+    background: var(--ink);
+    border-radius: 12px;
+    padding: 40px 30px;
+    margin: 28px 0;
+    overflow-x: auto;
+  }
+  .erd-grid {
+    display: grid;
+    gap: 16px;
+    min-width: 900px;
+  }
+  .erd-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .erd-table {
+    background: #1e1e3a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    min-width: 170px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .erd-table-header {
+    padding: 10px 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: white;
+  }
+  .erd-table-header.m1 { background: #c8441b; }
+  .erd-table-header.m2 { background: #1b6bc8; }
+  .erd-table-header.m3 { background: #b8860b; }
+  .erd-table-header.m4 { background: #1b8c4b; }
+  .erd-table-header.m5 { background: #7b2d8b; }
+  .erd-field {
+    padding: 5px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(230,230,255,0.7);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .erd-field .pk { color: #f9c74f; font-weight: 700; }
+  .erd-field .fk { color: #79b8ff; }
+  .erd-module-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    margin: 16px 0 8px;
+    padding: 0 16px;
+  }
+
+  /* ── STEP TIMELINE ── */
+  .timeline {
+    position: relative;
+    padding-left: 40px;
+    margin: 28px 0;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 8px; bottom: 8px; left: 14px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2));
+  }
+  .tl-step {
+    position: relative;
+    margin-bottom: 32px;
+  }
+  .tl-step::before {
+    content: '';
+    position: absolute;
+    left: -33px;
+    top: 6px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  .tl-step h4 { margin-top: 0; }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: rgba(200,68,27,0.08);
+    border: 1px solid rgba(200,68,27,0.15);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: #b83510;
+  }
+
+  /* ── PROJECT STRUCTURE ── */
+  .tree {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.9;
+    padding: 22px 24px;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  .tree .dir  { color: #79b8ff; font-weight: 600; }
+  .tree .file { color: #e0e0f0; }
+  .tree .note { color: var(--code-cmt); font-style: italic; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    #sidebar { display: none; }
+    #main { margin-left: 0; }
+    .content-section, #hero { padding: 40px 28px; }
+  }
+
+  /* ── SCROLL INDICATOR ── */
+  #progress {
+    position: fixed;
+    top: 0; left: 270px; right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform-origin: left;
+    transform: scaleX(0);
+    z-index: 99;
+    transition: transform .1s;
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div id="sidebar-header">
+    <div class="logo">Guía Técnica</div>
+    <h2>Diseñador Dinámico de Formularios</h2>
+  </div>
+  <nav>
+    <div class="nav-section">Arquitectura</div>
+    <a href="#overview">Visión General</a>
+    <a href="#sql-fixes">Correcciones SQL</a>
+    <a href="#diagram">Diagrama ERD</a>
+
+    <div class="nav-section">Backend — Quarkus</div>
+    <a href="#be-setup">1. Configuración Proyecto</a>
+    <a href="#be-entities">2. Entidades Panache</a>
+    <a href="#be-repositories">3. Repositorios Reactivos</a>
+    <a href="#be-services">4. Servicios</a>
+    <a href="#be-resources">5. REST Resources</a>
+    <a href="#be-dtos">6. DTOs / Mappers</a>
+
+    <div class="nav-section">Frontend — Vue 3</div>
+    <a href="#fe-setup">7. Configuración Vue</a>
+    <a href="#fe-store">8. Pinia Stores</a>
+    <a href="#fe-designer">9. Designer Component</a>
+    <a href="#fe-dragdrop">10. Drag & Drop</a>
+    <a href="#fe-validation">11. Validaciones</a>
+    <a href="#fe-execution">12. Ejecución Formularios</a>
+
+    <div class="nav-section">Datos</div>
+    <a href="#inserts">Inserts Completos</a>
+    <a href="#api-contract">Contrato API</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main id="main">
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-eyebrow">Stack Oracle 19c · Quarkus · Vue 3</div>
+    <h1>Diseñador <span>Dinámico</span><br>de Formularios</h1>
+    <p class="hero-desc">Guía completa paso a paso — desde el DDL corregido hasta el componente drag &amp; drop en Vue 3 con Quarkus Panache Reactive.</p>
+    <div class="stack-badges">
+      <span class="badge accent">Oracle 19c</span>
+      <span class="badge">Quarkus 3.x</span>
+      <span class="badge">Panache Reactive</span>
+      <span class="badge">Vue 3 + Composition API</span>
+      <span class="badge">PrimeVue 4</span>
+      <span class="badge">Pinia</span>
+      <span class="badge">vee-validate</span>
+      <span class="badge">vuedraggable</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- OVERVIEW -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="overview" class="content-section">
+    <div class="section-label">Visión General</div>
+    <h2 class="section-title">Arquitectura del Sistema</h2>
+    <p>El sistema se compone de <strong>dos grandes dominios</strong>: el <em>Diseñador</em>, donde un administrador construye y versiona plantillas de formulario; y la <em>Ejecución</em>, donde el contribuyente rellena y envía declaraciones basadas en esas plantillas.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-icon">🏗️</span>
+        <h4>Módulo Diseñador</h4>
+        <p>Crea Plantillas → Versiones → Secciones → Campos con drag &amp; drop. Asigna validaciones, condicionales y conceptos tributarios.</p>
+      </div>
+      <div class="card blue">
+        <span class="card-icon">📋</span>
+        <h4>Módulo Ejecución</h4>
+        <p>El formulario se renderiza en runtime a partir de la metadata. El contribuyente ingresa datos que se guardan como JSON + valores calculados de conceptos.</p>
+      </div>
+      <div class="card green">
+        <span class="card-icon">⚡</span>
+        <h4>Reactivo End-to-End</h4>
+        <p>Quarkus Mutiny + Hibernate Reactive. Todo el stack I/O es non-blocking: consultas, transacciones y endpoints SSE.</p>
+      </div>
+      <div class="card gold">
+        <span class="card-icon">📚</span>
+        <h4>Semántica Tributaria</h4>
+        <p>Los campos del formulario se mapean a conceptos del SRI (casilleros). Los valores calculados se materializan en <code>DETALLE_VALOR_CONCEPTO</code>.</p>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="flow-box accent">CATEGORIA_COMPONENTE</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">BIBLIOTECA_COMPONENTE</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box blue">CAMPO_PLANTILLA</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box green">FORMULARIO_DECLARACION</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- SQL FIXES -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="sql-fixes" class="content-section alt-bg">
+    <div class="section-label">DDL</div>
+    <h2 class="section-title">Correcciones al SQL</h2>
+
+    <div class="alert warn">
+      <span class="alert-icon">⚠️</span>
+      <div>Se detectaron <strong>5 problemas</strong> en el DDL original que deben corregirse antes de ejecutar las migraciones.</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Tabla / Objeto</th><th>Problema</th><th>Corrección</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><code>CATALOGO_MAESTRO</code></td>
+            <td>FK <code>USUARIO_CREADOR → USUARIO(CODIGO)</code> referencia tabla <code>USUARIO</code> que <strong>no está definida en el DDL</strong>. Igual en PLANTILLA, VERSION_PLANTILLA, FORMULARIO_DECLARACION, etc.</td>
+            <td>Crear la tabla <code>USUARIO</code> primero, o eliminar las FKs si se gestiona en otro esquema. Se muestra la creación de USUARIO a continuación.</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><code>IDX_CP_VER_ORDEN</code> y <code>IDX_SEC_PADRE</code></td>
+            <td>Los índices sobre <code>CAMPO_PLANTILLA</code> y <code>SECCION_PLANTILLA</code> se declaran <strong>antes de crear esas tablas</strong>.</td>
+            <td>Mover los <code>CREATE INDEX</code> <em>después</em> del <code>CREATE TABLE</code> correspondiente.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><code>CONTROL_FLUJO_ESTADO</code></td>
+            <td>Columna <code>USUARIO_RESPONSABLE VARCHAR2(100)</code> debería ser <code>NUMBER</code> y FK a <code>USUARIO</code>, consistente con el resto.</td>
+            <td>Cambiar tipo a <code>NUMBER</code> y agregar <code>CONSTRAINT FK_CFE_USR FOREIGN KEY ... REFERENCES USUARIO(CODIGO)</code>.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><code>CAMPO_PLANTILLA</code></td>
+            <td>Columna <code>CATEGORIA_COMPONENTE VARCHAR2(50)</code> es una cadena libre que duplica semánticamente <code>CODIGO_BIBLIOTECA_COMPONENTE</code>. Introduce inconsistencia.</td>
+            <td>Renombrar a <code>TIPO_COMPONENTE_TECNICO VARCHAR2(50)</code> y mantenerla como <em>snapshot</em> del identificador técnico al momento del diseño (desnormalización controlada para rendimiento).</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><code>CAMPO_PLANTILLA_CONCEPTO</code></td>
+            <td>Falta <code>UNIQUE</code> en <code>(CODIGO_CAMPO_PLANTILLA, CODIGO_CONCEPTO_TRIBUTARIO)</code> — puede duplicar asignaciones.</td>
+            <td>Agregar <code>CONSTRAINT UK_MCC UNIQUE (CODIGO_CAMPO_PLANTILLA, CODIGO_CONCEPTO_TRIBUTARIO)</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>DDL Corregido — Tabla USUARIO y orden correcto</h3>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-filename">V1__schema.sql (Flyway)</span>
+        <span class="code-lang">SQL Oracle</span>
+      </div>
+      <pre><span class="cmt">-- ╔══════════════════════════════════════════════╗
+-- ║  0. TABLA BASE: USUARIO  (debe ir primero)   ║
+-- ╚══════════════════════════════════════════════╝</span>
+<span class="kw">CREATE TABLE</span> <span class="cls">USUARIO</span> (
+    CODIGO          <span class="kw">NUMBER</span> GENERATED ALWAYS AS IDENTITY <span class="kw">PRIMARY KEY</span>,
+    USERNAME        <span class="kw">VARCHAR2</span>(<span class="num">100</span>) <span class="kw">UNIQUE NOT NULL</span>,
+    EMAIL           <span class="kw">VARCHAR2</span>(<span class="num">200</span>) <span class="kw">UNIQUE NOT NULL</span>,
+    NOMBRE_COMPLETO <span class="kw">VARCHAR2</span>(<span class="num">300</span>),
+    ROL             <span class="kw">VARCHAR2</span>(<span class="num">50</span>)  <span class="kw">DEFAULT</span> <span class="str">'CONTRIBUYENTE'</span>,
+    ACTIVO          <span class="kw">NUMBER</span>(<span class="num">1</span>)     <span class="kw">DEFAULT</span> <span class="num">1</span>,
+    FECHA_CREACION  <span class="kw">TIMESTAMP</span>     <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>
+);
+
+<span class="cmt">-- Fix #3: CONTROL_FLUJO_ESTADO con FK correcta</span>
+<span class="kw">CREATE TABLE</span> <span class="cls">CONTROL_FLUJO_ESTADO</span> (
+    CODIGO              <span class="kw">NUMBER</span> GENERATED ALWAYS AS IDENTITY <span class="kw">PRIMARY KEY</span>,
+    CODIGO_VERSION_PLANTILLA <span class="kw">NUMBER NOT NULL</span>,
+    ESTADO_ANTERIOR     <span class="kw">VARCHAR2</span>(<span class="num">20</span>),
+    ESTADO_NUEVO        <span class="kw">VARCHAR2</span>(<span class="num">20</span>) <span class="kw">NOT NULL</span>,
+    USUARIO_RESPONSABLE <span class="kw">NUMBER</span>,  <span class="cmt">-- CORREGIDO: era VARCHAR2</span>
+    FECHA_CAMBIO        <span class="kw">TIMESTAMP</span> <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>,
+    COMENTARIO          <span class="kw">VARCHAR2</span>(<span class="num">500</span>),
+    <span class="kw">CONSTRAINT</span> FK_CFE_VER <span class="kw">FOREIGN KEY</span> (CODIGO_VERSION_PLANTILLA) <span class="kw">REFERENCES</span> VERSION_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_CFE_USR <span class="kw">FOREIGN KEY</span> (USUARIO_RESPONSABLE) <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);
+
+<span class="cmt">-- Fix #4: Columna renombrada en CAMPO_PLANTILLA</span>
+<span class="cmt">-- Cambiar: CATEGORIA_COMPONENTE VARCHAR2(50)  →</span>
+<span class="cmt">--          TIPO_COMPONENTE_TECNICO VARCHAR2(50)</span>
+
+<span class="cmt">-- Fix #5: UNIQUE en CAMPO_PLANTILLA_CONCEPTO</span>
+<span class="kw">ALTER TABLE</span> <span class="cls">CAMPO_PLANTILLA_CONCEPTO</span>
+    <span class="kw">ADD CONSTRAINT</span> UK_MCC <span class="kw">UNIQUE</span> (CODIGO_CAMPO_PLANTILLA, CODIGO_CONCEPTO_TRIBUTARIO);
+
+<span class="cmt">-- Fix #2: Los índices DEBEN ir después de las tablas</span>
+<span class="kw">CREATE INDEX</span> IDX_SEC_PADRE   <span class="kw">ON</span> SECCION_PLANTILLA(CODIGO_SECCION_PADRE);
+<span class="kw">CREATE INDEX</span> IDX_SEC_VER_ORDEN <span class="kw">ON</span> SECCION_PLANTILLA(CODIGO_VERSION_PLANTILLA, ORDEN);
+<span class="kw">CREATE INDEX</span> IDX_CP_VER_ORDEN  <span class="kw">ON</span> CAMPO_PLANTILLA(CODIGO_VERSION_PLANTILLA, ORDEN);</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- DIAGRAM -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="diagram" class="content-section">
+    <div class="section-label">Modelo de Datos</div>
+    <h2 class="section-title">Diagrama ERD (Simplificado)</h2>
+    <p>El modelo se organiza en 5 módulos claramente delimitados. Las flechas indican FKs de muchos-a-uno.</p>
+
+    <div class="diagram-container">
+      <div class="erd-module-label">■ MÓDULO 1 — Primitivos del Frontend</div>
+      <div class="erd-row">
+        <div class="erd-table">
+          <div class="erd-table-header m1">CATEGORIA_COMPONENTE</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field">IDENTIFICADOR_TECNICO</div>
+          <div class="erd-field">NOMBRE_AMIGABLE</div>
+          <div class="erd-field">PERMITE_CATALOGO</div>
+          <div class="erd-field">PERMITE_HIJOS</div>
+        </div>
+        <div class="erd-field" style="color:#c8441b;font-size:20px;align-self:center;">→</div>
+        <div class="erd-table">
+          <div class="erd-table-header m1">BIBLIOTECA_COMPONENTE</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_CATEGORIA_COMP</div>
+          <div class="erd-field">NOMBRE_UI</div>
+          <div class="erd-field">CATEGORIA_UI</div>
+          <div class="erd-field">CONFIG_DEFAULT_JSON</div>
+        </div>
+      </div>
+
+      <div class="erd-module-label">■ MÓDULO 2 — Metadatos y Catálogos</div>
+      <div class="erd-row">
+        <div class="erd-table">
+          <div class="erd-table-header m2">CATALOGO_MAESTRO</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field">CODIGO_UNICO</div>
+          <div class="erd-field">NOMBRE</div>
+          <div class="erd-field">PERMITE_JERARQUIA</div>
+        </div>
+        <div class="erd-field" style="color:#1b6bc8;font-size:20px;align-self:center;">→</div>
+        <div class="erd-table">
+          <div class="erd-table-header m2">CATALOGO_DETALLE</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_CAT_MAESTRO</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_ITEM_PADRE ↺</div>
+          <div class="erd-field">VALOR_CLAVE</div>
+          <div class="erd-field">ETIQUETA</div>
+        </div>
+        <div class="erd-field" style="color:#b8860b;font-size:20px;align-self:center;">+</div>
+        <div class="erd-table">
+          <div class="erd-table-header m3">CONCEPTO_TRIBUTARIO</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_PADRE ↺</div>
+          <div class="erd-field">CASILLERO_SRI</div>
+          <div class="erd-field">NOMBRE</div>
+          <div class="erd-field">FORMULA_CALCULO</div>
+        </div>
+      </div>
+
+      <div class="erd-module-label">■ MÓDULO 4 — Diseñador de Plantillas</div>
+      <div class="erd-row">
+        <div class="erd-table">
+          <div class="erd-table-header m4">PLANTILLA</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field">IDENTIFICADOR</div>
+          <div class="erd-field">NOMBRE</div>
+        </div>
+        <div class="erd-field" style="color:#1b8c4b;font-size:20px;align-self:center;">→</div>
+        <div class="erd-table">
+          <div class="erd-table-header m4">VERSION_PLANTILLA</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_PLANTILLA</div>
+          <div class="erd-field">NUMERO_VERSION</div>
+          <div class="erd-field">ESTADO (BORRADOR…)</div>
+        </div>
+        <div class="erd-field" style="color:#1b8c4b;font-size:20px;align-self:center;">→</div>
+        <div class="erd-table">
+          <div class="erd-table-header m4">SECCION_PLANTILLA</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_VERSION</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_SEC_PADRE ↺</div>
+          <div class="erd-field">CLAVE_UI / ORDEN</div>
+        </div>
+        <div class="erd-field" style="color:#1b8c4b;font-size:20px;align-self:center;">→</div>
+        <div class="erd-table">
+          <div class="erd-table-header m4">CAMPO_PLANTILLA</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_VERSION</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_SECCION</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_BIBLIO_COMP</div>
+          <div class="erd-field">CLAVE_UI / ORDEN</div>
+          <div class="erd-field">PROPIEDADES_UI_JSON</div>
+        </div>
+      </div>
+
+      <div class="erd-module-label">■ MÓDULO 5 — Ejecución</div>
+      <div class="erd-row">
+        <div class="erd-table">
+          <div class="erd-table-header m5">FORMULARIO_DECLARACION</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_VERSION</div>
+          <div class="erd-field">RUC_CONTRIBUYENTE</div>
+          <div class="erd-field">PERIODO_FISCAL</div>
+          <div class="erd-field">DATOS_JSON (respuestas)</div>
+        </div>
+        <div class="erd-field" style="color:#7b2d8b;font-size:20px;align-self:center;">→</div>
+        <div class="erd-table">
+          <div class="erd-table-header m5">DETALLE_VALOR_CONCEPTO</div>
+          <div class="erd-field"><span class="pk">PK</span> (COD_DEC, COD_CONC)</div>
+          <div class="erd-field">VALOR_CALCULADO</div>
+        </div>
+        <div class="erd-field" style="color:#7b2d8b;font-size:20px;align-self:center;">+</div>
+        <div class="erd-table">
+          <div class="erd-table-header m5">DECLARACION_ADJUNTO</div>
+          <div class="erd-field"><span class="pk">PK</span> CODIGO</div>
+          <div class="erd-field"><span class="fk">FK</span> COD_DEC</div>
+          <div class="erd-field">HASH_SHA256</div>
+          <div class="erd-field">RUTA_ALMACENAMIENTO</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- BACKEND SETUP -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="be-setup" class="content-section alt-bg">
+    <div class="section-label">Backend · Paso 1</div>
+    <h2 class="section-title">Configuración del Proyecto Quarkus</h2>
+
+    <div class="timeline">
+      <div class="tl-step">
+        <h4>1.1 Crear proyecto con CLI de Quarkus</h4>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-filename">terminal</span><span class="code-lang">bash</span></div>
+          <pre><span class="fn">mvn</span> io.quarkus.platform:quarkus-maven-plugin:<span class="num">3.9.0</span>:create \
+    -DprojectGroupId=<span class="str">ec.form.designer</span> \
+    -DprojectArtifactId=<span class="str">form-designer-api</span> \
+    -Dextensions=<span class="str">"quarkus-rest,quarkus-rest-jackson,\
+quarkus-hibernate-reactive-panache,\
+quarkus-reactive-oracle-client,\
+quarkus-flyway,quarkus-smallrye-openapi,\
+quarkus-security-jpa-reactive,\
+quarkus-smallrye-jwt"</span>
+<span class="fn">cd</span> form-designer-api</pre>
+        </div>
+      </div>
+
+      <div class="tl-step">
+        <h4>1.2 application.properties</h4>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-filename">src/main/resources/application.properties</span><span class="code-lang">properties</span></div>
+          <pre><span class="cmt"># ── Datasource Oracle ──────────────────────────────</span>
+quarkus.datasource.db-kind=oracle
+quarkus.datasource.username=<span class="str">FORM_DESIGNER</span>
+quarkus.datasource.password=<span class="str">${DB_PASSWORD}</span>
+quarkus.datasource.reactive.url=oracle:thin:@<span class="str">localhost:1521/ORCLPDB</span>
+quarkus.datasource.reactive.max-size=<span class="num">20</span>
+
+<span class="cmt"># ── Hibernate Reactive ─────────────────────────────</span>
+quarkus.hibernate-orm.dialect=org.hibernate.dialect.OracleDialect
+quarkus.hibernate-orm.database.generation=none
+quarkus.hibernate-orm.log.sql=<span class="str">false</span>
+quarkus.hibernate-orm.physical-naming-strategy=\
+  org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+
+<span class="cmt"># ── Flyway ─────────────────────────────────────────</span>
+quarkus.flyway.migrate-at-start=<span class="str">true</span>
+quarkus.flyway.locations=classpath:db/migration
+quarkus.flyway.baseline-on-migrate=<span class="str">true</span>
+
+<span class="cmt"># ── OpenAPI ────────────────────────────────────────</span>
+quarkus.smallrye-openapi.info-title=Form Designer API
+quarkus.smallrye-openapi.info-version=1.0.0
+quarkus.swagger-ui.always-include=<span class="str">true</span>
+
+<span class="cmt"># ── CORS ───────────────────────────────────────────</span>
+quarkus.http.cors=<span class="str">true</span>
+quarkus.http.cors.origins=<span class="str">http://localhost:5173</span>
+quarkus.http.cors.methods=<span class="str">GET,POST,PUT,DELETE,PATCH,OPTIONS</span></pre>
+        </div>
+      </div>
+
+      <div class="tl-step">
+        <h4>1.3 Estructura de paquetes</h4>
+        <div class="tree">
+<span class="dir">src/main/java/ec/form/designer/</span>
+├── <span class="dir">domain/</span>
+│   ├── <span class="dir">entity/</span>       <span class="note">← Entidades Panache (@Entity)</span>
+│   ├── <span class="dir">repository/</span>   <span class="note">← PanacheRepository reactivos</span>
+│   ├── <span class="dir">service/</span>      <span class="note">← Lógica de negocio (Uni/Multi)</span>
+│   └── <span class="dir">dto/</span>          <span class="note">← Records para entrada/salida</span>
+├── <span class="dir">infrastructure/</span>
+│   ├── <span class="dir">rest/</span>         <span class="note">← @Path Resources (JAX-RS)</span>
+│   └── <span class="dir">mapper/</span>       <span class="note">← MapStruct mappers</span>
+└── <span class="dir">config/</span>          <span class="note">← Beans de configuración</span>
+
+<span class="dir">src/main/resources/</span>
+├── <span class="dir">db/migration/</span>
+│   ├── <span class="file">V1__base_schema.sql</span>
+│   └── <span class="file">V2__seed_data.sql</span>
+└── <span class="file">application.properties</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ENTITIES -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="be-entities" class="content-section">
+    <div class="section-label">Backend · Paso 2</div>
+    <h2 class="section-title">Entidades Panache Reactive</h2>
+    <p>Usamos el patrón <strong>Active Record</strong> de Panache extendiendo <code>PanacheEntityBase</code>. Para colecciones grandes usamos <code>PanacheRepository</code>.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">domain/entity/CategoriaComponente.java</span><span class="code-lang">Java</span></div>
+      <pre><span class="ann">@Entity</span>
+<span class="ann">@Table</span>(name = <span class="str">"CATEGORIA_COMPONENTE"</span>)
+<span class="kw">public class</span> <span class="cls">CategoriaComponente</span> <span class="kw">extends</span> <span class="cls">PanacheEntityBase</span> {
+
+    <span class="ann">@Id</span>
+    <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">public</span> Long codigo;
+
+    <span class="ann">@Column</span>(name = <span class="str">"IDENTIFICADOR_TECNICO"</span>, unique = <span class="kw">true</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">public</span> String identificadorTecnico;
+
+    <span class="ann">@Column</span>(name = <span class="str">"NOMBRE_AMIGABLE"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">public</span> String nombreAmigable;
+
+    <span class="ann">@Column</span>(name = <span class="str">"PERMITE_CATALOGO"</span>)
+    <span class="kw">public</span> Boolean permiteCatalogo = <span class="kw">false</span>;
+
+    <span class="ann">@Column</span>(name = <span class="str">"PERMITE_HIJOS"</span>)
+    <span class="kw">public</span> Boolean permiteHijos = <span class="kw">false</span>;
+
+    <span class="ann">@Column</span>(name = <span class="str">"PERMITE_ADJUNTO"</span>)
+    <span class="kw">public</span> Boolean permiteAdjunto = <span class="kw">false</span>;
+
+    <span class="ann">@Column</span>(name = <span class="str">"ACTIVO"</span>)
+    <span class="kw">public</span> Boolean activo = <span class="kw">true</span>;
+}</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">domain/entity/CampoPlantilla.java</span><span class="code-lang">Java</span></div>
+      <pre><span class="ann">@Entity</span>
+<span class="ann">@Table</span>(name = <span class="str">"CAMPO_PLANTILLA"</span>)
+<span class="kw">public class</span> <span class="cls">CampoPlantilla</span> <span class="kw">extends</span> <span class="cls">PanacheEntityBase</span> {
+
+    <span class="ann">@Id @GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">public</span> Long codigo;
+
+    <span class="ann">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="ann">@JoinColumn</span>(name = <span class="str">"CODIGO_VERSION_PLANTILLA"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">public</span> VersionPlantilla versionPlantilla;
+
+    <span class="ann">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="ann">@JoinColumn</span>(name = <span class="str">"CODIGO_SECCION"</span>)
+    <span class="kw">public</span> SeccionPlantilla seccion;
+
+    <span class="ann">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="ann">@JoinColumn</span>(name = <span class="str">"CODIGO_BIBLIOTECA_COMPONENTE"</span>)
+    <span class="kw">public</span> BibliotecaComponente bibliotecaComponente;
+
+    <span class="ann">@Column</span>(name = <span class="str">"CLAVE_UI"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">public</span> String claveUi;
+
+    <span class="ann">@Column</span>(name = <span class="str">"ETIQUETA_UI"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">public</span> String etiquetaUi;
+
+    <span class="cmt">// snapshot del tipo técnico al momento del diseño</span>
+    <span class="ann">@Column</span>(name = <span class="str">"TIPO_COMPONENTE_TECNICO"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">public</span> String tipoComponenteTecnico;
+
+    <span class="ann">@Column</span>(name = <span class="str">"ORDEN"</span>, nullable = <span class="kw">false</span>)
+    <span class="kw">public</span> Integer orden;
+
+    <span class="ann">@Column</span>(name = <span class="str">"ES_OBLIGATORIO"</span>)
+    <span class="kw">public</span> Boolean esObligatorio = <span class="kw">false</span>;
+
+    <span class="ann">@Column</span>(name = <span class="str">"ES_VISIBLE"</span>)
+    <span class="kw">public</span> Boolean esVisible = <span class="kw">true</span>;
+
+    <span class="ann">@Column</span>(name = <span class="str">"ES_EDITABLE"</span>)
+    <span class="kw">public</span> Boolean esEditable = <span class="kw">true</span>;
+
+    <span class="ann">@Column</span>(name = <span class="str">"ANCHO_COLUMNAS"</span>)
+    <span class="kw">public</span> Integer anchoColumnas = <span class="num">12</span>;
+
+    <span class="ann">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="ann">@JoinColumn</span>(name = <span class="str">"CODIGO_CATALOGO_MAESTRO"</span>)
+    <span class="kw">public</span> CatalogoMaestro catalogoMaestro;
+
+    <span class="ann">@Column</span>(name = <span class="str">"PROPIEDADES_UI_JSON"</span>, columnDefinition = <span class="str">"CLOB"</span>)
+    <span class="kw">public</span> String propiedadesUiJson;
+
+    <span class="ann">@OneToMany</span>(mappedBy = <span class="str">"campoPlantilla"</span>, cascade = CascadeType.ALL, orphanRemoval = <span class="kw">true</span>)
+    <span class="ann">@OrderBy</span>(<span class="str">"ordenEjecucion ASC"</span>)
+    <span class="kw">public</span> List&lt;CampoReglaValidacion&gt; reglas = new ArrayList&lt;&gt;();
+
+    <span class="ann">@OneToMany</span>(mappedBy = <span class="str">"campoPlantilla"</span>, cascade = CascadeType.ALL, orphanRemoval = <span class="kw">true</span>)
+    <span class="kw">public</span> List&lt;ReglaCondicional&gt; condicionales = new ArrayList&lt;&gt;();
+}</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- REPOSITORIES -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="be-repositories" class="content-section alt-bg">
+    <div class="section-label">Backend · Paso 3</div>
+    <h2 class="section-title">Repositorios Reactivos</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">domain/repository/CampoPlantillaRepository.java</span><span class="code-lang">Java</span></div>
+      <pre><span class="ann">@ApplicationScoped</span>
+<span class="kw">public class</span> <span class="cls">CampoPlantillaRepository</span>
+        <span class="kw">implements</span> <span class="cls">PanacheRepositoryBase</span>&lt;<span class="cls">CampoPlantilla</span>, Long&gt; {
+
+    <span class="cmt">/** Todos los campos de una versión, con secciones en eager para no N+1 */</span>
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">List</span>&lt;<span class="cls">CampoPlantilla</span>&gt;&gt; <span class="fn">findByVersionOrdenados</span>(Long versionId) {
+        <span class="kw">return</span> <span class="fn">find</span>(<span class="str">"""
+            SELECT c FROM CampoPlantilla c
+            LEFT JOIN FETCH c.seccion
+            LEFT JOIN FETCH c.bibliotecaComponente bc
+            LEFT JOIN FETCH bc.categoriaComponente
+            WHERE c.versionPlantilla.codigo = ?1
+            ORDER BY c.orden ASC
+            """</span>, versionId).<span class="fn">list</span>();
+    }
+
+    <span class="cmt">/** Actualiza el orden de múltiples campos en una sola transacción */</span>
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;Void&gt; <span class="fn">actualizarOrdenes</span>(<span class="cls">List</span>&lt;<span class="cls">OrdenCampoDto</span>&gt; ordenes) {
+        <span class="kw">return</span> <span class="cls">Uni</span>.<span class="fn">combine</span>().<span class="fn">all</span>().<span class="fn">unis</span>(
+            ordenes.<span class="fn">stream</span>()
+                   .<span class="fn">map</span>(o -&gt; <span class="fn">update</span>(<span class="str">"orden = ?1 WHERE codigo = ?2"</span>,
+                                      o.orden(), o.codigoCampo())
+                                     .<span class="fn">replaceWithVoid</span>())
+                   .<span class="fn">toList</span>()
+        ).<span class="fn">discardItems</span>();
+    }
+}</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">domain/repository/VersionPlantillaRepository.java</span><span class="code-lang">Java</span></div>
+      <pre><span class="ann">@ApplicationScoped</span>
+<span class="kw">public class</span> <span class="cls">VersionPlantillaRepository</span>
+        <span class="kw">implements</span> <span class="cls">PanacheRepositoryBase</span>&lt;<span class="cls">VersionPlantilla</span>, Long&gt; {
+
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">Optional</span>&lt;<span class="cls">VersionPlantilla</span>&gt;&gt; <span class="fn">findActivaByPlantilla</span>(Long plantillaId) {
+        <span class="kw">return</span> <span class="fn">find</span>(<span class="str">"plantilla.codigo = ?1 AND estado = ?2"</span>,
+                    plantillaId, <span class="str">"PUBLICADA"</span>)
+               .<span class="fn">firstResultOptional</span>();
+    }
+
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">VersionPlantilla</span>&gt; <span class="fn">publicar</span>(Long versionId, Long usuarioId) {
+        <span class="kw">return</span> <span class="cls">Panache</span>.<span class="fn">withTransaction</span>(() -&gt;
+            <span class="fn">findById</span>(versionId).<span class="fn">onItem</span>().<span class="fn">ifNotNull</span>().<span class="fn">invoke</span>(v -&gt; {
+                v.estado = <span class="str">"PUBLICADA"</span>;
+                <span class="cls">VersionPlantillaHistorial</span> hist = <span class="kw">new</span> <span class="cls">VersionPlantillaHistorial</span>();
+                hist.versionPlantilla = v;
+                hist.estadoAnterior    = v.estado;
+                hist.estadoNuevo       = <span class="str">"PUBLICADA"</span>;
+                hist.usuarioResponsable = usuarioId;
+                hist.<span class="fn">persist</span>();
+            })
+        );
+    }
+}</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- SERVICES -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="be-services" class="content-section">
+    <div class="section-label">Backend · Paso 4</div>
+    <h2 class="section-title">Servicios — Lógica de Negocio</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">domain/service/PlantillaDesignerService.java</span><span class="code-lang">Java</span></div>
+      <pre><span class="ann">@ApplicationScoped</span>
+<span class="kw">public class</span> <span class="cls">PlantillaDesignerService</span> {
+
+    <span class="ann">@Inject</span> <span class="cls">CampoPlantillaRepository</span>  campoRepo;
+    <span class="ann">@Inject</span> <span class="cls">SeccionPlantillaRepository</span> seccionRepo;
+    <span class="ann">@Inject</span> <span class="cls">BibliotecaComponenteRepository</span> bibliotecaRepo;
+    <span class="ann">@Inject</span> <span class="cls">PlantillaMapper</span> mapper;
+
+    <span class="cmt">/**
+     * Obtiene la definición completa de una versión para el diseñador.
+     * Estructura: { version, secciones: [{ ...seccion, campos: [...] }] }
+     */</span>
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">VersionDesignDto</span>&gt; <span class="fn">cargarVersionCompleta</span>(Long versionId) {
+        <span class="kw">return</span> <span class="cls">Panache</span>.<span class="fn">withSession</span>(() -&gt;
+            campoRepo.<span class="fn">findByVersionOrdenados</span>(versionId)
+                     .<span class="fn">map</span>(campos -&gt; mapper.<span class="fn">toVersionDesignDto</span>(versionId, campos))
+        );
+    }
+
+    <span class="cmt">/**
+     * Agrega un campo desde la biblioteca (snapshot de configuración)
+     */</span>
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">CampoPlantillaDto</span>&gt; <span class="fn">agregarCampoDesdeLibreria</span>(
+            Long versionId, <span class="cls">AgregarCampoRequest</span> req) {
+
+        <span class="kw">return</span> <span class="cls">Panache</span>.<span class="fn">withTransaction</span>(() -&gt;
+            bibliotecaRepo.<span class="fn">findById</span>(req.codigoBiblioteca())
+                .<span class="fn">onItem</span>().<span class="fn">ifNull</span>()
+                    .<span class="fn">failWith</span>(() -&gt; <span class="kw">new</span> <span class="cls">NotFoundException</span>(<span class="str">"Componente no encontrado"</span>))
+                .<span class="fn">flatMap</span>(biblio -&gt; {
+                    <span class="cls">CampoPlantilla</span> campo = <span class="kw">new</span> <span class="cls">CampoPlantilla</span>();
+                    campo.versionPlantilla    = <span class="cls">VersionPlantilla</span>.<span class="fn">getReference</span>(versionId);
+                    campo.seccion             = req.codigoSeccion() != <span class="kw">null</span>
+                        ? <span class="cls">SeccionPlantilla</span>.<span class="fn">getReference</span>(req.codigoSeccion()) : <span class="kw">null</span>;
+                    campo.bibliotecaComponente = biblio;
+                    campo.claveUi             = req.claveUi();
+                    campo.etiquetaUi          = biblio.nombreUi;
+                    campo.tipoComponenteTecnico = biblio.categoriaComponente.identificadorTecnico;
+                    <span class="cmt">// Snapshot: copia la config default de la biblioteca</span>
+                    campo.propiedadesUiJson   = biblio.configuracionDefaultJson;
+                    campo.orden               = req.orden();
+                    <span class="kw">return</span> campo.<span class="fn">persist</span>().<span class="fn">map</span>(v -&gt; mapper.<span class="fn">toCampoDto</span>(campo));
+                })
+        );
+    }
+
+    <span class="cmt">/**
+     * Reordenamiento masivo tras drag-and-drop
+     */</span>
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;Void&gt; <span class="fn">reordenarCampos</span>(<span class="cls">List</span>&lt;<span class="cls">OrdenCampoDto</span>&gt; ordenes) {
+        <span class="kw">return</span> <span class="cls">Panache</span>.<span class="fn">withTransaction</span>(() -&gt;
+            campoRepo.<span class="fn">actualizarOrdenes</span>(ordenes)
+        );
+    }
+}</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">domain/service/EjecucionFormularioService.java</span><span class="code-lang">Java</span></div>
+      <pre><span class="ann">@ApplicationScoped</span>
+<span class="kw">public class</span> <span class="cls">EjecucionFormularioService</span> {
+
+    <span class="ann">@Inject</span> <span class="cls">FormularioDeclaracionRepository</span> decRepo;
+    <span class="ann">@Inject</span> <span class="cls">ConceptoTributarioRepository</span>    conceptoRepo;
+    <span class="ann">@Inject</span> <span class="cls">CampoPlantillaConceptoRepository</span>  mapConceptoRepo;
+    <span class="ann">@Inject</span> <span class="cls">ObjectMapper</span> objectMapper;
+
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">FormularioDeclaracion</span>&gt; <span class="fn">guardarBorrador</span>(
+            Long declaracionId, <span class="cls">Map</span>&lt;String, Object&gt; datos) {
+
+        <span class="kw">return</span> <span class="cls">Panache</span>.<span class="fn">withTransaction</span>(() -&gt;
+            decRepo.<span class="fn">findById</span>(declaracionId)
+                .<span class="fn">flatMap</span>(dec -&gt; {
+                    <span class="kw">try</span> {
+                        dec.datosJson = objectMapper.<span class="fn">writeValueAsString</span>(datos);
+                    } <span class="kw">catch</span> (<span class="cls">JsonProcessingException</span> e) {
+                        <span class="kw">throw new</span> <span class="cls">RuntimeException</span>(e);
+                    }
+                    <span class="cmt">// Calcular y materializar conceptos tributarios</span>
+                    <span class="kw">return</span> <span class="fn">calcularConceptos</span>(dec, datos)
+                        .<span class="fn">replaceWith</span>(dec);
+                })
+        );
+    }
+
+    <span class="kw">private</span> <span class="cls">Uni</span>&lt;Void&gt; <span class="fn">calcularConceptos</span>(
+            <span class="cls">FormularioDeclaracion</span> dec, <span class="cls">Map</span>&lt;String, Object&gt; datos) {
+        <span class="kw">return</span> mapConceptoRepo
+            .<span class="fn">findByVersion</span>(dec.versionPlantilla.codigo)
+            .<span class="fn">flatMap</span>(mapeos -&gt; {
+                <span class="kw">var</span> unis = mapeos.<span class="fn">stream</span>().<span class="fn">map</span>(m -&gt; {
+                    <span class="cls">Object</span> valor = datos.<span class="fn">get</span>(m.campoPlantilla.claveUi);
+                    <span class="cls">BigDecimal</span> num = <span class="fn">parseDecimal</span>(valor);
+                    <span class="kw">return</span> <span class="cls">DetalleValorConcepto</span>.<span class="fn">upsert</span>(dec, m.conceptoTributario, num);
+                }).<span class="fn">toList</span>();
+                <span class="kw">return</span> <span class="cls">Uni</span>.<span class="fn">combine</span>().<span class="fn">all</span>().<span class="fn">unis</span>(unis).<span class="fn">discardItems</span>();
+            });
+    }
+}</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- REST RESOURCES -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="be-resources" class="content-section alt-bg">
+    <div class="section-label">Backend · Paso 5</div>
+    <h2 class="section-title">REST Resources (JAX-RS)</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">infrastructure/rest/PlantillaResource.java</span><span class="code-lang">Java</span></div>
+      <pre><span class="ann">@Path</span>(<span class="str">"/api/v1/plantillas"</span>)
+<span class="ann">@Produces</span>(<span class="cls">MediaType</span>.APPLICATION_JSON)
+<span class="ann">@Consumes</span>(<span class="cls">MediaType</span>.APPLICATION_JSON)
+<span class="kw">public class</span> <span class="cls">PlantillaResource</span> {
+
+    <span class="ann">@Inject</span> <span class="cls">PlantillaDesignerService</span> designerService;
+    <span class="ann">@Inject</span> <span class="cls">VersionPlantillaRepository</span> versionRepo;
+
+    <span class="ann">@GET</span>
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">List</span>&lt;<span class="cls">PlantillaDto</span>&gt;&gt; <span class="fn">listarPlantillas</span>() {
+        <span class="kw">return</span> <span class="cls">Panache</span>.<span class="fn">withSession</span>(() -&gt;
+            <span class="cls">Plantilla</span>.<span class="fn">listAll</span>().<span class="fn">map</span>(list -&gt;
+                list.<span class="fn">stream</span>().<span class="fn">map</span>(mapper::<span class="fn">toDto</span>).<span class="fn">toList</span>())
+        );
+    }
+
+    <span class="ann">@GET</span>
+    <span class="ann">@Path</span>(<span class="str">"/{id}/versiones/{versionId}/design"</span>)
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">VersionDesignDto</span>&gt; <span class="fn">cargarDesign</span>(<span class="ann">@PathParam</span>(<span class="str">"versionId"</span>) Long versionId) {
+        <span class="kw">return</span> designerService.<span class="fn">cargarVersionCompleta</span>(versionId);
+    }
+
+    <span class="ann">@POST</span>
+    <span class="ann">@Path</span>(<span class="str">"/{id}/versiones/{versionId}/campos"</span>)
+    <span class="ann">@ResponseStatus</span>(<span class="num">201</span>)
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">CampoPlantillaDto</span>&gt; <span class="fn">agregarCampo</span>(
+            <span class="ann">@PathParam</span>(<span class="str">"versionId"</span>) Long versionId,
+            <span class="ann">@Valid</span> <span class="cls">AgregarCampoRequest</span> req) {
+        <span class="kw">return</span> designerService.<span class="fn">agregarCampoDesdeLibreria</span>(versionId, req);
+    }
+
+    <span class="ann">@PATCH</span>
+    <span class="ann">@Path</span>(<span class="str">"/{id}/versiones/{versionId}/campos/orden"</span>)
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">Response</span>&gt; <span class="fn">reordenarCampos</span>(
+            <span class="ann">@PathParam</span>(<span class="str">"versionId"</span>) Long versionId,
+            <span class="cls">List</span>&lt;<span class="cls">OrdenCampoDto</span>&gt; ordenes) {
+        <span class="kw">return</span> designerService.<span class="fn">reordenarCampos</span>(ordenes)
+            .<span class="fn">replaceWith</span>(<span class="cls">Response</span>.<span class="fn">noContent</span>().<span class="fn">build</span>());
+    }
+
+    <span class="ann">@POST</span>
+    <span class="ann">@Path</span>(<span class="str">"/{id}/versiones/{versionId}/publicar"</span>)
+    <span class="kw">public</span> <span class="cls">Uni</span>&lt;<span class="cls">VersionPlantillaDto</span>&gt; <span class="fn">publicarVersion</span>(
+            <span class="ann">@PathParam</span>(<span class="str">"versionId"</span>) Long versionId,
+            <span class="ann">@Context</span> <span class="cls">SecurityContext</span> sec) {
+        Long usuarioId = <span class="fn">getUserId</span>(sec);
+        <span class="kw">return</span> versionRepo.<span class="fn">publicar</span>(versionId, usuarioId)
+                          .<span class="fn">map</span>(mapper::<span class="fn">toDto</span>);
+    }
+}</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- DTOs -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="be-dtos" class="content-section">
+    <div class="section-label">Backend · Paso 6</div>
+    <h2 class="section-title">DTOs y Records Java</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">domain/dto/AgregarCampoRequest.java</span><span class="code-lang">Java</span></div>
+      <pre><span class="kw">public record</span> <span class="cls">AgregarCampoRequest</span>(
+    <span class="ann">@NotNull</span> Long   codigoBiblioteca,
+    <span class="ann">@NotBlank</span> String claveUi,
+              Long   codigoSeccion,
+    <span class="ann">@Min</span>(<span class="num">0</span>) Integer orden
+) {}
+
+<span class="kw">public record</span> <span class="cls">OrdenCampoDto</span>(Long codigoCampo, Integer orden) {}
+
+<span class="kw">public record</span> <span class="cls">CampoPlantillaDto</span>(
+    Long    codigo,
+    String  claveUi,
+    String  etiquetaUi,
+    String  tipoComponenteTecnico,
+    Integer orden,
+    Boolean esObligatorio,
+    Boolean esVisible,
+    Boolean esEditable,
+    Integer anchoColumnas,
+    String  propiedadesUiJson,   <span class="cmt">// JSON crudo, el frontend parsea</span>
+    Long    codigoSeccion,
+    Long    codigoCatalogoMaestro
+) {}
+
+<span class="kw">public record</span> <span class="cls">VersionDesignDto</span>(
+    Long   versionId,
+    String numeroVersion,
+    String estado,
+    List&lt;<span class="cls">SeccionConCamposDto</span>&gt; secciones
+) {}
+
+<span class="kw">public record</span> <span class="cls">SeccionConCamposDto</span>(
+    Long   codigo,
+    String claveUi,
+    String etiqueta,
+    Integer orden,
+    List&lt;<span class="cls">CampoPlantillaDto</span>&gt; campos
+) {}</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- FRONTEND SETUP -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="fe-setup" class="content-section alt-bg">
+    <div class="section-label">Frontend · Paso 7</div>
+    <h2 class="section-title">Configuración Vue 3</h2>
+
+    <div class="timeline">
+      <div class="tl-step">
+        <h4>7.1 Scaffolding</h4>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-filename">terminal</span><span class="code-lang">bash</span></div>
+          <pre><span class="fn">npm</span> create vue@latest form-designer-ui
+<span class="cmt"># Seleccionar: TypeScript ✓ | Router ✓ | Pinia ✓ | ESLint ✓</span>
+<span class="fn">cd</span> form-designer-ui
+<span class="fn">npm</span> install primevue @primevue/themes primeicons
+<span class="fn">npm</span> install vee-validate @vee-validate/rules yup
+<span class="fn">npm</span> install vuedraggable@next
+<span class="fn">npm</span> install axios</pre>
+        </div>
+      </div>
+
+      <div class="tl-step">
+        <h4>7.2 main.ts</h4>
+        <div class="code-wrap">
+          <div class="code-header"><span class="code-filename">src/main.ts</span><span class="code-lang">TypeScript</span></div>
+          <pre><span class="kw">import</span> { createApp } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import</span> { createPinia } <span class="kw">from</span> <span class="str">'pinia'</span>
+<span class="kw">import</span> PrimeVue <span class="kw">from</span> <span class="str">'primevue/config'</span>
+<span class="kw">import</span> Aura <span class="kw">from</span> <span class="str">'@primevue/themes/aura'</span>
+<span class="kw">import</span> ToastService <span class="kw">from</span> <span class="str">'primevue/toastservice'</span>
+<span class="kw">import</span> ConfirmationService <span class="kw">from</span> <span class="str">'primevue/confirmationservice'</span>
+<span class="kw">import</span> App <span class="kw">from</span> <span class="str">'./App.vue'</span>
+<span class="kw">import</span> router <span class="kw">from</span> <span class="str">'./router'</span>
+<span class="kw">import</span> <span class="str">'primeicons/primeicons.css'</span>
+
+<span class="kw">const</span> app = <span class="fn">createApp</span>(App)
+app.<span class="fn">use</span>(<span class="fn">createPinia</span>())
+app.<span class="fn">use</span>(router)
+app.<span class="fn">use</span>(PrimeVue, {
+  theme: {
+    preset: Aura,
+    options: { darkModeSelector: <span class="str">'.dark-mode'</span> }
+  }
+})
+app.<span class="fn">use</span>(ToastService)
+app.<span class="fn">use</span>(ConfirmationService)
+app.<span class="fn">mount</span>(<span class="str">'#app'</span>)</pre>
+        </div>
+      </div>
+
+      <div class="tl-step">
+        <h4>7.3 Estructura de carpetas Vue</h4>
+        <div class="tree">
+<span class="dir">src/</span>
+├── <span class="dir">api/</span>
+│   ├── <span class="file">plantillaApi.ts</span>
+│   ├── <span class="file">bibliotecaApi.ts</span>
+│   └── <span class="file">declaracionApi.ts</span>
+├── <span class="dir">stores/</span>
+│   ├── <span class="file">designerStore.ts</span>   <span class="note">← estado del diseñador</span>
+│   ├── <span class="file">bibliotecaStore.ts</span>
+│   └── <span class="file">declaracionStore.ts</span>
+├── <span class="dir">components/</span>
+│   ├── <span class="dir">designer/</span>
+│   │   ├── <span class="file">DesignerCanvas.vue</span>      <span class="note">← zona drag-drop</span>
+│   │   ├── <span class="file">ComponenteLibreria.vue</span>  <span class="note">← panel lateral</span>
+│   │   ├── <span class="file">CampoEditor.vue</span>         <span class="note">← propiedades campo</span>
+│   │   └── <span class="file">SeccionBlock.vue</span>        <span class="note">← contenedor sección</span>
+│   ├── <span class="dir">renderer/</span>
+│   │   ├── <span class="file">FormRenderer.vue</span>        <span class="note">← renderiza en ejecución</span>
+│   │   └── <span class="file">FieldWidget.vue</span>         <span class="note">← switch por tipo</span>
+│   └── <span class="dir">ui/</span>
+├── <span class="dir">views/</span>
+│   ├── <span class="file">DesignerView.vue</span>
+│   └── <span class="file">EjecucionView.vue</span>
+└── <span class="dir">types/</span>
+    └── <span class="file">designer.ts</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- PINIA STORE -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="fe-store" class="content-section">
+    <div class="section-label">Frontend · Paso 8</div>
+    <h2 class="section-title">Pinia Stores</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">stores/designerStore.ts</span><span class="code-lang">TypeScript</span></div>
+      <pre><span class="kw">import</span> { defineStore } <span class="kw">from</span> <span class="str">'pinia'</span>
+<span class="kw">import</span> { ref, computed } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import type</span> { VersionDesignDto, CampoPlantillaDto, SeccionConCamposDto } <span class="kw">from</span> <span class="str">'../types/designer'</span>
+<span class="kw">import</span> * <span class="kw">as</span> api <span class="kw">from</span> <span class="str">'../api/plantillaApi'</span>
+
+<span class="kw">export const</span> useDesignerStore = <span class="fn">defineStore</span>(<span class="str">'designer'</span>, () =&gt; {
+
+  <span class="cmt">// ── State ──────────────────────────────────────────────</span>
+  <span class="kw">const</span> versionActual = <span class="fn">ref</span>&lt;<span class="cls">VersionDesignDto</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>)
+  <span class="kw">const</span> campoSeleccionado = <span class="fn">ref</span>&lt;<span class="cls">CampoPlantillaDto</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>)
+  <span class="kw">const</span> cargando = <span class="fn">ref</span>(<span class="kw">false</span>)
+  <span class="kw">const</span> error = <span class="fn">ref</span>&lt;string | <span class="kw">null</span>&gt;(<span class="kw">null</span>)
+
+  <span class="cmt">// ── Getters ─────────────────────────────────────────────</span>
+  <span class="kw">const</span> todasLasSecciones = <span class="fn">computed</span>(() =&gt;
+    versionActual.value?.secciones ?? []
+  )
+
+  <span class="kw">const</span> camposPorSeccion = <span class="fn">computed</span>(() =&gt; {
+    <span class="kw">const</span> mapa = <span class="kw">new</span> Map&lt;number | <span class="kw">null</span>, <span class="cls">CampoPlantillaDto</span>[]&gt;()
+    todasLasSecciones.value.<span class="fn">forEach</span>(sec =&gt; {
+      mapa.<span class="fn">set</span>(sec.codigo, sec.campos)
+    })
+    <span class="kw">return</span> mapa
+  })
+
+  <span class="cmt">// ── Actions ─────────────────────────────────────────────</span>
+  <span class="kw">async function</span> <span class="fn">cargarVersion</span>(versionId: number) {
+    cargando.value = <span class="kw">true</span>
+    error.value = <span class="kw">null</span>
+    <span class="kw">try</span> {
+      versionActual.value = <span class="kw">await</span> api.<span class="fn">getVersionDesign</span>(versionId)
+    } <span class="kw">catch</span>(e: <span class="kw">any</span>) {
+      error.value = e.message
+    } <span class="kw">finally</span> {
+      cargando.value = <span class="kw">false</span>
+    }
+  }
+
+  <span class="kw">async function</span> <span class="fn">reordenarCampos</span>(
+      versionId: number,
+      ordenes: { codigoCampo: number; orden: number }[]
+  ) {
+    <span class="cmt">// Optimistic update</span>
+    <span class="fn">aplicarOrdenesLocalmente</span>(ordenes)
+    <span class="kw">try</span> {
+      <span class="kw">await</span> api.<span class="fn">patchOrdenCampos</span>(versionId, ordenes)
+    } <span class="kw">catch</span>(e) {
+      <span class="cmt">// Revertir si falla</span>
+      <span class="kw">await</span> <span class="fn">cargarVersion</span>(versionId)
+    }
+  }
+
+  <span class="kw">function</span> <span class="fn">seleccionarCampo</span>(campo: <span class="cls">CampoPlantillaDto</span> | <span class="kw">null</span>) {
+    campoSeleccionado.value = campo
+  }
+
+  <span class="kw">function</span> <span class="fn">aplicarOrdenesLocalmente</span>(ordenes: { codigoCampo: number; orden: number }[]) {
+    <span class="kw">const</span> ordenMap = <span class="kw">new</span> Map(ordenes.<span class="fn">map</span>(o =&gt; [o.codigoCampo, o.orden]))
+    todasLasSecciones.value.<span class="fn">forEach</span>(sec =&gt; {
+      sec.campos.<span class="fn">forEach</span>(c =&gt; {
+        <span class="kw">if</span> (ordenMap.<span class="fn">has</span>(c.codigo)) c.orden = ordenMap.<span class="fn">get</span>(c.codigo)!
+      })
+      sec.campos.<span class="fn">sort</span>((a, b) =&gt; a.orden - b.orden)
+    })
+  }
+
+  <span class="kw">return</span> {
+    versionActual, campoSeleccionado, cargando, error,
+    todasLasSecciones, camposPorSeccion,
+    cargarVersion, reordenarCampos, seleccionarCampo
+  }
+})</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- DESIGNER COMPONENT -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="fe-designer" class="content-section alt-bg">
+    <div class="section-label">Frontend · Paso 9</div>
+    <h2 class="section-title">Componente Principal del Diseñador</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">components/designer/DesignerCanvas.vue</span><span class="code-lang">Vue 3</span></div>
+      <pre><span class="tag">&lt;template&gt;</span>
+  <span class="tag">&lt;div</span> <span class="atr">class</span>=<span class="str">"designer-layout"</span><span class="tag">&gt;</span>
+
+    <span class="cmt">&lt;!-- Panel lateral: biblioteca de componentes --&gt;</span>
+    <span class="tag">&lt;aside</span> <span class="atr">class</span>=<span class="str">"biblioteca-panel"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;ComponenteLibreria</span> <span class="atr">@drag-start</span>=<span class="str">"onDragStart"</span> <span class="tag">/&gt;</span>
+    <span class="tag">&lt;/aside&gt;</span>
+
+    <span class="cmt">&lt;!-- Canvas central --&gt;</span>
+    <span class="tag">&lt;main</span> <span class="atr">class</span>=<span class="str">"canvas-area"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;div</span> <span class="atr">v-if</span>=<span class="str">"store.cargando"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;ProgressBar</span> <span class="atr">mode</span>=<span class="str">"indeterminate"</span> <span class="tag">/&gt;</span>
+      <span class="tag">&lt;/div&gt;</span>
+
+      <span class="tag">&lt;SeccionBlock</span>
+        <span class="atr">v-for</span>=<span class="str">"seccion in store.todasLasSecciones"</span>
+        <span class="atr">:key</span>=<span class="str">"seccion.codigo"</span>
+        <span class="atr">:seccion</span>=<span class="str">"seccion"</span>
+        <span class="atr">@campo-seleccionado</span>=<span class="str">"store.seleccionarCampo"</span>
+        <span class="atr">@reordenar</span>=<span class="str">"onReordenar"</span>
+      <span class="tag">/&gt;</span>
+    <span class="tag">&lt;/main&gt;</span>
+
+    <span class="cmt">&lt;!-- Panel derecho: propiedades --&gt;</span>
+    <span class="tag">&lt;aside</span> <span class="atr">class</span>=<span class="str">"propiedades-panel"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;CampoEditor</span>
+        <span class="atr">v-if</span>=<span class="str">"store.campoSeleccionado"</span>
+        <span class="atr">:campo</span>=<span class="str">"store.campoSeleccionado"</span>
+        <span class="atr">@guardar</span>=<span class="str">"onGuardarCampo"</span>
+      <span class="tag">/&gt;</span>
+      <span class="tag">&lt;div</span> <span class="atr">v-else</span> <span class="atr">class</span>=<span class="str">"empty-state"</span><span class="tag">&gt;</span>
+        Selecciona un campo para editar sus propiedades
+      <span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;/aside&gt;</span>
+  <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+
+<span class="tag">&lt;script setup lang="ts"&gt;</span>
+<span class="kw">import</span> { onMounted } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import</span> { useDesignerStore } <span class="kw">from</span> <span class="str">'../../stores/designerStore'</span>
+<span class="kw">import</span> <span class="cls">ComponenteLibreria</span> <span class="kw">from</span> <span class="str">'./ComponenteLibreria.vue'</span>
+<span class="kw">import</span> <span class="cls">SeccionBlock</span> <span class="kw">from</span> <span class="str">'./SeccionBlock.vue'</span>
+<span class="kw">import</span> <span class="cls">CampoEditor</span> <span class="kw">from</span> <span class="str">'./CampoEditor.vue'</span>
+<span class="kw">import type</span> { CampoPlantillaDto } <span class="kw">from</span> <span class="str">'../../types/designer'</span>
+
+<span class="kw">const</span> props = <span class="fn">defineProps</span>&lt;{ versionId: number }&gt;()
+<span class="kw">const</span> store = <span class="fn">useDesignerStore</span>()
+
+<span class="fn">onMounted</span>(() =&gt; store.<span class="fn">cargarVersion</span>(props.versionId))
+
+<span class="kw">async function</span> <span class="fn">onReordenar</span>(ordenes: { codigoCampo: number; orden: number }[]) {
+  <span class="kw">await</span> store.<span class="fn">reordenarCampos</span>(props.versionId, ordenes)
+}
+
+<span class="kw">async function</span> <span class="fn">onGuardarCampo</span>(campo: <span class="cls">CampoPlantillaDto</span>) {
+  <span class="cmt">// llamar API de actualización de campo</span>
+}
+<span class="tag">&lt;/script&gt;</span></pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- DRAG AND DROP -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="fe-dragdrop" class="content-section">
+    <div class="section-label">Frontend · Paso 10</div>
+    <h2 class="section-title">Drag &amp; Drop con vuedraggable</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">components/designer/SeccionBlock.vue</span><span class="code-lang">Vue 3</span></div>
+      <pre><span class="tag">&lt;template&gt;</span>
+  <span class="tag">&lt;div</span> <span class="atr">class</span>=<span class="str">"seccion-block"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;div</span> <span class="atr">class</span>=<span class="str">"seccion-header"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;span</span> <span class="atr">class</span>=<span class="str">"pi pi-table"</span><span class="tag">&gt;&lt;/span&gt;</span>
+      {{ seccion.etiqueta }}
+    <span class="tag">&lt;/div&gt;</span>
+
+    <span class="tag">&lt;draggable</span>
+      <span class="atr">v-model</span>=<span class="str">"camposLocales"</span>
+      <span class="atr">:group</span>=<span class="str">"{ name: 'campos', pull: true, put: true }"</span>
+      <span class="atr">item-key</span>=<span class="str">"codigo"</span>
+      <span class="atr">handle</span>=<span class="str">".drag-handle"</span>
+      <span class="atr">animation</span>=<span class="str">"200"</span>
+      <span class="atr">ghost-class</span>=<span class="str">"campo-ghost"</span>
+      <span class="atr">@end</span>=<span class="str">"onDragEnd"</span>
+      <span class="atr">class</span>=<span class="str">"campos-drop-zone"</span>
+    <span class="tag">&gt;</span>
+      <span class="tag">&lt;template</span> <span class="atr">#item</span>=<span class="str">"{ element: campo }"</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;div</span>
+          <span class="atr">class</span>=<span class="str">"campo-chip"</span>
+          <span class="atr">:class</span>=<span class="str">"{ selected: campoSeleccionado?.codigo === campo.codigo }"</span>
+          <span class="atr">:style</span>=<span class="str">`grid-column: span ${campo.anchoColumnas}`</span>
+          <span class="atr">@click</span>=<span class="str">"emit('campo-seleccionado', campo)"</span>
+        <span class="tag">&gt;</span>
+          <span class="tag">&lt;span</span> <span class="atr">class</span>=<span class="str">"drag-handle pi pi-bars"</span><span class="tag">&gt;&lt;/span&gt;</span>
+          <span class="tag">&lt;span</span> <span class="atr">class</span>=<span class="str">"campo-icon"</span><span class="tag">&gt;</span>
+            {{ iconoPorTipo(campo.tipoComponenteTecnico) }}
+          <span class="tag">&lt;/span&gt;</span>
+          <span class="tag">&lt;span</span> <span class="atr">class</span>=<span class="str">"campo-label"</span><span class="tag">&gt;</span>{{ campo.etiquetaUi }}<span class="tag">&lt;/span&gt;</span>
+          <span class="tag">&lt;Tag</span> <span class="atr">:value</span>=<span class="str">"campo.tipoComponenteTecnico"</span> <span class="atr">severity</span>=<span class="str">"info"</span> <span class="tag">/&gt;</span>
+          <span class="tag">&lt;Badge</span> <span class="atr">v-if</span>=<span class="str">"campo.esObligatorio"</span> <span class="atr">value</span>=<span class="str">"*"</span> <span class="atr">severity</span>=<span class="str">"danger"</span> <span class="tag">/&gt;</span>
+        <span class="tag">&lt;/div&gt;</span>
+      <span class="tag">&lt;/template&gt;</span>
+    <span class="tag">&lt;/draggable&gt;</span>
+  <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+
+<span class="tag">&lt;script setup lang="ts"&gt;</span>
+<span class="kw">import</span> { ref, watch } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import</span> draggable <span class="kw">from</span> <span class="str">'vuedraggable'</span>
+<span class="kw">import</span> { useDesignerStore } <span class="kw">from</span> <span class="str">'../../stores/designerStore'</span>
+<span class="kw">import type</span> { SeccionConCamposDto, CampoPlantillaDto } <span class="kw">from</span> <span class="str">'../../types/designer'</span>
+
+<span class="kw">const</span> props = <span class="fn">defineProps</span>&lt;{ seccion: <span class="cls">SeccionConCamposDto</span> }&gt;()
+<span class="kw">const</span> emit = <span class="fn">defineEmits</span>&lt;{
+  (e: <span class="str">'campo-seleccionado'</span>, campo: <span class="cls">CampoPlantillaDto</span>): <span class="kw">void</span>
+  (e: <span class="str">'reordenar'</span>, ordenes: { codigoCampo: number; orden: number }[]): <span class="kw">void</span>
+}&gt;()
+
+<span class="kw">const</span> store = <span class="fn">useDesignerStore</span>()
+<span class="kw">const</span> campoSeleccionado = store.campoSeleccionado
+
+<span class="cmt">// Copia local para que vuedraggable pueda mutar el array</span>
+<span class="kw">const</span> camposLocales = <span class="fn">ref</span>([...props.seccion.campos])
+
+<span class="fn">watch</span>(() =&gt; props.seccion.campos, v =&gt; { camposLocales.value = [...v] })
+
+<span class="kw">function</span> <span class="fn">onDragEnd</span>() {
+  <span class="kw">const</span> ordenes = camposLocales.value.<span class="fn">map</span>((c, idx) =&gt; ({
+    codigoCampo: c.codigo,
+    orden: idx
+  }))
+  emit(<span class="str">'reordenar'</span>, ordenes)
+}
+
+<span class="kw">const</span> ICONOS: Record&lt;string, string&gt; = {
+  INPUT_TEXT:    <span class="str">'✏️'</span>,  INPUT_NUMBER: <span class="str">'🔢'</span>,
+  SELECT:        <span class="str">'📋'</span>,  DATE:         <span class="str">'📅'</span>,
+  TEXTAREA:      <span class="str">'📝'</span>,  FILE:         <span class="str">'📎'</span>,
+  CHECKBOX:      <span class="str">'☑️'</span>,  GRID:         <span class="str">'📊'</span>,
+}
+<span class="kw">const</span> <span class="fn">iconoPorTipo</span> = (tipo: string) =&gt; ICONOS[tipo] ?? <span class="str">'🧩'</span>
+<span class="tag">&lt;/script&gt;</span></pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- VALIDATIONS -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="fe-validation" class="content-section alt-bg">
+    <div class="section-label">Frontend · Paso 11</div>
+    <h2 class="section-title">Validaciones con vee-validate + Yup</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">components/renderer/FieldWidget.vue (fragmento)</span><span class="code-lang">Vue 3</span></div>
+      <pre><span class="tag">&lt;template&gt;</span>
+  <span class="tag">&lt;Field</span> <span class="atr">:name</span>=<span class="str">"campo.claveUi"</span> <span class="atr">v-slot</span>=<span class="str">"{ field, errorMessage }"</span><span class="tag">&gt;</span>
+    <span class="cmt">&lt;!-- INPUT_NUMBER --&gt;</span>
+    <span class="tag">&lt;template</span> <span class="atr">v-if</span>=<span class="str">"campo.tipoComponenteTecnico === 'INPUT_NUMBER'"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;label</span><span class="tag">&gt;</span>{{ campo.etiquetaUi }}
+        <span class="tag">&lt;span</span> <span class="atr">v-if</span>=<span class="str">"campo.esObligatorio"</span> <span class="atr">class</span>=<span class="str">"required"</span><span class="tag">&gt;</span>*<span class="tag">&lt;/span&gt;</span>
+      <span class="tag">&lt;/label&gt;</span>
+      <span class="tag">&lt;InputNumber</span>
+        <span class="atr">v-bind</span>=<span class="str">"field"</span>
+        <span class="atr">v-bind</span>=<span class="str">"propiedades"</span>
+        <span class="atr">:class</span>=<span class="str">"{ 'p-invalid': errorMessage }"</span>
+      <span class="tag">/&gt;</span>
+    <span class="tag">&lt;/template&gt;</span>
+
+    <span class="cmt">&lt;!-- SELECT desde catálogo --&gt;</span>
+    <span class="tag">&lt;template</span> <span class="atr">v-else-if</span>=<span class="str">"campo.tipoComponenteTecnico === 'SELECT'"</span><span class="tag">&gt;</span>
+      <span class="tag">&lt;label</span><span class="tag">&gt;</span>{{ campo.etiquetaUi }}<span class="tag">&lt;/label&gt;</span>
+      <span class="tag">&lt;Dropdown</span>
+        <span class="atr">v-bind</span>=<span class="str">"field"</span>
+        <span class="atr">:options</span>=<span class="str">"catalogoItems"</span>
+        <span class="atr">optionLabel</span>=<span class="str">"etiqueta"</span>
+        <span class="atr">optionValue</span>=<span class="str">"valorClave"</span>
+        <span class="atr">:class</span>=<span class="str">"{ 'p-invalid': errorMessage }"</span>
+        <span class="atr">:loading</span>=<span class="str">"loadingCatalogo"</span>
+      <span class="tag">/&gt;</span>
+    <span class="tag">&lt;/template&gt;</span>
+
+    <span class="tag">&lt;small</span> <span class="atr">v-if</span>=<span class="str">"errorMessage"</span> <span class="atr">class</span>=<span class="str">"p-error"</span><span class="tag">&gt;</span>{{ errorMessage }}<span class="tag">&lt;/small&gt;</span>
+  <span class="tag">&lt;/Field&gt;</span>
+<span class="tag">&lt;/template&gt;</span>
+
+<span class="tag">&lt;script setup lang="ts"&gt;</span>
+<span class="kw">import</span> { computed, onMounted, ref } <span class="kw">from</span> <span class="str">'vue'</span>
+<span class="kw">import</span> { Field } <span class="kw">from</span> <span class="str">'vee-validate'</span>
+<span class="kw">import type</span> { CampoPlantillaDto } <span class="kw">from</span> <span class="str">'../../types/designer'</span>
+<span class="kw">import</span> { getCatalogoDetalle } <span class="kw">from</span> <span class="str">'../../api/bibliotecaApi'</span>
+
+<span class="kw">const</span> props = <span class="fn">defineProps</span>&lt;{ campo: <span class="cls">CampoPlantillaDto</span> }&gt;()
+
+<span class="kw">const</span> propiedades = <span class="fn">computed</span>(() =&gt;
+  props.campo.propiedadesUiJson
+    ? <span class="cls">JSON</span>.<span class="fn">parse</span>(props.campo.propiedadesUiJson)
+    : {}
+)
+<span class="kw">const</span> catalogoItems = <span class="fn">ref</span>([])
+<span class="kw">const</span> loadingCatalogo = <span class="fn">ref</span>(<span class="kw">false</span>)
+
+<span class="fn">onMounted</span>(<span class="kw">async</span> () =&gt; {
+  <span class="kw">if</span> (props.campo.codigoCatalogoMaestro) {
+    loadingCatalogo.value = <span class="kw">true</span>
+    catalogoItems.value = <span class="kw">await</span> <span class="fn">getCatalogoDetalle</span>(props.campo.codigoCatalogoMaestro)
+    loadingCatalogo.value = <span class="kw">false</span>
+  }
+})
+<span class="tag">&lt;/script&gt;</span></pre>
+    </div>
+
+    <h4>Schema Yup dinámico en FormRenderer</h4>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">components/renderer/FormRenderer.vue (buildSchema)</span><span class="code-lang">TypeScript</span></div>
+      <pre><span class="kw">import</span> * <span class="kw">as</span> yup <span class="kw">from</span> <span class="str">'yup'</span>
+<span class="kw">import</span> { useForm } <span class="kw">from</span> <span class="str">'vee-validate'</span>
+
+<span class="kw">function</span> <span class="fn">buildSchema</span>(campos: <span class="cls">CampoPlantillaDto</span>[]) {
+  <span class="kw">const</span> shape: Record&lt;string, <span class="kw">any</span>&gt; = {}
+
+  campos.<span class="fn">forEach</span>(campo =&gt; {
+    <span class="kw">let</span> rule: <span class="kw">any</span>
+
+    <span class="kw">switch</span> (campo.tipoComponenteTecnico) {
+      <span class="kw">case</span> <span class="str">'INPUT_NUMBER'</span>:
+        rule = yup.<span class="fn">number</span>().<span class="fn">typeError</span>(<span class="str">'Debe ser un número'</span>)
+        <span class="kw">break</span>
+      <span class="kw">case</span> <span class="str">'DATE'</span>:
+        rule = yup.<span class="fn">date</span>().<span class="fn">typeError</span>(<span class="str">'Fecha inválida'</span>)
+        <span class="kw">break</span>
+      <span class="kw">default</span>:
+        rule = yup.<span class="fn">string</span>()
+    }
+
+    <span class="kw">if</span> (campo.esObligatorio) {
+      rule = rule.<span class="fn">required</span>(<span class="str">`${campo.etiquetaUi} es requerido`</span>)
+    }
+
+    <span class="cmt">// Reglas adicionales del servidor (REGLA_VALIDACION)</span>
+    <span class="kw">const</span> props = campo.propiedadesUiJson
+      ? <span class="cls">JSON</span>.<span class="fn">parse</span>(campo.propiedadesUiJson)
+      : {}
+    <span class="kw">if</span> (props.min !== <span class="kw">undefined</span>) rule = rule.<span class="fn">min</span>(props.min)
+    <span class="kw">if</span> (props.max !== <span class="kw">undefined</span>) rule = rule.<span class="fn">max</span>(props.max)
+    <span class="kw">if</span> (props.regex)              rule = rule.<span class="fn">matches</span>(<span class="kw">new</span> <span class="cls">RegExp</span>(props.regex))
+
+    shape[campo.claveUi] = rule
+  })
+
+  <span class="kw">return</span> yup.<span class="fn">object</span>().<span class="fn">shape</span>(shape)
+}
+
+<span class="kw">const</span> { handleSubmit, values } = <span class="fn">useForm</span>({
+  validationSchema: <span class="fn">buildSchema</span>(campos.value)
+})</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- EXECUTION -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="fe-execution" class="content-section">
+    <div class="section-label">Frontend · Paso 12</div>
+    <h2 class="section-title">Vista de Ejecución — Formulario en Runtime</h2>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">views/EjecucionView.vue</span><span class="code-lang">Vue 3</span></div>
+      <pre><span class="tag">&lt;template&gt;</span>
+  <span class="tag">&lt;div</span> <span class="atr">class</span>=<span class="str">"ejecucion-view"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;Card&gt;</span>
+      <span class="tag">&lt;template</span> <span class="atr">#header</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;h2&gt;</span>{{ version?.numeroVersion }} — Periodo {{ declaracion?.periodoFiscal }}<span class="tag">&lt;/h2&gt;</span>
+      <span class="tag">&lt;/template&gt;</span>
+      <span class="tag">&lt;template</span> <span class="atr">#content</span><span class="tag">&gt;</span>
+        <span class="tag">&lt;Form</span> <span class="atr">:validation-schema</span>=<span class="str">"schema"</span> <span class="atr">@submit</span>=<span class="str">"onEnviar"</span><span class="tag">&gt;</span>
+          <span class="tag">&lt;div</span>
+            <span class="atr">v-for</span>=<span class="str">"seccion in version?.secciones"</span>
+            <span class="atr">:key</span>=<span class="str">"seccion.codigo"</span>
+            <span class="atr">class</span>=<span class="str">"seccion-form"</span>
+          <span class="tag">&gt;</span>
+            <span class="tag">&lt;Fieldset</span> <span class="atr">:legend</span>=<span class="str">"seccion.etiqueta"</span><span class="tag">&gt;</span>
+              <span class="tag">&lt;div</span> <span class="atr">class</span>=<span class="str">"p-fluid grid"</span><span class="tag">&gt;</span>
+                <span class="tag">&lt;div</span>
+                  <span class="atr">v-for</span>=<span class="str">"campo in seccion.campos.filter(c =&gt; c.esVisible)"</span>
+                  <span class="atr">:key</span>=<span class="str">"campo.codigo"</span>
+                  <span class="atr">:class</span>=<span class="str">`col-${campo.anchoColumnas}`</span>
+                <span class="tag">&gt;</span>
+                  <span class="tag">&lt;FieldWidget</span>
+                    <span class="atr">:campo</span>=<span class="str">"campo"</span>
+                    <span class="atr">:disabled</span>=<span class="str">"!campo.esEditable || declaracion?.estado === 'ENVIADO'"</span>
+                  <span class="tag">/&gt;</span>
+                <span class="tag">&lt;/div&gt;</span>
+              <span class="tag">&lt;/div&gt;</span>
+            <span class="tag">&lt;/Fieldset&gt;</span>
+          <span class="tag">&lt;/div&gt;</span>
+
+          <span class="tag">&lt;div</span> <span class="atr">class</span>=<span class="str">"form-actions"</span><span class="tag">&gt;</span>
+            <span class="tag">&lt;Button</span> <span class="atr">label</span>=<span class="str">"Guardar borrador"</span> <span class="atr">icon</span>=<span class="str">"pi pi-save"</span>
+              <span class="atr">severity</span>=<span class="str">"secondary"</span> <span class="atr">@click</span>=<span class="str">"onBorrador"</span> <span class="tag">/&gt;</span>
+            <span class="tag">&lt;Button</span> <span class="atr">label</span>=<span class="str">"Enviar declaración"</span> <span class="atr">icon</span>=<span class="str">"pi pi-send"</span>
+              <span class="atr">type</span>=<span class="str">"submit"</span> <span class="atr">severity</span>=<span class="str">"success"</span> <span class="tag">/&gt;</span>
+          <span class="tag">&lt;/div&gt;</span>
+        <span class="tag">&lt;/Form&gt;</span>
+      <span class="tag">&lt;/template&gt;</span>
+    <span class="tag">&lt;/Card&gt;</span>
+  <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/template&gt;</span></pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- INSERTS -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="inserts" class="content-section alt-bg">
+    <div class="section-label">Datos de Ejemplo</div>
+    <h2 class="section-title">Inserts Completos — Sin Omitir Tablas</h2>
+    <p>Ejemplo funcional: Formulario de Declaración IVA Mensual con campos de ventas y compras.</p>
+
+    <div class="alert info">
+      <span class="alert-icon">ℹ️</span>
+      <div>Los <code>GENERATED ALWAYS AS IDENTITY</code> no requieren especificar el valor de <code>CODIGO</code> en el INSERT. Se usan subqueries para las FK donde se necesita referenciar registros recién creados.</div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-filename">V2__seed_data.sql</span><span class="code-lang">SQL Oracle 19c</span></div>
+      <pre><span class="cmt">-- ╔══════════════════════════════════════════════════════════════╗
+-- ║  SEED COMPLETO: IVA MENSUAL                                  ║
+-- ║  Cubre todas las tablas del DDL                              ║
+-- ╚══════════════════════════════════════════════════════════════╝</span>
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   1. USUARIO
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> USUARIO (USERNAME, EMAIL, NOMBRE_COMPLETO, ROL)
+<span class="kw">VALUES</span> (<span class="str">'admin'</span>, <span class="str">'admin@sri.gob.ec'</span>, <span class="str">'Administrador Sistema'</span>, <span class="str">'ADMIN'</span>);
+
+<span class="kw">INSERT INTO</span> USUARIO (USERNAME, EMAIL, NOMBRE_COMPLETO, ROL)
+<span class="kw">VALUES</span> (<span class="str">'contribuyente01'</span>, <span class="str">'empresa@example.com'</span>, <span class="str">'Empresa Ejemplo SA'</span>, <span class="str">'CONTRIBUYENTE'</span>);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   2. CATEGORIA_COMPONENTE (primitivos del frontend)
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> CATEGORIA_COMPONENTE (IDENTIFICADOR_TECNICO, NOMBRE_AMIGABLE, ICONO_CSS, PERMITE_CATALOGO, PERMITE_HIJOS, PERMITE_ADJUNTO)
+<span class="kw">VALUES</span> (<span class="str">'INPUT_TEXT'</span>,   <span class="str">'Texto Libre'</span>,     <span class="str">'pi-pencil'</span>,         <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>);
+
+<span class="kw">INSERT INTO</span> CATEGORIA_COMPONENTE (IDENTIFICADOR_TECNICO, NOMBRE_AMIGABLE, ICONO_CSS, PERMITE_CATALOGO, PERMITE_HIJOS, PERMITE_ADJUNTO)
+<span class="kw">VALUES</span> (<span class="str">'INPUT_NUMBER'</span>, <span class="str">'Número / Monto'</span>,  <span class="str">'pi-calculator'</span>,    <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>);
+
+<span class="kw">INSERT INTO</span> CATEGORIA_COMPONENTE (IDENTIFICADOR_TECNICO, NOMBRE_AMIGABLE, ICONO_CSS, PERMITE_CATALOGO, PERMITE_HIJOS, PERMITE_ADJUNTO)
+<span class="kw">VALUES</span> (<span class="str">'SELECT'</span>,       <span class="str">'Lista Desplegable'</span>, <span class="str">'pi-list'</span>,          <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>);
+
+<span class="kw">INSERT INTO</span> CATEGORIA_COMPONENTE (IDENTIFICADOR_TECNICO, NOMBRE_AMIGABLE, ICONO_CSS, PERMITE_CATALOGO, PERMITE_HIJOS, PERMITE_ADJUNTO)
+<span class="kw">VALUES</span> (<span class="str">'DATE'</span>,         <span class="str">'Fecha'</span>,           <span class="str">'pi-calendar'</span>,       <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>);
+
+<span class="kw">INSERT INTO</span> CATEGORIA_COMPONENTE (IDENTIFICADOR_TECNICO, NOMBRE_AMIGABLE, ICONO_CSS, PERMITE_CATALOGO, PERMITE_HIJOS, PERMITE_ADJUNTO)
+<span class="kw">VALUES</span> (<span class="str">'TEXTAREA'</span>,     <span class="str">'Texto Largo'</span>,     <span class="str">'pi-file-edit'</span>,     <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>);
+
+<span class="kw">INSERT INTO</span> CATEGORIA_COMPONENTE (IDENTIFICADOR_TECNICO, NOMBRE_AMIGABLE, ICONO_CSS, PERMITE_CATALOGO, PERMITE_HIJOS, PERMITE_ADJUNTO)
+<span class="kw">VALUES</span> (<span class="str">'FILE'</span>,         <span class="str">'Adjunto'</span>,         <span class="str">'pi-paperclip'</span>,     <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>);
+
+<span class="kw">INSERT INTO</span> CATEGORIA_COMPONENTE (IDENTIFICADOR_TECNICO, NOMBRE_AMIGABLE, ICONO_CSS, PERMITE_CATALOGO, PERMITE_HIJOS, PERMITE_ADJUNTO)
+<span class="kw">VALUES</span> (<span class="str">'CHECKBOX'</span>,     <span class="str">'Casilla'</span>,         <span class="str">'pi-check-square'</span>,  <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   3. BIBLIOTECA_COMPONENTE (widgets preconfigurados)
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> BIBLIOTECA_COMPONENTE (CODIGO_CATEGORIA_COMPONENTE, NOMBRE_UI, DESCRIPCION, CATEGORIA_UI, CONFIGURACION_DEFAULT_JSON, ORDEN_CATALOGO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATEGORIA_COMPONENTE <span class="kw">WHERE</span> IDENTIFICADOR_TECNICO=<span class="str">'INPUT_NUMBER'</span>),
+    <span class="str">'Monto en Dólares'</span>,
+    <span class="str">'Campo monetario con prefijo $ y 2 decimales'</span>,
+    <span class="str">'Numéricos'</span>,
+    <span class="str">'{"mode":"currency","currency":"USD","locale":"es-EC","minFractionDigits":2,"maxFractionDigits":2}'</span>,
+    <span class="num">1</span>
+);
+
+<span class="kw">INSERT INTO</span> BIBLIOTECA_COMPONENTE (CODIGO_CATEGORIA_COMPONENTE, NOMBRE_UI, DESCRIPCION, CATEGORIA_UI, CONFIGURACION_DEFAULT_JSON, ORDEN_CATALOGO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATEGORIA_COMPONENTE <span class="kw">WHERE</span> IDENTIFICADOR_TECNICO=<span class="str">'INPUT_NUMBER'</span>),
+    <span class="str">'Porcentaje'</span>,
+    <span class="str">'Campo para porcentajes 0-100'</span>,
+    <span class="str">'Numéricos'</span>,
+    <span class="str">'{"suffix":"%","min":0,"max":100,"minFractionDigits":2}'</span>,
+    <span class="num">2</span>
+);
+
+<span class="kw">INSERT INTO</span> BIBLIOTECA_COMPONENTE (CODIGO_CATEGORIA_COMPONENTE, NOMBRE_UI, DESCRIPCION, CATEGORIA_UI, CONFIGURACION_DEFAULT_JSON, ORDEN_CATALOGO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATEGORIA_COMPONENTE <span class="kw">WHERE</span> IDENTIFICADOR_TECNICO=<span class="str">'INPUT_TEXT'</span>),
+    <span class="str">'RUC / Identificación'</span>,
+    <span class="str">'Campo texto para número de RUC'</span>,
+    <span class="str">'Texto'</span>,
+    <span class="str">'{"maxlength":13,"placeholder":"0000000000001","regex":"^[0-9]{10,13}$"}'</span>,
+    <span class="num">1</span>
+);
+
+<span class="kw">INSERT INTO</span> BIBLIOTECA_COMPONENTE (CODIGO_CATEGORIA_COMPONENTE, NOMBRE_UI, DESCRIPCION, CATEGORIA_UI, CONFIGURACION_DEFAULT_JSON, ORDEN_CATALOGO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATEGORIA_COMPONENTE <span class="kw">WHERE</span> IDENTIFICADOR_TECNICO=<span class="str">'SELECT'</span>),
+    <span class="str">'Selector de Catálogo'</span>,
+    <span class="str">'Dropdown vinculado a catálogo maestro'</span>,
+    <span class="str">'Selección'</span>,
+    <span class="str">'{"filter":true,"showClear":true}'</span>,
+    <span class="num">1</span>
+);
+
+<span class="kw">INSERT INTO</span> BIBLIOTECA_COMPONENTE (CODIGO_CATEGORIA_COMPONENTE, NOMBRE_UI, DESCRIPCION, CATEGORIA_UI, CONFIGURACION_DEFAULT_JSON, ORDEN_CATALOGO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATEGORIA_COMPONENTE <span class="kw">WHERE</span> IDENTIFICADOR_TECNICO=<span class="str">'DATE'</span>),
+    <span class="str">'Mes / Año Fiscal'</span>,
+    <span class="str">'Selector de mes para periodo fiscal'</span>,
+    <span class="str">'Fechas'</span>,
+    <span class="str">'{"view":"month","dateFormat":"mm/yy","showIcon":true}'</span>,
+    <span class="num">1</span>
+);
+
+<span class="kw">INSERT INTO</span> BIBLIOTECA_COMPONENTE (CODIGO_CATEGORIA_COMPONENTE, NOMBRE_UI, DESCRIPCION, CATEGORIA_UI, CONFIGURACION_DEFAULT_JSON, ORDEN_CATALOGO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATEGORIA_COMPONENTE <span class="kw">WHERE</span> IDENTIFICADOR_TECNICO=<span class="str">'FILE'</span>),
+    <span class="str">'Adjunto PDF'</span>,
+    <span class="str">'Subida de archivos PDF hasta 5MB'</span>,
+    <span class="str">'Adjuntos'</span>,
+    <span class="str">'{"accept":".pdf","maxFileSize":5242880}'</span>,
+    <span class="num">1</span>
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   4. CATEGORIA_PLANTILLA
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> CATEGORIA_PLANTILLA (NOMBRE, DESCRIPCION, ICONO_CSS, ORDEN)
+<span class="kw">VALUES</span> (<span class="str">'Declaraciones IVA'</span>, <span class="str">'Formularios para declaración del IVA mensual y semestral'</span>, <span class="str">'pi-percentage'</span>, <span class="num">1</span>);
+
+<span class="kw">INSERT INTO</span> CATEGORIA_PLANTILLA (NOMBRE, DESCRIPCION, ICONO_CSS, ORDEN)
+<span class="kw">VALUES</span> (<span class="str">'Retenciones'</span>, <span class="str">'Comprobantes de retención en la fuente'</span>, <span class="str">'pi-file-minus'</span>, <span class="num">2</span>);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   5. CATALOGO_MAESTRO y CATALOGO_DETALLE
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> CATALOGO_MAESTRO (CODIGO_UNICO, NOMBRE, DESCRIPCION, PERMITE_JERARQUIA, USUARIO_CREADOR)
+<span class="kw">VALUES</span> (<span class="str">'TIPO_CONTRIBUYENTE'</span>, <span class="str">'Tipo de Contribuyente'</span>, <span class="str">'Clasificación del contribuyente según SRI'</span>, <span class="num">0</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> USUARIO <span class="kw">WHERE</span> USERNAME=<span class="str">'admin'</span>));
+
+<span class="kw">INSERT INTO</span> CATALOGO_DETALLE (CODIGO_CATALOGO_MAESTRO, VALOR_CLAVE, ETIQUETA, ORDEN)
+<span class="kw">VALUES</span> ((<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATALOGO_MAESTRO <span class="kw">WHERE</span> CODIGO_UNICO=<span class="str">'TIPO_CONTRIBUYENTE'</span>),
+         <span class="str">'NAT'</span>, <span class="str">'Persona Natural'</span>, <span class="num">1</span>);
+
+<span class="kw">INSERT INTO</span> CATALOGO_DETALLE (CODIGO_CATALOGO_MAESTRO, VALOR_CLAVE, ETIQUETA, ORDEN)
+<span class="kw">VALUES</span> ((<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATALOGO_MAESTRO <span class="kw">WHERE</span> CODIGO_UNICO=<span class="str">'TIPO_CONTRIBUYENTE'</span>),
+         <span class="str">'JUR'</span>, <span class="str">'Persona Jurídica'</span>, <span class="num">2</span>);
+
+<span class="kw">INSERT INTO</span> CATALOGO_DETALLE (CODIGO_CATALOGO_MAESTRO, VALOR_CLAVE, ETIQUETA, ORDEN)
+<span class="kw">VALUES</span> ((<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATALOGO_MAESTRO <span class="kw">WHERE</span> CODIGO_UNICO=<span class="str">'TIPO_CONTRIBUYENTE'</span>),
+         <span class="str">'SOC'</span>, <span class="str">'Sociedad'</span>, <span class="num">3</span>);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   6. CONCEPTO_TRIBUTARIO
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> CONCEPTO_TRIBUTARIO (CASILLERO_SRI, NOMBRE, DESCRIPCION, TIPO_DATO, ES_CALCULADO, VIGENCIA_DESDE)
+<span class="kw">VALUES</span> (<span class="str">'401'</span>, <span class="str">'Ventas locales gravadas con tarifa 15%'</span>, <span class="str">'Base imponible ventas tarifa 15%'</span>, <span class="str">'MONEDA'</span>, <span class="num">0</span>, DATE <span class="str">'2024-01-01'</span>);
+
+<span class="kw">INSERT INTO</span> CONCEPTO_TRIBUTARIO (CASILLERO_SRI, NOMBRE, DESCRIPCION, TIPO_DATO, ES_CALCULADO, VIGENCIA_DESDE)
+<span class="kw">VALUES</span> (<span class="str">'402'</span>, <span class="str">'Ventas locales gravadas tarifa 0%'</span>, <span class="str">'Ventas exentas o tarifa cero'</span>, <span class="str">'MONEDA'</span>, <span class="num">0</span>, DATE <span class="str">'2024-01-01'</span>);
+
+<span class="kw">INSERT INTO</span> CONCEPTO_TRIBUTARIO (CASILLERO_SRI, NOMBRE, DESCRIPCION, TIPO_DATO, ES_CALCULADO, VIGENCIA_DESDE)
+<span class="kw">VALUES</span> (<span class="str">'499'</span>, <span class="str">'Total ventas'</span>, <span class="str">'Suma de todas las ventas del periodo'</span>, <span class="str">'MONEDA'</span>, <span class="num">1</span>,
+         DATE <span class="str">'2024-01-01'</span>);
+<span class="cmt">-- Actualizar fórmula calculado</span>
+<span class="kw">UPDATE</span> CONCEPTO_TRIBUTARIO
+<span class="kw">SET</span>    FORMULA_CALCULO = <span class="str">'[401] + [402]'</span>
+<span class="kw">WHERE</span>  CASILLERO_SRI = <span class="str">'499'</span>;
+
+<span class="kw">INSERT INTO</span> CONCEPTO_TRIBUTARIO (CASILLERO_SRI, NOMBRE, DESCRIPCION, TIPO_DATO, ES_CALCULADO, VIGENCIA_DESDE)
+<span class="kw">VALUES</span> (<span class="str">'501'</span>, <span class="str">'Compras locales gravadas tarifa 15%'</span>, <span class="str">'Crédito tributario compras'</span>, <span class="str">'MONEDA'</span>, <span class="num">0</span>, DATE <span class="str">'2024-01-01'</span>);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   7. PLANTILLA
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> PLANTILLA (CODIGO_CATEGORIA_PLANTILLA, IDENTIFICADOR, NOMBRE, DESCRIPCION, USUARIO_CREADOR)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATEGORIA_PLANTILLA <span class="kw">WHERE</span> NOMBRE=<span class="str">'Declaraciones IVA'</span>),
+    <span class="str">'FORM-104'</span>,
+    <span class="str">'Formulario 104 - Declaración Mensual IVA'</span>,
+    <span class="str">'Formulario oficial para declarar el IVA mensual ante el SRI'</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> USUARIO <span class="kw">WHERE</span> USERNAME=<span class="str">'admin'</span>)
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   8. VERSION_PLANTILLA
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> VERSION_PLANTILLA (CODIGO_PLANTILLA, NUMERO_VERSION, VIGENCIA_DESDE, ESTADO, CONFIG_GLOBAL_JSON, USUARIO_CREADOR)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> PLANTILLA <span class="kw">WHERE</span> IDENTIFICADOR=<span class="str">'FORM-104'</span>),
+    <span class="str">'1.0.0'</span>,
+    DATE <span class="str">'2025-01-01'</span>,
+    <span class="str">'PUBLICADA'</span>,
+    <span class="str">'{"layoutCols":12,"theme":"sri-oficial","locale":"es-EC"}'</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> USUARIO <span class="kw">WHERE</span> USERNAME=<span class="str">'admin'</span>)
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   9. VERSION_PLANTILLA_HISTORIAL
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> VERSION_PLANTILLA_HISTORIAL (CODIGO_VERSION_PLANTILLA, ESTADO_ANTERIOR, ESTADO_NUEVO, COMENTARIO, USUARIO_RESPONSABLE)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>
+     <span class="kw">AND</span> CODIGO_PLANTILLA=(<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> PLANTILLA <span class="kw">WHERE</span> IDENTIFICADOR=<span class="str">'FORM-104'</span>)),
+    <span class="str">'BORRADOR'</span>, <span class="str">'PUBLICADA'</span>, <span class="str">'Aprobado por director de tecnología'</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> USUARIO <span class="kw">WHERE</span> USERNAME=<span class="str">'admin'</span>)
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   10. SECCION_PLANTILLA (cabecera + ventas + compras)
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> SECCION_PLANTILLA (CODIGO_VERSION_PLANTILLA, TIPO, CLAVE_UI, ETIQUETA, DESCRIPCION, ORDEN, CONFIG_LAYOUT_JSON)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    <span class="str">'PANEL'</span>, <span class="str">'SEC_CABECERA'</span>, <span class="str">'Información del Contribuyente'</span>,
+    <span class="str">'Datos generales del declarante'</span>, <span class="num">1</span>,
+    <span class="str">'{"collapsible":false,"cols":12}'</span>
+);
+
+<span class="kw">INSERT INTO</span> SECCION_PLANTILLA (CODIGO_VERSION_PLANTILLA, TIPO, CLAVE_UI, ETIQUETA, DESCRIPCION, ORDEN, CONFIG_LAYOUT_JSON)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    <span class="str">'PANEL'</span>, <span class="str">'SEC_VENTAS'</span>, <span class="str">'Ventas del Periodo'</span>,
+    <span class="str">'Declaración de ingresos por ventas'</span>, <span class="num">2</span>,
+    <span class="str">'{"collapsible":true,"cols":12}'</span>
+);
+
+<span class="kw">INSERT INTO</span> SECCION_PLANTILLA (CODIGO_VERSION_PLANTILLA, TIPO, CLAVE_UI, ETIQUETA, DESCRIPCION, ORDEN, CONFIG_LAYOUT_JSON)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    <span class="str">'PANEL'</span>, <span class="str">'SEC_COMPRAS'</span>, <span class="str">'Compras del Periodo'</span>,
+    <span class="str">'Crédito tributario por compras'</span>, <span class="num">3</span>,
+    <span class="str">'{"collapsible":true,"cols":12}'</span>
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   11. CAMPO_PLANTILLA (campos de cada sección)
+   ══════════════════════════════════════════════════════════════</span>
+<span class="cmt">-- Campos sección CABECERA</span>
+<span class="kw">INSERT INTO</span> CAMPO_PLANTILLA (
+    CODIGO_VERSION_PLANTILLA, CODIGO_SECCION, CODIGO_BIBLIOTECA_COMPONENTE,
+    CLAVE_UI, ETIQUETA_UI, TIPO_COMPONENTE_TECNICO, ORDEN,
+    ES_OBLIGATORIO, ES_VISIBLE, ES_EDITABLE, ANCHO_COLUMNAS,
+    CODIGO_CATALOGO_MAESTRO, PROPIEDADES_UI_JSON)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> SECCION_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'SEC_CABECERA'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> BIBLIOTECA_COMPONENTE <span class="kw">WHERE</span> NOMBRE_UI=<span class="str">'RUC / Identificación'</span>),
+    <span class="str">'ruc_contribuyente'</span>, <span class="str">'RUC del Contribuyente'</span>, <span class="str">'INPUT_TEXT'</span>, <span class="num">1</span>,
+    <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">6</span>, <span class="kw">NULL</span>,
+    <span class="str">'{"maxlength":13,"placeholder":"0000000000001","regex":"^[0-9]{10,13}$"}'</span>
+);
+
+<span class="kw">INSERT INTO</span> CAMPO_PLANTILLA (
+    CODIGO_VERSION_PLANTILLA, CODIGO_SECCION, CODIGO_BIBLIOTECA_COMPONENTE,
+    CLAVE_UI, ETIQUETA_UI, TIPO_COMPONENTE_TECNICO, ORDEN,
+    ES_OBLIGATORIO, ES_VISIBLE, ES_EDITABLE, ANCHO_COLUMNAS,
+    CODIGO_CATALOGO_MAESTRO, PROPIEDADES_UI_JSON)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> SECCION_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'SEC_CABECERA'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> BIBLIOTECA_COMPONENTE <span class="kw">WHERE</span> NOMBRE_UI=<span class="str">'Mes / Año Fiscal'</span>),
+    <span class="str">'periodo_fiscal'</span>, <span class="str">'Período Fiscal'</span>, <span class="str">'DATE'</span>, <span class="num">2</span>,
+    <span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">3</span>, <span class="kw">NULL</span>,
+    <span class="str">'{"view":"month","dateFormat":"mm/yy","showIcon":true}'</span>
+);
+
+<span class="kw">INSERT INTO</span> CAMPO_PLANTILLA (
+    CODIGO_VERSION_PLANTILLA, CODIGO_SECCION, CODIGO_BIBLIOTECA_COMPONENTE,
+    CLAVE_UI, ETIQUETA_UI, TIPO_COMPONENTE_TECNICO, ORDEN,
+    ES_OBLIGATORIO, ES_VISIBLE, ES_EDITABLE, ANCHO_COLUMNAS,
+    CODIGO_CATALOGO_MAESTRO, PROPIEDADES_UI_JSON)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> SECCION_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'SEC_CABECERA'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> BIBLIOTECA_COMPONENTE <span class="kw">WHERE</span> NOMBRE_UI=<span class="str">'Selector de Catálogo'</span>),
+    <span class="str">'tipo_contribuyente'</span>, <span class="str">'Tipo de Contribuyente'</span>, <span class="str">'SELECT'</span>, <span class="num">3</span>,
+    <span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">3</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CATALOGO_MAESTRO <span class="kw">WHERE</span> CODIGO_UNICO=<span class="str">'TIPO_CONTRIBUYENTE'</span>),
+    <span class="str">'{"filter":true,"showClear":true}'</span>
+);
+
+<span class="cmt">-- Campos sección VENTAS (casilleros 401, 402)</span>
+<span class="kw">INSERT INTO</span> CAMPO_PLANTILLA (
+    CODIGO_VERSION_PLANTILLA, CODIGO_SECCION, CODIGO_BIBLIOTECA_COMPONENTE,
+    CLAVE_UI, ETIQUETA_UI, TIPO_COMPONENTE_TECNICO, ORDEN,
+    ES_OBLIGATORIO, ES_VISIBLE, ES_EDITABLE, ANCHO_COLUMNAS,
+    CODIGO_CATALOGO_MAESTRO, PROPIEDADES_UI_JSON)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> SECCION_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'SEC_VENTAS'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> BIBLIOTECA_COMPONENTE <span class="kw">WHERE</span> NOMBRE_UI=<span class="str">'Monto en Dólares'</span>),
+    <span class="str">'casillero_401'</span>, <span class="str">'401 — Ventas gravadas 15% (base)'</span>, <span class="str">'INPUT_NUMBER'</span>, <span class="num">1</span>,
+    <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">6</span>, <span class="kw">NULL</span>,
+    <span class="str">'{"mode":"currency","currency":"USD","locale":"es-EC","minFractionDigits":2}'</span>
+);
+
+<span class="kw">INSERT INTO</span> CAMPO_PLANTILLA (
+    CODIGO_VERSION_PLANTILLA, CODIGO_SECCION, CODIGO_BIBLIOTECA_COMPONENTE,
+    CLAVE_UI, ETIQUETA_UI, TIPO_COMPONENTE_TECNICO, ORDEN,
+    ES_OBLIGATORIO, ES_VISIBLE, ES_EDITABLE, ANCHO_COLUMNAS,
+    CODIGO_CATALOGO_MAESTRO, PROPIEDADES_UI_JSON)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> SECCION_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'SEC_VENTAS'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> BIBLIOTECA_COMPONENTE <span class="kw">WHERE</span> NOMBRE_UI=<span class="str">'Monto en Dólares'</span>),
+    <span class="str">'casillero_402'</span>, <span class="str">'402 — Ventas tarifa 0% / exentas'</span>, <span class="str">'INPUT_NUMBER'</span>, <span class="num">2</span>,
+    <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">6</span>, <span class="kw">NULL</span>,
+    <span class="str">'{"mode":"currency","currency":"USD","locale":"es-EC","minFractionDigits":2}'</span>
+);
+
+<span class="cmt">-- Campo sección COMPRAS (casillero 501)</span>
+<span class="kw">INSERT INTO</span> CAMPO_PLANTILLA (
+    CODIGO_VERSION_PLANTILLA, CODIGO_SECCION, CODIGO_BIBLIOTECA_COMPONENTE,
+    CLAVE_UI, ETIQUETA_UI, TIPO_COMPONENTE_TECNICO, ORDEN,
+    ES_OBLIGATORIO, ES_VISIBLE, ES_EDITABLE, ANCHO_COLUMNAS,
+    CODIGO_CATALOGO_MAESTRO, PROPIEDADES_UI_JSON)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> SECCION_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'SEC_COMPRAS'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> BIBLIOTECA_COMPONENTE <span class="kw">WHERE</span> NOMBRE_UI=<span class="str">'Monto en Dólares'</span>),
+    <span class="str">'casillero_501'</span>, <span class="str">'501 — Compras gravadas 15%'</span>, <span class="str">'INPUT_NUMBER'</span>, <span class="num">1</span>,
+    <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">6</span>, <span class="kw">NULL</span>,
+    <span class="str">'{"mode":"currency","currency":"USD","locale":"es-EC","minFractionDigits":2}'</span>
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   12. REGLA_VALIDACION y CAMPO_REGLA_VALIDACION
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> REGLA_VALIDACION (NOMBRE, TIPO, EXPRESION, MENSAJE_ERROR, REUTILIZABLE)
+<span class="kw">VALUES</span> (<span class="str">'MONTO_NO_NEGATIVO'</span>, <span class="str">'MIN_VALUE'</span>, <span class="str">'0'</span>, <span class="str">'El monto no puede ser negativo'</span>, <span class="num">1</span>);
+
+<span class="kw">INSERT INTO</span> REGLA_VALIDACION (NOMBRE, TIPO, EXPRESION, MENSAJE_ERROR, REUTILIZABLE)
+<span class="kw">VALUES</span> (<span class="str">'RUC_FORMATO'</span>, <span class="str">'REGEX'</span>, <span class="str">'^[0-9]{10,13}$'</span>, <span class="str">'RUC debe tener 10 a 13 dígitos'</span>, <span class="num">1</span>);
+
+<span class="cmt">-- Asociar MONTO_NO_NEGATIVO a los 3 campos monetarios</span>
+<span class="kw">INSERT INTO</span> CAMPO_REGLA_VALIDACION (CODIGO_CAMPO_PLANTILLA, CODIGO_REGLA_VALIDACION, ORDEN_EJECUCION)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CAMPO_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'casillero_401'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> REGLA_VALIDACION <span class="kw">WHERE</span> NOMBRE=<span class="str">'MONTO_NO_NEGATIVO'</span>), <span class="num">1</span>
+);
+
+<span class="kw">INSERT INTO</span> CAMPO_REGLA_VALIDACION (CODIGO_CAMPO_PLANTILLA, CODIGO_REGLA_VALIDACION, ORDEN_EJECUCION)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CAMPO_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'casillero_402'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> REGLA_VALIDACION <span class="kw">WHERE</span> NOMBRE=<span class="str">'MONTO_NO_NEGATIVO'</span>), <span class="num">1</span>
+);
+
+<span class="kw">INSERT INTO</span> CAMPO_REGLA_VALIDACION (CODIGO_CAMPO_PLANTILLA, CODIGO_REGLA_VALIDACION, ORDEN_EJECUCION)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CAMPO_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'casillero_501'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> REGLA_VALIDACION <span class="kw">WHERE</span> NOMBRE=<span class="str">'MONTO_NO_NEGATIVO'</span>), <span class="num">1</span>
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   13. REGLA_CONDICIONAL y REGLA_CONDICIONAL_DETALLE
+       (Mostrar casillero 501 solo si tipo_contribuyente = JUR)
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> REGLA_CONDICIONAL (CODIGO_CAMPO_PLANTILLA, ACCION, CONECTOR_LOGICO, ORDEN)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CAMPO_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'casillero_501'</span>),
+    <span class="str">'SHOW'</span>, <span class="str">'AND'</span>, <span class="num">1</span>
+);
+
+<span class="kw">INSERT INTO</span> REGLA_CONDICIONAL_DETALLE (CODIGO_REGLA_CONDICIONAL, CLAVE_UI_CAMPO_EVALUADO, OPERADOR, VALOR_REFERENCIA)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> REGLA_CONDICIONAL rc
+     <span class="kw">JOIN</span> CAMPO_PLANTILLA cp <span class="kw">ON</span> rc.CODIGO_CAMPO_PLANTILLA = cp.CODIGO
+     <span class="kw">WHERE</span> cp.CLAVE_UI = <span class="str">'casillero_501'</span>),
+    <span class="str">'tipo_contribuyente'</span>, <span class="str">'EQUALS'</span>, <span class="str">'JUR'</span>
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   14. CAMPO_PLANTILLA_CONCEPTO (mapeo campos → casilleros SRI)
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> CAMPO_PLANTILLA_CONCEPTO (CODIGO_CAMPO_PLANTILLA, CODIGO_CONCEPTO_TRIBUTARIO, TIPO_OPERACION)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CAMPO_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'casillero_401'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CONCEPTO_TRIBUTARIO <span class="kw">WHERE</span> CASILLERO_SRI=<span class="str">'401'</span>),
+    <span class="str">'ASIGNACION'</span>
+);
+
+<span class="kw">INSERT INTO</span> CAMPO_PLANTILLA_CONCEPTO (CODIGO_CAMPO_PLANTILLA, CODIGO_CONCEPTO_TRIBUTARIO, TIPO_OPERACION)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CAMPO_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'casillero_402'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CONCEPTO_TRIBUTARIO <span class="kw">WHERE</span> CASILLERO_SRI=<span class="str">'402'</span>),
+    <span class="str">'ASIGNACION'</span>
+);
+
+<span class="kw">INSERT INTO</span> CAMPO_PLANTILLA_CONCEPTO (CODIGO_CAMPO_PLANTILLA, CODIGO_CONCEPTO_TRIBUTARIO, TIPO_OPERACION)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CAMPO_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'casillero_501'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CONCEPTO_TRIBUTARIO <span class="kw">WHERE</span> CASILLERO_SRI=<span class="str">'501'</span>),
+    <span class="str">'ASIGNACION'</span>
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   15. CONTROL_FLUJO_ESTADO
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> CONTROL_FLUJO_ESTADO (CODIGO_VERSION_PLANTILLA, ESTADO_ANTERIOR, ESTADO_NUEVO, USUARIO_RESPONSABLE, COMENTARIO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    <span class="str">'BORRADOR'</span>, <span class="str">'PUBLICADA'</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> USUARIO <span class="kw">WHERE</span> USERNAME=<span class="str">'admin'</span>),
+    <span class="str">'Versión inicial publicada'</span>
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   16. FORMULARIO_DECLARACION (una declaración de ejemplo)
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> FORMULARIO_DECLARACION (
+    CODIGO_VERSION_PLANTILLA, RUC_CONTRIBUYENTE, PERIODO_FISCAL,
+    NUMERO_DECLARACION, ESTADO, PRIORIDAD, DATOS_JSON, USUARIO_CREADOR)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> VERSION_PLANTILLA <span class="kw">WHERE</span> NUMERO_VERSION=<span class="str">'1.0.0'</span>),
+    <span class="str">'1792345678001'</span>,
+    <span class="str">'2025-01'</span>,
+    <span class="str">'DEC-2025-01-001'</span>,
+    <span class="str">'ENVIADO'</span>,
+    <span class="str">'NORMAL'</span>,
+    <span class="str">'{"ruc_contribuyente":"1792345678001","periodo_fiscal":"01/2025","tipo_contribuyente":"JUR","casillero_401":150000.00,"casillero_402":25000.00,"casillero_501":80000.00}'</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> USUARIO <span class="kw">WHERE</span> USERNAME=<span class="str">'contribuyente01'</span>)
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   17. DECLARACION_HISTORIAL_ESTADO
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> DECLARACION_HISTORIAL_ESTADO (
+    CODIGO_FORMULARIO_DECLARACION, ESTADO_ANTERIOR, ESTADO_NUEVO,
+    COMENTARIO, USUARIO_RESPONSABLE)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> FORMULARIO_DECLARACION <span class="kw">WHERE</span> NUMERO_DECLARACION=<span class="str">'DEC-2025-01-001'</span>),
+    <span class="str">'BORRADOR'</span>, <span class="str">'ENVIADO'</span>,
+    <span class="str">'Declaración enviada por el contribuyente'</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> USUARIO <span class="kw">WHERE</span> USERNAME=<span class="str">'contribuyente01'</span>)
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   18. DETALLE_VALOR_CONCEPTO (valores materializados)
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> DETALLE_VALOR_CONCEPTO (CODIGO_FORMULARIO_DECLARACION, CODIGO_CONCEPTO_TRIBUTARIO, VALOR_CALCULADO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> FORMULARIO_DECLARACION <span class="kw">WHERE</span> NUMERO_DECLARACION=<span class="str">'DEC-2025-01-001'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CONCEPTO_TRIBUTARIO <span class="kw">WHERE</span> CASILLERO_SRI=<span class="str">'401'</span>),
+    <span class="num">150000.00</span>
+);
+
+<span class="kw">INSERT INTO</span> DETALLE_VALOR_CONCEPTO (CODIGO_FORMULARIO_DECLARACION, CODIGO_CONCEPTO_TRIBUTARIO, VALOR_CALCULADO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> FORMULARIO_DECLARACION <span class="kw">WHERE</span> NUMERO_DECLARACION=<span class="str">'DEC-2025-01-001'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CONCEPTO_TRIBUTARIO <span class="kw">WHERE</span> CASILLERO_SRI=<span class="str">'402'</span>),
+    <span class="num">25000.00</span>
+);
+
+<span class="kw">INSERT INTO</span> DETALLE_VALOR_CONCEPTO (CODIGO_FORMULARIO_DECLARACION, CODIGO_CONCEPTO_TRIBUTARIO, VALOR_CALCULADO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> FORMULARIO_DECLARACION <span class="kw">WHERE</span> NUMERO_DECLARACION=<span class="str">'DEC-2025-01-001'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CONCEPTO_TRIBUTARIO <span class="kw">WHERE</span> CASILLERO_SRI=<span class="str">'499'</span>),
+    <span class="num">175000.00</span>  <span class="cmt">-- 150000 + 25000 = 499 calculado</span>
+);
+
+<span class="kw">INSERT INTO</span> DETALLE_VALOR_CONCEPTO (CODIGO_FORMULARIO_DECLARACION, CODIGO_CONCEPTO_TRIBUTARIO, VALOR_CALCULADO)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> FORMULARIO_DECLARACION <span class="kw">WHERE</span> NUMERO_DECLARACION=<span class="str">'DEC-2025-01-001'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CONCEPTO_TRIBUTARIO <span class="kw">WHERE</span> CASILLERO_SRI=<span class="str">'501'</span>),
+    <span class="num">80000.00</span>
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   19. DECLARACION_OBSERVACION
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> DECLARACION_OBSERVACION (
+    CODIGO_FORMULARIO_DECLARACION, CODIGO_CAMPO_PLANTILLA,
+    TIPO, MENSAJE, USUARIO_CREADOR)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> FORMULARIO_DECLARACION <span class="kw">WHERE</span> NUMERO_DECLARACION=<span class="str">'DEC-2025-01-001'</span>),
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> CAMPO_PLANTILLA <span class="kw">WHERE</span> CLAVE_UI=<span class="str">'casillero_401'</span>),
+    <span class="str">'REVISION'</span>,
+    <span class="str">'El monto declarado supera el umbral de revisión automática. Se requiere documentación de respaldo.'</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> USUARIO <span class="kw">WHERE</span> USERNAME=<span class="str">'admin'</span>)
+);
+
+<span class="cmt">-- ══════════════════════════════════════════════════════════════
+   20. DECLARACION_ADJUNTO
+   ══════════════════════════════════════════════════════════════</span>
+<span class="kw">INSERT INTO</span> DECLARACION_ADJUNTO (
+    CODIGO_FORMULARIO_DECLARACION, CODIGO_CAMPO_PLANTILLA,
+    NOMBRE_ORIGINAL, NOMBRE_ALMACENADO, RUTA_ALMACENAMIENTO,
+    MIME_TYPE, TAMANO_BYTES, HASH_SHA256, USUARIO_CARGA)
+<span class="kw">VALUES</span> (
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> FORMULARIO_DECLARACION <span class="kw">WHERE</span> NUMERO_DECLARACION=<span class="str">'DEC-2025-01-001'</span>),
+    <span class="kw">NULL</span>,
+    <span class="str">'balance_enero_2025.pdf'</span>,
+    <span class="str">'dec_001_20250120_143022_abc123.pdf'</span>,
+    <span class="str">'/storage/declaraciones/2025/01/dec_001_20250120_143022_abc123.pdf'</span>,
+    <span class="str">'application/pdf'</span>,
+    <span class="num">245760</span>,
+    <span class="str">'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'</span>,
+    (<span class="kw">SELECT</span> CODIGO <span class="kw">FROM</span> USUARIO <span class="kw">WHERE</span> USERNAME=<span class="str">'contribuyente01'</span>)
+);
+
+<span class="fn">COMMIT</span>;</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- API CONTRACT -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="api-contract" class="content-section">
+    <div class="section-label">Referencia API</div>
+    <h2 class="section-title">Contrato REST API</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Método</th><th>Endpoint</th><th>Descripción</th><th>Body / Params</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>GET</code></td><td><code>/api/v1/plantillas</code></td><td>Listar plantillas</td><td>—</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/plantillas</code></td><td>Crear plantilla</td><td><code>PlantillaRequest</code></td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/v1/plantillas/{id}/versiones/{vId}/design</code></td><td>Cargar versión completa para diseñador</td><td>—</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/plantillas/{id}/versiones/{vId}/campos</code></td><td>Agregar campo desde biblioteca</td><td><code>AgregarCampoRequest</code></td></tr>
+          <tr><td><code>PUT</code></td><td><code>/api/v1/plantillas/{id}/versiones/{vId}/campos/{cId}</code></td><td>Actualizar propiedades del campo</td><td><code>CampoUpdateRequest</code></td></tr>
+          <tr><td><code>PATCH</code></td><td><code>/api/v1/plantillas/{id}/versiones/{vId}/campos/orden</code></td><td>Reordenar campos (drag &amp; drop)</td><td><code>List&lt;OrdenCampoDto&gt;</code></td></tr>
+          <tr><td><code>DELETE</code></td><td><code>/api/v1/plantillas/{id}/versiones/{vId}/campos/{cId}</code></td><td>Eliminar campo</td><td>—</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/plantillas/{id}/versiones/{vId}/publicar</code></td><td>Publicar versión</td><td>—</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/v1/biblioteca-componentes</code></td><td>Listar widgets disponibles</td><td>—</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/v1/catalogos/{id}/items</code></td><td>Obtener items de catálogo</td><td>—</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/declaraciones</code></td><td>Crear nueva declaración</td><td><code>CrearDeclaracionRequest</code></td></tr>
+          <tr><td><code>PATCH</code></td><td><code>/api/v1/declaraciones/{id}/datos</code></td><td>Guardar borrador de datos</td><td><code>Map&lt;String,Object&gt;</code></td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/declaraciones/{id}/enviar</code></td><td>Enviar declaración</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert success">
+      <span class="alert-icon">✅</span>
+      <div>El endpoint <code>GET /design</code> devuelve la estructura completa de secciones y campos en un solo round-trip, minimizando la latencia en el diseñador. Para la ejecución, el mismo endpoint sirve para renderizar el formulario en runtime.</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// Progress bar
+const progress = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+  const scrolled = window.scrollY / scrollable;
+  progress.style.transform = `scaleX(${scrolled})`;
+});
+
+// Active nav link
+const sections = document.querySelectorAll('[id]');
+const navLinks = document.querySelectorAll('#sidebar nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const active = document.querySelector(`#sidebar nav a[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
