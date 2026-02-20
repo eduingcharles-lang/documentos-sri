@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis Unificación · Esquema SRI Form Designer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:        #080a0f;
+    --surface:   #0f1218;
+    --surface2:  #161b25;
+    --surface3:  #1e2535;
+    --border:    #1f2535;
+    --border2:   #2a3347;
+    --accent:    #5b9cf6;
+    --accent2:   #f6a94b;
+    --accent3:   #4df0a0;
+    --accent4:   #e05cf6;
+    --danger:    #f65b75;
+    --text:      #dde3f0;
+    --muted:     #5a6480;
+    --muted2:    #8892aa;
+
+    /* nodos ERD */
+    --node-module1: #1a2540;   /* diseñador */
+    --node-module2: #1a2a1a;   /* tributario */
+    --node-module3: #2a1a10;   /* ejecución */
+    --node-module4: #2a1a2a;   /* nueva unificada */
+    --node-module5: #10202a;   /* catálogos */
+    --node-module6: #202010;   /* componentes */
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0;
+    width: 240px; height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 16px;
+    overflow-y: auto;
+    z-index: 100;
+  }
+  .nav-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 12px;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 4px;
+  }
+  .nav-ver {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; color: var(--muted);
+    margin-bottom: 28px;
+  }
+  .nav-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 9.5px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); margin: 18px 0 6px 8px;
+  }
+  nav a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 6px;
+    font-size: 12px; font-weight: 500;
+    color: var(--muted2); text-decoration: none;
+    transition: all .15s;
+  }
+  nav a:hover { background: var(--surface2); color: var(--text); }
+  nav a.act   { background: rgba(91,156,246,.1); color: var(--accent); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── MAIN ── */
+  main { margin-left: 240px; padding: 48px 60px; max-width: 1200px; }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 56px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 56px;
+  }
+  .hero-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; color: var(--accent2);
+    background: rgba(246,169,75,.08);
+    border: 1px solid rgba(246,169,75,.2);
+    border-radius: 4px; padding: 4px 12px;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 38px; font-weight: 800;
+    line-height: 1.12; color: var(--text);
+    margin-bottom: 18px;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p { color: var(--muted2); max-width: 620px; line-height: 1.8; }
+
+  /* ── SECTIONS ── */
+  section { margin-bottom: 72px; scroll-margin-top: 32px; }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 800;
+    color: var(--text); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sec-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    color: var(--accent);
+    background: rgba(91,156,246,.1);
+    border: 1px solid rgba(91,156,246,.2);
+    padding: 2px 8px; border-radius: 3px;
+  }
+  .sec-desc { color: var(--muted2); margin-bottom: 24px; font-size: 13.5px; max-width: 700px; }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14.5px; font-weight: 700;
+    color: var(--accent2); margin: 26px 0 10px;
+  }
+  h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px; font-weight: 700;
+    color: var(--accent3); margin: 18px 0 8px;
+    text-transform: uppercase; letter-spacing: .07em;
+  }
+
+  p { margin-bottom: 10px; }
+
+  /* ── CODE ── */
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 18px 22px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; line-height: 1.75;
+    margin: 14px 0;
+    position: relative;
+  }
+  pre .lbl {
+    position: absolute; top: 10px; right: 14px;
+    font-size: 9px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .09em;
+  }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: var(--surface3);
+    padding: 1px 5px; border-radius: 3px;
+    color: var(--accent3);
+  }
+  .kw  { color: #c792ea; }
+  .str { color: #c3e88d; }
+  .cm  { color: #4a5568; font-style: italic; }
+  .fn  { color: #82aaff; }
+  .nu  { color: #f78c6c; }
+  .cl  { color: #ffcb6b; }
+  .op  { color: #89ddff; }
+
+  /* ── VERDICT CARDS ── */
+  .verdict-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px; margin: 18px 0;
+  }
+  .vcard {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 18px 20px;
+    transition: border-color .2s;
+  }
+  .vcard:hover { border-color: var(--border2); }
+  .vcard-head {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .vcard-icon {
+    width: 30px; height: 30px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .vcard-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12.5px; font-weight: 700; color: var(--text);
+  }
+  .vcard-body { font-size: 12px; color: var(--muted2); line-height: 1.65; }
+
+  /* ── PRO / CON TABLE ── */
+  .procon {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin: 16px 0;
+  }
+  .procon-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px; padding: 18px;
+  }
+  .procon-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px; font-weight: 700;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+  }
+  .procon-list { list-style: none; }
+  .procon-list li {
+    font-size: 12px; color: var(--muted2);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 8px;
+  }
+  .procon-list li:last-child { border-bottom: none; }
+  .procon-list li::before { flex-shrink: 0; font-size: 11px; }
+  .pro li::before { content: '✓'; color: var(--accent3); }
+  .con li::before { content: '✗'; color: var(--danger); }
+
+  /* ── TABLE ── */
+  table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; margin: 14px 0;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--accent); text-align: left;
+    padding: 9px 13px;
+    border-bottom: 1px solid var(--border2);
+    font-weight: 700; letter-spacing: .04em;
+  }
+  td {
+    padding: 8px 13px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text); vertical-align: top;
+  }
+  tr:hover td { background: var(--surface2); }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; padding: 2px 7px;
+    border-radius: 3px; font-weight: 700; margin: 1px;
+  }
+  .b-new  { background: rgba(77,240,160,.1); color: var(--accent3); border: 1px solid rgba(77,240,160,.25); }
+  .b-mod  { background: rgba(246,169,75,.1); color: var(--accent2); border: 1px solid rgba(246,169,75,.25); }
+  .b-del  { background: rgba(246,91,117,.1); color: var(--danger);  border: 1px solid rgba(246,91,117,.25); }
+  .b-ok   { background: rgba(91,156,246,.1); color: var(--accent);  border: 1px solid rgba(91,156,246,.25); }
+  .b-warn { background: rgba(224,92,246,.1); color: var(--accent4); border: 1px solid rgba(224,92,246,.25); }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(91,156,246,.05);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px; margin: 14px 0;
+    font-size: 13px; color: var(--text);
+  }
+  .callout.warn  { border-color: var(--accent2); background: rgba(246,169,75,.05); }
+  .callout.ok    { border-color: var(--accent3); background: rgba(77,240,160,.05); }
+  .callout.purp  { border-color: var(--accent4); background: rgba(224,92,246,.05); }
+  .callout strong { color: inherit; }
+
+  /* ── VERDICT BANNER ── */
+  .verdict-banner {
+    background: linear-gradient(135deg, rgba(77,240,160,.06), rgba(91,156,246,.06));
+    border: 1px solid rgba(77,240,160,.2);
+    border-radius: 12px; padding: 24px 28px;
+    margin: 20px 0;
+  }
+  .verdict-banner h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px; font-weight: 800;
+    color: var(--accent3); margin: 0 0 10px;
+  }
+  .verdict-banner p { color: var(--text); margin: 0; font-size: 13.5px; }
+
+  /* ── ERD SVG ── */
+  .erd-scroll {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    overflow-x: auto; padding: 24px;
+  }
+  svg.erd { display: block; }
+
+  /* node styles */
+  .n-title { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 9.5px; }
+  .n-col   { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; fill: #8892aa; }
+  .n-col-key { fill: #f6a94b; }
+  .n-col-fk  { fill: #5b9cf6; }
+  .n-col-hi  { fill: #4df0a0; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    margin: 16px 0;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--muted2);
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  @media (max-width: 900px) {
+    nav { display: none; }
+    main { margin-left: 0; padding: 24px 16px; }
+    .verdict-grid { grid-template-columns: 1fr; }
+    .procon { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <div class="nav-brand">SRI · Form Designer</div>
+  <div class="nav-ver">Esquema Unificado v2.0</div>
+
+  <div class="nav-label">Análisis</div>
+  <a href="#analisis-tablas"><span class="dot" style="background:#5b9cf6"></span>Análisis de las 3 tablas</a>
+  <a href="#caso-unificacion"><span class="dot" style="background:#f6a94b"></span>Caso de Unificación</a>
+  <a href="#veredicto"><span class="dot" style="background:#4df0a0"></span>Veredicto Final</a>
+
+  <div class="nav-label">Esquema Nuevo</div>
+  <a href="#nueva-tabla"><span class="dot" style="background:#e05cf6"></span>NODO_PLANTILLA (DDL)</a>
+  <a href="#tablas-relacionadas"><span class="dot" style="background:#5b9cf6"></span>Tablas Relacionadas</a>
+  <a href="#erd-completo"><span class="dot" style="background:#4df0a0"></span>ERD Completo</a>
+
+  <div class="nav-label">Migración</div>
+  <a href="#migracion"><span class="dot" style="background:#f6a94b"></span>Script de Migración</a>
+  <a href="#impacto-backend"><span class="dot" style="background:#5b9cf6"></span>Impacto Backend</a>
+  <a href="#impacto-frontend"><span class="dot" style="background:#4df0a0"></span>Impacto Frontend</a>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<main>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-chip">⬡ ANÁLISIS DE DISEÑO · ORACLE 19c + QUARKUS + VUE 3</div>
+  <h1>¿Se pueden unificar<br><em>CAMPO, SECCIÓN y GRID</em>?</h1>
+  <p>Análisis técnico profundo del patrón de tabla única polimórfica vs. tablas separadas, veredicto razonado y esquema ERD completo sin omisiones.</p>
+</div>
+
+<!-- ══════════════════════════════
+     01 ANÁLISIS DE LAS 3 TABLAS
+══════════════════════════════ -->
+<section id="analisis-tablas">
+  <h2><span class="sec-num">01</span> Anatomía de las 3 tablas actuales</h2>
+  <p class="sec-desc">Antes de decidir, hay que entender qué hace cada tabla, qué columnas comparten y qué tienen exclusivo.</p>
+
+  <h3>Columnas compartidas (candidatas a unificación)</h3>
+  <table>
+    <tr>
+      <th>Columna</th>
+      <th>SECCION_PLANTILLA</th>
+      <th>CAMPO_PLANTILLA</th>
+      <th>GRID_COLUMNA_PLANTILLA</th>
+    </tr>
+    <tr>
+      <td><code>CODIGO</code> PK</td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-ok">✓</span></td>
+    </tr>
+    <tr>
+      <td><code>CLAVE_UI / CLAVE_COLUMNA</code></td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-ok">✓</span></td>
+    </tr>
+    <tr>
+      <td><code>ETIQUETA / CABECERA</code></td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-ok">✓</span></td>
+    </tr>
+    <tr>
+      <td><code>ORDEN</code></td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-ok">✓</span></td>
+    </tr>
+    <tr>
+      <td><code>CODIGO_VERSION_PLANTILLA</code> FK</td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-ok">✓</span></td>
+      <td><span class="badge b-del">✗ (indirecto)</span></td>
+    </tr>
+    <tr>
+      <td><code>PADRE</code> auto-referencia</td>
+      <td><span class="badge b-ok">✓ (sección padre)</span></td>
+      <td><span class="badge b-ok">✓ (seccion)</span></td>
+      <td><span class="badge b-ok">✓ (campo grid)</span></td>
+    </tr>
+    <tr>
+      <td><code>CONFIG_JSON</code></td>
+      <td><span class="badge b-ok">CONFIG_LAYOUT_JSON</span></td>
+      <td><span class="badge b-ok">PROPIEDADES_UI_JSON</span></td>
+      <td><span class="badge b-ok">CONFIG_CELDA_JSON</span></td>
+    </tr>
+    <tr>
+      <td><code>ACTIVO / VISIBLE</code></td>
+      <td><span class="badge b-ok">VISIBLE_DEFECTO</span></td>
+      <td><span class="badge b-ok">ES_VISIBLE</span></td>
+      <td><span class="badge b-del">✗</span></td>
+    </tr>
+  </table>
+
+  <h3>Columnas exclusivas por tabla (el problema real)</h3>
+  <table>
+    <tr><th>Columna exclusiva</th><th>Tabla</th><th>¿Aplica a otras?</th></tr>
+    <tr>
+      <td><code>TIPO</code> (PAGE/TAB/PANEL…)</td>
+      <td>SECCION_PLANTILLA</td>
+      <td><span class="badge b-del">No</span></td>
+    </tr>
+    <tr>
+      <td><code>ES_COLAPSABLE, CONTENIDO_HTML, ICONO_CSS</code></td>
+      <td>SECCION_PLANTILLA</td>
+      <td><span class="badge b-del">No</span></td>
+    </tr>
+    <tr>
+      <td><code>CODIGO_CATEGORIA_COMPONENTE</code></td>
+      <td>CAMPO_PLANTILLA</td>
+      <td><span class="badge b-del">No</span></td>
+    </tr>
+    <tr>
+      <td><code>CODIGO_BIBLIOTECA_COMPONENTE</code></td>
+      <td>CAMPO_PLANTILLA</td>
+      <td><span class="badge b-del">No</span></td>
+    </tr>
+    <tr>
+      <td><code>CODIGO_CATALOGO_MAESTRO</code></td>
+      <td>CAMPO_PLANTILLA</td>
+      <td><span class="badge b-del">No</span></td>
+    </tr>
+    <tr>
+      <td><code>ES_OBLIGATORIO, ES_EDITABLE, ANCHO_COLUMNAS</code></td>
+      <td>CAMPO_PLANTILLA</td>
+      <td><span class="badge b-del">No (grids tienen ANCHO_PX distinto)</span></td>
+    </tr>
+    <tr>
+      <td><code>ES_READONLY, PLACEHOLDER, TEXTO_AYUDA</code></td>
+      <td>CAMPO_PLANTILLA</td>
+      <td><span class="badge b-del">No</span></td>
+    </tr>
+    <tr>
+      <td><code>ANCHO_PX, ES_ORDENABLE, ES_FILTRABLE</code></td>
+      <td>GRID_COLUMNA_PLANTILLA</td>
+      <td><span class="badge b-del">No</span></td>
+    </tr>
+    <tr>
+      <td><code>ES_EDITABLE_INLINE</code></td>
+      <td>GRID_COLUMNA_PLANTILLA</td>
+      <td><span class="badge b-del">No</span></td>
+    </tr>
+    <tr>
+      <td><code>TIPO_DATO</code> (TEXT/CURRENCY/DATE…)</td>
+      <td>GRID_COLUMNA_PLANTILLA</td>
+      <td><span class="badge b-del">No (para campos es CATEGORIA_COMPONENTE)</span></td>
+    </tr>
+  </table>
+</section>
+
+<!-- ══════════════════════════════
+     02 CASO DE UNIFICACIÓN
+══════════════════════════════ -->
+<section id="caso-unificacion">
+  <h2><span class="sec-num">02</span> El caso de la Tabla Polimórfica Única</h2>
+  <p class="sec-desc">El patrón "Single Table Inheritance" (STI) unifica todo en <code>NODO_PLANTILLA</code> con un discriminador <code>TIPO_NODO</code>. Analicemos sus consecuencias.</p>
+
+  <div class="verdict-grid">
+    <div class="vcard">
+      <div class="vcard-head">
+        <div class="vcard-icon" style="background:rgba(91,156,246,.1)">🔗</div>
+        <div class="vcard-title">Auto-referencia natural</div>
+      </div>
+      <div class="vcard-body">Toda la jerarquía del formulario (página → tab → sección → campo → columna-grid) vive en una FK <code>CODIGO_PADRE</code> de la misma tabla. El árbol se consulta con un solo CTE recursivo.</div>
+    </div>
+    <div class="vcard">
+      <div class="vcard-head">
+        <div class="vcard-icon" style="background:rgba(246,169,75,.1)">⚠️</div>
+        <div class="vcard-title">Columnas nullable masivas</div>
+      </div>
+      <div class="vcard-body">Una SECCION de tipo PAGE nunca usará <code>CODIGO_CATEGORIA_COMPONENTE</code>. Un campo INPUT_TEXT nunca usará <code>ES_FILTRABLE</code>. Esto genera una tabla con ~40 columnas donde el 60% son NULL en cada fila.</div>
+    </div>
+    <div class="vcard">
+      <div class="vcard-head">
+        <div class="vcard-icon" style="background:rgba(77,240,160,.1)">✓</div>
+        <div class="vcard-title">Reordenar simplificado</div>
+      </div>
+      <div class="vcard-body">El drag&drop del diseñador actualiza el <code>ORDEN</code> y el <code>CODIGO_PADRE</code> con un solo <code>UPDATE</code> sin importar si mueves una sección, un campo o una columna de grid.</div>
+    </div>
+  </div>
+
+  <div class="procon">
+    <div class="procon-box">
+      <div class="procon-title" style="color:var(--accent3)">✓ Ventajas de Unificar (STI)</div>
+      <ul class="procon-list pro">
+        <li>Un único árbol jerárquico auto-referenciado</li>
+        <li>CTE recursivo simple para cargar toda la estructura</li>
+        <li>Reordenamiento con un solo UPDATE</li>
+        <li>Mover un campo de sección = solo cambiar CODIGO_PADRE</li>
+        <li>El endpoint <code>/estructura</code> retorna un JSON tree natural</li>
+        <li>Menos JOINs en queries del diseñador</li>
+        <li>Menos entidades Java/Panache que mantener</li>
+      </ul>
+    </div>
+    <div class="procon-box">
+      <div class="procon-title" style="color:var(--danger)">✗ Desventajas de Unificar (STI)</div>
+      <ul class="procon-list con">
+        <li>~20 columnas nullable sin semántica clara</li>
+        <li>Imposible poner NOT NULL en columnas tipo-específicas</li>
+        <li>Las FK (CATEGORIA_COMPONENTE, CATALOGO_MAESTRO) cuelgan de nodos que no son campos</li>
+        <li>Los CHECKs cruzados son complejos: "si TIPO_NODO='CAMPO' entonces CODIGO_CATEGORIA_COMPONENTE NOT NULL" requiere triggers o CHECKs elaborados</li>
+        <li>ORM (Hibernate) necesita @DiscriminatorColumn y subclases, que con Panache Reactive tiene limitaciones</li>
+        <li>Las tablas relacionadas (CAMPO_REGLA_VALIDACION, CAMPO_PLANTILLA_CONCEPTO) ahora FK a NODO_PLANTILLA sin poder restringir que solo campos válidos las referencien</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     03 VEREDICTO
+══════════════════════════════ -->
+<section id="veredicto">
+  <h2><span class="sec-num">03</span> Veredicto: Unificación Parcial Estratégica</h2>
+
+  <div class="verdict-banner">
+    <h3>✓ SÍ unificar SECCION_PLANTILLA + CAMPO_PLANTILLA → NODO_PLANTILLA</h3>
+    <p>Estas dos tablas comparten la misma jerarquía padre-hijo, la misma FK a VERSION_PLANTILLA, y la diferencia entre "sección" y "campo" es solo semántica. La auto-referencia en SECCION ya existía, y CAMPO apuntaba a SECCION. Unificarlas elimina ese JOIN y hace el árbol verdaderamente recursivo. Las columnas exclusivas van en el <code>CONFIG_JSON</code> o en un número manejable de columnas nullable bien documentadas.</p>
+  </div>
+
+  <div class="callout warn">
+    <strong>✗ NO unificar GRID_COLUMNA_PLANTILLA → NODO_PLANTILLA</strong><br>
+    Las columnas de un grid son meta-columnas de una tabla de datos, no nodos del formulario. Son hijas de un campo GRID específico, tienen semántica completamente diferente (TIPO_DATO=CURRENCY, ES_FILTRABLE, ES_ORDENABLE, ANCHO_PX), y sus FKs relacionadas no existen (no tienen reglas de validación ni mapeo a conceptos). Mantenerla separada es más limpio.
+  </div>
+
+  <h3>Mapa de decisión por tabla</h3>
+  <table>
+    <tr><th>Tabla original</th><th>Decisión</th><th>Resultado</th><th>Motivo</th></tr>
+    <tr>
+      <td>SECCION_PLANTILLA</td>
+      <td><span class="badge b-del">ELIMINAR</span></td>
+      <td>→ NODO_PLANTILLA</td>
+      <td>Se absorbe con TIPO_NODO = PAGE/TAB/PANEL/SECTION/FIELDSET/TEXT_BLOCK/DIVIDER</td>
+    </tr>
+    <tr>
+      <td>CAMPO_PLANTILLA</td>
+      <td><span class="badge b-del">ELIMINAR</span></td>
+      <td>→ NODO_PLANTILLA</td>
+      <td>Se absorbe con TIPO_NODO = CAMPO. FK CATEGORIA_COMPONENTE y CATALOGO_MAESTRO se mantienen con CHECK condicional</td>
+    </tr>
+    <tr>
+      <td>GRID_COLUMNA_PLANTILLA</td>
+      <td><span class="badge b-ok">MANTENER</span></td>
+      <td>→ GRID_COLUMNA_PLANTILLA</td>
+      <td>FK a NODO_PLANTILLA (nodos GRID). Semántica diferente, no es un nodo del árbol de layout</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ══════════════════════════════
+     04 DDL NUEVA TABLA
+══════════════════════════════ -->
+<section id="nueva-tabla">
+  <h2><span class="sec-num">04</span> DDL · NODO_PLANTILLA (tabla unificada)</h2>
+  <p class="sec-desc">Una sola tabla con discriminador <code>TIPO_NODO</code>. Las columnas exclusivas de cada tipo van en su mayoría en el <code>CONFIG_JSON</code>; solo las que necesitan índice o FK están como columnas físicas.</p>
+
+  <pre><span class="lbl">Oracle SQL · DDL · v2.0</span><span class="cm">/* ================================================================
+   NODO_PLANTILLA
+   Unifica: SECCION_PLANTILLA + CAMPO_PLANTILLA
+   Discriminador: TIPO_NODO
+   ================================================================
+
+   TIPO_NODO válidos:
+     Tipos de layout (ex-SECCION):
+       PAGE       → Página de wizard (Stepper PrimeVue)
+       TAB        → Pestaña dentro de TabView
+       PANEL      → Panel colapsable
+       SECTION    → Sección horizontal con título
+       FIELDSET   → FieldSet con leyenda
+       TEXT_BLOCK → Bloque HTML estático
+       DIVIDER    → Separador visual
+
+     Tipos de campo (ex-CAMPO_PLANTILLA):
+       CAMPO      → Cualquier widget de la biblioteca
+================================================================ */</span>
+
+<span class="kw">CREATE TABLE</span> NODO_PLANTILLA (
+    CODIGO                       NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+
+    <span class="cm">-- ── Contexto (siempre presente) ──────────────────────────────</span>
+    CODIGO_VERSION_PLANTILLA     NUMBER        <span class="kw">NOT NULL</span>,
+    CODIGO_PADRE                 NUMBER,       <span class="cm">-- auto-referencia: sección padre o campo grid</span>
+    TIPO_NODO                    VARCHAR2(<span class="nu">30</span>)  <span class="kw">NOT NULL</span>,
+    CLAVE_UI                     VARCHAR2(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+    ETIQUETA                     VARCHAR2(<span class="nu">200</span>),
+    DESCRIPCION                  VARCHAR2(<span class="nu">500</span>),
+    ORDEN                        NUMBER        <span class="kw">NOT NULL</span>,
+
+    <span class="cm">-- ── Visibilidad / comportamiento básico ──────────────────────</span>
+    ES_VISIBLE                   NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>,
+    ES_EDITABLE                  NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>,
+    ES_OBLIGATORIO               NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+    ES_READONLY                  NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+
+    <span class="cm">-- ── Columnas físicas exclusivas LAYOUT (TIPO_NODO ≠ CAMPO) ──</span>
+    ES_COLAPSABLE                NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+    CONTENIDO_HTML               CLOB,         <span class="cm">-- TEXT_BLOCK</span>
+
+    <span class="cm">-- ── Columnas físicas exclusivas CAMPO (TIPO_NODO = CAMPO) ───</span>
+    CODIGO_CATEGORIA_COMPONENTE  NUMBER,       <span class="cm">-- FK → CATEGORIA_COMPONENTE</span>
+    CODIGO_BIBLIOTECA_COMPONENTE NUMBER,       <span class="cm">-- FK → BIBLIOTECA_COMPONENTE</span>
+    CODIGO_CATALOGO_MAESTRO      NUMBER,       <span class="cm">-- FK → CATALOGO_MAESTRO (SELECT/RADIO)</span>
+    ANCHO_COLUMNAS               NUMBER        DEFAULT <span class="nu">12</span>,  <span class="cm">-- grid CSS (1-12)</span>
+    PLACEHOLDER                  VARCHAR2(<span class="nu">200</span>),
+    TEXTO_AYUDA                  VARCHAR2(<span class="nu">500</span>),
+
+    <span class="cm">-- ── Config JSON (todo lo demás, según tipo) ──────────────────
+    --   Layout : { icono, gap, cols, ... }
+    --   Campo  : snapshot de BIBLIOTECA_COMPONENTE.CONFIGURACION_DEFAULT_JSON
+    --            + personalizaciones del diseñador
+    --            Ej: {"mask":"currency","prefix":"$","decimals":2} </span>
+    CONFIG_JSON                  CLOB <span class="kw">CONSTRAINT</span> CK_NP_JSON <span class="kw">CHECK</span>(CONFIG_JSON <span class="kw">IS JSON</span>),
+
+    <span class="cm">-- ── Constraints ──────────────────────────────────────────────</span>
+    <span class="kw">CONSTRAINT</span> CK_NP_TIPO <span class="kw">CHECK</span>(
+        TIPO_NODO <span class="kw">IN</span>(
+            <span class="str">'PAGE'</span>,<span class="str">'TAB'</span>,<span class="str">'PANEL'</span>,<span class="str">'SECTION'</span>,<span class="str">'FIELDSET'</span>,
+            <span class="str">'TEXT_BLOCK'</span>,<span class="str">'DIVIDER'</span>,
+            <span class="str">'CAMPO'</span>
+        )
+    ),
+
+    <span class="cm">-- CAMPO requiere categoría de componente</span>
+    <span class="kw">CONSTRAINT</span> CK_NP_CAMPO_CAT <span class="kw">CHECK</span>(
+        TIPO_NODO != <span class="str">'CAMPO'</span> <span class="kw">OR</span> CODIGO_CATEGORIA_COMPONENTE <span class="kw">IS NOT NULL</span>
+    ),
+
+    <span class="cm">-- No-CAMPO no debe tener categoría de componente</span>
+    <span class="kw">CONSTRAINT</span> CK_NP_LAYOUT_NOCAT <span class="kw">CHECK</span>(
+        TIPO_NODO = <span class="str">'CAMPO'</span> <span class="kw">OR</span> CODIGO_CATEGORIA_COMPONENTE <span class="kw">IS NULL</span>
+    ),
+
+    <span class="cm">-- CLAVE_UI único por versión</span>
+    <span class="kw">CONSTRAINT</span> UK_NP_CLAVE <span class="kw">UNIQUE</span>(CODIGO_VERSION_PLANTILLA, CLAVE_UI),
+
+    <span class="cm">-- FKs</span>
+    <span class="kw">CONSTRAINT</span> FK_NP_VER    <span class="kw">FOREIGN KEY</span>(CODIGO_VERSION_PLANTILLA)    <span class="kw">REFERENCES</span> VERSION_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_NP_PADRE  <span class="kw">FOREIGN KEY</span>(CODIGO_PADRE)                 <span class="kw">REFERENCES</span> NODO_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_NP_CATCMP <span class="kw">FOREIGN KEY</span>(CODIGO_CATEGORIA_COMPONENTE)  <span class="kw">REFERENCES</span> CATEGORIA_COMPONENTE(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_NP_BIBLIO <span class="kw">FOREIGN KEY</span>(CODIGO_BIBLIOTECA_COMPONENTE) <span class="kw">REFERENCES</span> BIBLIOTECA_COMPONENTE(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_NP_CATLOG <span class="kw">FOREIGN KEY</span>(CODIGO_CATALOGO_MAESTRO)      <span class="kw">REFERENCES</span> CATALOGO_MAESTRO(CODIGO)
+);
+
+<span class="cm">-- Índices</span>
+<span class="kw">CREATE INDEX</span> IDX_NP_VERSION     <span class="kw">ON</span> NODO_PLANTILLA(CODIGO_VERSION_PLANTILLA);
+<span class="kw">CREATE INDEX</span> IDX_NP_PADRE       <span class="kw">ON</span> NODO_PLANTILLA(CODIGO_PADRE);
+<span class="kw">CREATE INDEX</span> IDX_NP_VER_ORDEN   <span class="kw">ON</span> NODO_PLANTILLA(CODIGO_VERSION_PLANTILLA, ORDEN);
+<span class="kw">CREATE INDEX</span> IDX_NP_TIPO        <span class="kw">ON</span> NODO_PLANTILLA(TIPO_NODO);
+<span class="kw">CREATE INDEX</span> IDX_NP_CATCMP      <span class="kw">ON</span> NODO_PLANTILLA(CODIGO_CATEGORIA_COMPONENTE);
+<span class="kw">CREATE INDEX</span> IDX_NP_CATLOG      <span class="kw">ON</span> NODO_PLANTILLA(CODIGO_CATALOGO_MAESTRO);</pre>
+
+  <h3>Query CTE recursivo — árbol completo de una versión</h3>
+  <pre><span class="lbl">Oracle SQL · Query</span><span class="cm">-- Carga toda la estructura en una sola query con CONNECT BY</span>
+<span class="kw">SELECT</span>
+    LEVEL                     <span class="kw">AS</span> PROFUNDIDAD,
+    LPAD(<span class="str">' '</span>, (LEVEL<span class="op">-</span><span class="nu">1</span>)<span class="op">*</span><span class="nu">2</span>) <span class="op">||</span> TIPO_NODO  <span class="kw">AS</span> NODO,
+    CODIGO,
+    CODIGO_PADRE,
+    CLAVE_UI,
+    ETIQUETA,
+    ORDEN,
+    TIPO_NODO,
+    CODIGO_CATEGORIA_COMPONENTE,
+    CONFIG_JSON,
+    SYS_CONNECT_BY_PATH(CLAVE_UI, <span class="str">'/'</span>)  <span class="kw">AS</span> RUTA_UI
+<span class="kw">FROM</span>  NODO_PLANTILLA
+<span class="kw">WHERE</span> CODIGO_VERSION_PLANTILLA = <span class="op">:versionId</span>
+<span class="kw">START WITH</span>  CODIGO_PADRE <span class="kw">IS NULL</span>
+<span class="kw">CONNECT BY</span>  PRIOR CODIGO = CODIGO_PADRE
+<span class="kw">ORDER SIBLINGS BY</span> ORDEN;</pre>
+
+  <h3>GRID_COLUMNA_PLANTILLA — actualizada con FK a NODO_PLANTILLA</h3>
+  <pre><span class="lbl">Oracle SQL · DDL</span><span class="kw">CREATE TABLE</span> GRID_COLUMNA_PLANTILLA (
+    CODIGO                   NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    <span class="cm">-- FK al nodo de tipo CAMPO cuya CATEGORIA = GRID</span>
+    CODIGO_NODO_PLANTILLA    NUMBER        <span class="kw">NOT NULL</span>,
+    CLAVE_COLUMNA            VARCHAR2(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+    CABECERA                 VARCHAR2(<span class="nu">200</span>) <span class="kw">NOT NULL</span>,
+    TIPO_DATO                VARCHAR2(<span class="nu">30</span>)  DEFAULT <span class="str">'TEXT'</span>,
+    ORDEN                    NUMBER        <span class="kw">NOT NULL</span>,
+    ANCHO_PX                 NUMBER,
+    ES_ORDENABLE             NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>,
+    ES_FILTRABLE             NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+    ES_EDITABLE_INLINE       NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+    CODIGO_CATALOGO_MAESTRO  NUMBER,
+    CONFIG_CELDA_JSON        CLOB <span class="kw">CONSTRAINT</span> CK_GCP_JSON <span class="kw">CHECK</span>(CONFIG_CELDA_JSON <span class="kw">IS JSON</span>),
+    <span class="kw">CONSTRAINT</span> CK_GCP_TIPO  <span class="kw">CHECK</span>(TIPO_DATO <span class="kw">IN</span>(<span class="str">'TEXT'</span>,<span class="str">'NUMBER'</span>,<span class="str">'CURRENCY'</span>,<span class="str">'DATE'</span>,<span class="str">'BOOLEAN'</span>,<span class="str">'SELECT'</span>)),
+    <span class="kw">CONSTRAINT</span> FK_GCP_NODO  <span class="kw">FOREIGN KEY</span>(CODIGO_NODO_PLANTILLA) <span class="kw">REFERENCES</span> NODO_PLANTILLA(CODIGO) <span class="kw">ON DELETE CASCADE</span>,
+    <span class="kw">CONSTRAINT</span> FK_GCP_CAT   <span class="kw">FOREIGN KEY</span>(CODIGO_CATALOGO_MAESTRO) <span class="kw">REFERENCES</span> CATALOGO_MAESTRO(CODIGO)
+);
+<span class="kw">CREATE INDEX</span> IDX_GCP_NODO <span class="kw">ON</span> GRID_COLUMNA_PLANTILLA(CODIGO_NODO_PLANTILLA);</pre>
+</section>
+
+<!-- ══════════════════════════════
+     05 TABLAS RELACIONADAS COMPLETAS
+══════════════════════════════ -->
+<section id="tablas-relacionadas">
+  <h2><span class="sec-num">05</span> Esquema Completo — Todas las Tablas</h2>
+  <p class="sec-desc">Sin omisiones. Todas las tablas del sistema con sus FK actualizadas apuntando a <code>NODO_PLANTILLA</code> donde antes apuntaban a <code>CAMPO_PLANTILLA</code> o <code>SECCION_PLANTILLA</code>.</p>
+
+  <h3>Módulo 1 · Tipos de Componente</h3>
+  <pre><span class="lbl">Sin cambios</span><span class="kw">CREATE TABLE</span> CATEGORIA_COMPONENTE (
+    CODIGO                NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    IDENTIFICADOR_TECNICO VARCHAR2(<span class="nu">50</span>)  <span class="kw">UNIQUE NOT NULL</span>,
+    NOMBRE_AMIGABLE       VARCHAR2(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+    ICONO_CSS             VARCHAR2(<span class="nu">50</span>),
+    PERMITE_CATALOGO      NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+    PERMITE_HIJOS         NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+    PERMITE_ADJUNTO       NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+    ACTIVO                NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>
+);
+
+<span class="kw">CREATE TABLE</span> BIBLIOTECA_COMPONENTE (
+    CODIGO                          NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_CATEGORIA_COMPONENTE     NUMBER        <span class="kw">NOT NULL</span>,
+    NOMBRE_UI                       VARCHAR2(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+    DESCRIPCION                     VARCHAR2(<span class="nu">300</span>),
+    CATEGORIA_UI                    VARCHAR2(<span class="nu">50</span>),
+    ICONO_CSS                       VARCHAR2(<span class="nu">50</span>),
+    CONFIGURACION_DEFAULT_JSON      CLOB <span class="kw">CONSTRAINT</span> CK_BC_JSON <span class="kw">CHECK</span>(CONFIGURACION_DEFAULT_JSON <span class="kw">IS JSON</span>),
+    ORDEN_CATALOGO                  NUMBER        DEFAULT <span class="nu">0</span>,
+    ACTIVO                          NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>,
+    <span class="kw">CONSTRAINT</span> FK_BC_CAT  <span class="kw">FOREIGN KEY</span>(CODIGO_CATEGORIA_COMPONENTE) <span class="kw">REFERENCES</span> CATEGORIA_COMPONENTE(CODIGO)
+);</pre>
+
+  <h3>Módulo 2 · Catálogos</h3>
+  <pre><span class="lbl">Sin cambios</span><span class="kw">CREATE TABLE</span> CATALOGO_MAESTRO (
+    CODIGO                NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_UNICO          VARCHAR2(<span class="nu">50</span>)  <span class="kw">UNIQUE NOT NULL</span>,
+    NOMBRE                VARCHAR2(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+    DESCRIPCION           VARCHAR2(<span class="nu">300</span>),
+    METADATA_COLUMNAS_JSON CLOB <span class="kw">CONSTRAINT</span> CK_CM_JSON <span class="kw">CHECK</span>(METADATA_COLUMNAS_JSON <span class="kw">IS JSON</span>),
+    PERMITE_JERARQUIA     NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+    ACTIVO                NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>,
+    FECHA_CREACION        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    USUARIO_CREADOR       NUMBER,
+    <span class="kw">CONSTRAINT</span> FK_CM_USR  <span class="kw">FOREIGN KEY</span>(USUARIO_CREADOR) <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);
+
+<span class="kw">CREATE TABLE</span> CATALOGO_DETALLE (
+    CODIGO                  NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_CATALOGO_MAESTRO NUMBER <span class="kw">NOT NULL</span>,
+    CODIGO_ITEM_PADRE       NUMBER,
+    VALOR_CLAVE             VARCHAR2(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+    ETIQUETA                VARCHAR2(<span class="nu">200</span>) <span class="kw">NOT NULL</span>,
+    ATRIBUTOS_EXTRA_JSON    CLOB <span class="kw">CONSTRAINT</span> CK_CD_JSON <span class="kw">CHECK</span>(ATRIBUTOS_EXTRA_JSON <span class="kw">IS JSON</span>),
+    ORDEN                   NUMBER         DEFAULT <span class="nu">0</span>,
+    ACTIVO                  NUMBER(<span class="nu">1</span>)     DEFAULT <span class="nu">1</span>,
+    <span class="kw">CONSTRAINT</span> FK_CD_MAES  <span class="kw">FOREIGN KEY</span>(CODIGO_CATALOGO_MAESTRO) <span class="kw">REFERENCES</span> CATALOGO_MAESTRO(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_CD_PAD   <span class="kw">FOREIGN KEY</span>(CODIGO_ITEM_PADRE)       <span class="kw">REFERENCES</span> CATALOGO_DETALLE(CODIGO)
+);
+<span class="kw">CREATE INDEX</span> IDX_CD_MAESTRO <span class="kw">ON</span> CATALOGO_DETALLE(CODIGO_CATALOGO_MAESTRO);
+<span class="kw">CREATE INDEX</span> IDX_CD_PADRE   <span class="kw">ON</span> CATALOGO_DETALLE(CODIGO_ITEM_PADRE);
+<span class="kw">CREATE INDEX</span> IDX_CD_CLAVE   <span class="kw">ON</span> CATALOGO_DETALLE(VALOR_CLAVE);</pre>
+
+  <h3>Módulo 3 · Semántica Tributaria</h3>
+  <pre><span class="lbl">Sin cambios</span><span class="kw">CREATE TABLE</span> CONCEPTO_TRIBUTARIO (
+    CODIGO           NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_PADRE     NUMBER,
+    CASILLERO_SRI    VARCHAR2(<span class="nu">20</span>),
+    NOMBRE           VARCHAR2(<span class="nu">300</span>) <span class="kw">NOT NULL</span>,
+    DESCRIPCION      VARCHAR2(<span class="nu">500</span>),
+    TIPO_DATO        VARCHAR2(<span class="nu">50</span>)  DEFAULT <span class="str">'MONEDA'</span>,
+    ES_CALCULADO     NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">0</span>,
+    FORMULA_CALCULO  VARCHAR2(<span class="nu">500</span>),
+    VIGENCIA_DESDE   DATE,
+    VIGENCIA_HASTA   DATE,
+    ACTIVO           NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>,
+    <span class="kw">CONSTRAINT</span> FK_CT_PAD <span class="kw">FOREIGN KEY</span>(CODIGO_PADRE) <span class="kw">REFERENCES</span> CONCEPTO_TRIBUTARIO(CODIGO)
+);
+<span class="kw">CREATE INDEX</span> IDX_CT_CASILLERO <span class="kw">ON</span> CONCEPTO_TRIBUTARIO(CASILLERO_SRI);</pre>
+
+  <h3>Módulo 4 · Diseñador de Plantillas</h3>
+  <pre><span class="lbl">Sin cambios excepto lo que ya tenía</span><span class="kw">CREATE TABLE</span> CATEGORIA_PLANTILLA (
+    CODIGO      NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    NOMBRE      VARCHAR2(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+    DESCRIPCION VARCHAR2(<span class="nu">300</span>),
+    ICONO_CSS   VARCHAR2(<span class="nu">50</span>),
+    ORDEN       NUMBER         DEFAULT <span class="nu">0</span>,
+    ACTIVO      NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>
+);
+
+<span class="kw">CREATE TABLE</span> PLANTILLA (
+    CODIGO                     NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_CATEGORIA_PLANTILLA NUMBER        <span class="kw">NOT NULL</span>,
+    IDENTIFICADOR              VARCHAR2(<span class="nu">50</span>)  <span class="kw">UNIQUE NOT NULL</span>,
+    NOMBRE                     VARCHAR2(<span class="nu">200</span>) <span class="kw">NOT NULL</span>,
+    DESCRIPCION                VARCHAR2(<span class="nu">500</span>),
+    FECHA_CREACION             TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    USUARIO_CREADOR            NUMBER,
+    <span class="kw">CONSTRAINT</span> FK_PLT_CAT <span class="kw">FOREIGN KEY</span>(CODIGO_CATEGORIA_PLANTILLA) <span class="kw">REFERENCES</span> CATEGORIA_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_PLT_USR <span class="kw">FOREIGN KEY</span>(USUARIO_CREADOR)            <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);
+
+<span class="kw">CREATE TABLE</span> VERSION_PLANTILLA (
+    CODIGO           NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_PLANTILLA NUMBER        <span class="kw">NOT NULL</span>,
+    NUMERO_VERSION   VARCHAR2(<span class="nu">20</span>)  <span class="kw">NOT NULL</span>,
+    VIGENCIA_DESDE   DATE          <span class="kw">NOT NULL</span>,
+    VIGENCIA_HASTA   DATE,
+    ESTADO           VARCHAR2(<span class="nu">20</span>)  DEFAULT <span class="str">'BORRADOR'</span>,
+    CONFIG_GLOBAL_JSON CLOB <span class="kw">CONSTRAINT</span> CK_VER_JSON <span class="kw">CHECK</span>(CONFIG_GLOBAL_JSON <span class="kw">IS JSON</span>),
+    FECHA_CREACION   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    USUARIO_CREADOR  NUMBER,
+    <span class="kw">CONSTRAINT</span> FK_VER_PLT <span class="kw">FOREIGN KEY</span>(CODIGO_PLANTILLA)  <span class="kw">REFERENCES</span> PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> UK_VER_PLT <span class="kw">UNIQUE</span>(CODIGO_PLANTILLA, NUMERO_VERSION),
+    <span class="kw">CONSTRAINT</span> CK_VER_EST <span class="kw">CHECK</span>(ESTADO <span class="kw">IN</span>(<span class="str">'BORRADOR'</span>,<span class="str">'REVISION'</span>,<span class="str">'PUBLICADA'</span>,<span class="str">'ARCHIVADA'</span>)),
+    <span class="kw">CONSTRAINT</span> FK_VER_USR <span class="kw">FOREIGN KEY</span>(USUARIO_CREADOR) <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);
+
+<span class="kw">CREATE TABLE</span> VERSION_PLANTILLA_HISTORIAL (
+    CODIGO                   NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_VERSION_PLANTILLA NUMBER        <span class="kw">NOT NULL</span>,
+    ESTADO_ANTERIOR          VARCHAR2(<span class="nu">20</span>),
+    ESTADO_NUEVO             VARCHAR2(<span class="nu">20</span>)  <span class="kw">NOT NULL</span>,
+    COMENTARIO               VARCHAR2(<span class="nu">500</span>),
+    USUARIO_RESPONSABLE      NUMBER        <span class="kw">NOT NULL</span>,
+    FECHA_CAMBIO             TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    <span class="kw">CONSTRAINT</span> FK_VPH_VER <span class="kw">FOREIGN KEY</span>(CODIGO_VERSION_PLANTILLA) <span class="kw">REFERENCES</span> VERSION_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_VPH_USR <span class="kw">FOREIGN KEY</span>(USUARIO_RESPONSABLE)      <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);
+
+<span class="cm">-- ▼ TABLA NUEVA (unificada) ─────────────────────────────────────────</span>
+<span class="cm">-- NODO_PLANTILLA está definida en la Sección 04</span>
+
+<span class="cm">-- ▼ TABLA NUEVA ──────────────────────────────────────────────────────</span>
+<span class="cm">-- GRID_COLUMNA_PLANTILLA actualizada (ver Sección 04)</span>
+
+<span class="kw">CREATE TABLE</span> PLANTILLA_PERMISO_ROL (
+    CODIGO           NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_PLANTILLA NUMBER       <span class="kw">NOT NULL</span>,
+    CODIGO_ROL       NUMBER       <span class="kw">NOT NULL</span>,
+    PUEDE_DISENAR    NUMBER(<span class="nu">1</span>)   DEFAULT <span class="nu">0</span>,
+    PUEDE_PUBLICAR   NUMBER(<span class="nu">1</span>)   DEFAULT <span class="nu">0</span>,
+    PUEDE_EJECUTAR   NUMBER(<span class="nu">1</span>)   DEFAULT <span class="nu">1</span>,
+    <span class="kw">CONSTRAINT</span> UK_PPR     <span class="kw">UNIQUE</span>(CODIGO_PLANTILLA, CODIGO_ROL),
+    <span class="kw">CONSTRAINT</span> FK_PPR_PLT <span class="kw">FOREIGN KEY</span>(CODIGO_PLANTILLA) <span class="kw">REFERENCES</span> PLANTILLA(CODIGO)
+);</pre>
+
+  <h3>Módulo 4b · Reglas (FK ahora apuntan a NODO_PLANTILLA)</h3>
+  <pre><span class="lbl">FK actualizadas → NODO_PLANTILLA</span><span class="kw">CREATE TABLE</span> REGLA_VALIDACION (
+    CODIGO         NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    NOMBRE         VARCHAR2(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+    TIPO           VARCHAR2(<span class="nu">30</span>)  <span class="kw">NOT NULL</span>,
+    EXPRESION      VARCHAR2(<span class="nu">500</span>),
+    MENSAJE_ERROR  VARCHAR2(<span class="nu">300</span>),
+    REUTILIZABLE   NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>,
+    ACTIVO         NUMBER(<span class="nu">1</span>)    DEFAULT <span class="nu">1</span>
+);
+
+<span class="kw">CREATE TABLE</span> NODO_REGLA_VALIDACION (          <span class="cm">-- era CAMPO_REGLA_VALIDACION</span>
+    CODIGO_NODO_PLANTILLA   NUMBER <span class="kw">NOT NULL</span>,  <span class="cm">-- solo nodos TIPO_NODO='CAMPO'</span>
+    CODIGO_REGLA_VALIDACION NUMBER <span class="kw">NOT NULL</span>,
+    ORDEN_EJECUCION         NUMBER DEFAULT <span class="nu">0</span>,
+    PARAMETROS_JSON         CLOB <span class="kw">CONSTRAINT</span> CK_NRV_JSON <span class="kw">CHECK</span>(PARAMETROS_JSON <span class="kw">IS JSON</span>),
+    <span class="kw">PRIMARY KEY</span>(CODIGO_NODO_PLANTILLA, CODIGO_REGLA_VALIDACION),
+    <span class="kw">CONSTRAINT</span> FK_NRV_NODO  <span class="kw">FOREIGN KEY</span>(CODIGO_NODO_PLANTILLA)   <span class="kw">REFERENCES</span> NODO_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_NRV_REGLA <span class="kw">FOREIGN KEY</span>(CODIGO_REGLA_VALIDACION) <span class="kw">REFERENCES</span> REGLA_VALIDACION(CODIGO)
+);
+
+<span class="kw">CREATE TABLE</span> REGLA_CONDICIONAL (
+    CODIGO               NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_NODO_PLANTILLA NUMBER       <span class="kw">NOT NULL</span>, <span class="cm">-- nodo objetivo de la acción</span>
+    ACCION               VARCHAR2(<span class="nu">20</span>) <span class="kw">NOT NULL</span>,
+    CONECTOR_LOGICO      VARCHAR2(<span class="nu">5</span>)  DEFAULT <span class="str">'AND'</span>,
+    ORDEN                NUMBER        DEFAULT <span class="nu">0</span>,
+    <span class="kw">CONSTRAINT</span> CK_RC_ACC  <span class="kw">CHECK</span>(ACCION <span class="kw">IN</span>(<span class="str">'SHOW'</span>,<span class="str">'HIDE'</span>,<span class="str">'ENABLE'</span>,<span class="str">'DISABLE'</span>,<span class="str">'REQUIRE'</span>,<span class="str">'OPTIONAL'</span>,<span class="str">'SET_VALUE'</span>)),
+    <span class="kw">CONSTRAINT</span> CK_RC_CON  <span class="kw">CHECK</span>(CONECTOR_LOGICO <span class="kw">IN</span>(<span class="str">'AND'</span>,<span class="str">'OR'</span>)),
+    <span class="kw">CONSTRAINT</span> FK_RC_NODO <span class="kw">FOREIGN KEY</span>(CODIGO_NODO_PLANTILLA) <span class="kw">REFERENCES</span> NODO_PLANTILLA(CODIGO)
+);
+
+<span class="kw">CREATE TABLE</span> REGLA_CONDICIONAL_DETALLE (
+    CODIGO                   NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_REGLA_CONDICIONAL NUMBER        <span class="kw">NOT NULL</span>,
+    CLAVE_UI_NODO_EVALUADO   VARCHAR2(<span class="nu">100</span>) <span class="kw">NOT NULL</span>, <span class="cm">-- clave del nodo cuyo valor se evalúa</span>
+    OPERADOR                 VARCHAR2(<span class="nu">20</span>)  <span class="kw">NOT NULL</span>,
+    VALOR_REFERENCIA         VARCHAR2(<span class="nu">200</span>),
+    <span class="kw">CONSTRAINT</span> CK_RCD_OP  <span class="kw">CHECK</span>(OPERADOR <span class="kw">IN</span>(<span class="str">'EQUALS'</span>,<span class="str">'NOT_EQUALS'</span>,<span class="str">'GREATER_THAN'</span>,<span class="str">'LESS_THAN'</span>,<span class="str">'CONTAINS'</span>,<span class="str">'IS_EMPTY'</span>,<span class="str">'IS_NOT_EMPTY'</span>)),
+    <span class="kw">CONSTRAINT</span> FK_RCD_RC  <span class="kw">FOREIGN KEY</span>(CODIGO_REGLA_CONDICIONAL) <span class="kw">REFERENCES</span> REGLA_CONDICIONAL(CODIGO) <span class="kw">ON DELETE CASCADE</span>
+);
+
+<span class="kw">CREATE TABLE</span> NODO_PLANTILLA_CONCEPTO (         <span class="cm">-- era CAMPO_PLANTILLA_CONCEPTO</span>
+    CODIGO                     NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_NODO_PLANTILLA      NUMBER <span class="kw">NOT NULL</span>,
+    CODIGO_CONCEPTO_TRIBUTARIO NUMBER <span class="kw">NOT NULL</span>,
+    TIPO_OPERACION             VARCHAR2(<span class="nu">20</span>) DEFAULT <span class="str">'ASIGNACION'</span>,
+    <span class="kw">CONSTRAINT</span> CK_NPC_OP   <span class="kw">CHECK</span>(TIPO_OPERACION <span class="kw">IN</span>(<span class="str">'ASIGNACION'</span>,<span class="str">'CALCULADO'</span>,<span class="str">'ACUMULACION'</span>)),
+    <span class="kw">CONSTRAINT</span> FK_NPC_NODO <span class="kw">FOREIGN KEY</span>(CODIGO_NODO_PLANTILLA)      <span class="kw">REFERENCES</span> NODO_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_NPC_CON  <span class="kw">FOREIGN KEY</span>(CODIGO_CONCEPTO_TRIBUTARIO) <span class="kw">REFERENCES</span> CONCEPTO_TRIBUTARIO(CODIGO)
+);</pre>
+
+  <h3>Módulo 5 · Ejecución (sin cambios en estructura, FK renombradas)</h3>
+  <pre><span class="lbl">FK apuntan a NODO_PLANTILLA donde antes iban a CAMPO_PLANTILLA</span><span class="kw">CREATE TABLE</span> FORMULARIO_DECLARACION (
+    CODIGO                   NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_VERSION_PLANTILLA NUMBER        <span class="kw">NOT NULL</span>,
+    RUC_CONTRIBUYENTE        VARCHAR2(<span class="nu">13</span>)  <span class="kw">NOT NULL</span>,
+    PERIODO_FISCAL           VARCHAR2(<span class="nu">10</span>)  <span class="kw">NOT NULL</span>,
+    NUMERO_DECLARACION       VARCHAR2(<span class="nu">30</span>)  <span class="kw">UNIQUE</span>,
+    ESTADO                   VARCHAR2(<span class="nu">20</span>)  DEFAULT <span class="str">'BORRADOR'</span>,
+    PRIORIDAD                VARCHAR2(<span class="nu">10</span>)  DEFAULT <span class="str">'NORMAL'</span>,
+    DATOS_JSON               CLOB <span class="kw">CONSTRAINT</span> CK_DEC_JSON <span class="kw">CHECK</span>(DATOS_JSON <span class="kw">IS JSON</span>),
+    USUARIO_CREADOR          NUMBER,
+    FECHA_CREACION           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    USUARIO_MODIFICADOR      NUMBER,
+    FECHA_MODIFICACION       TIMESTAMP,
+    USUARIO_ENVIO            NUMBER,
+    FECHA_ENVIO              TIMESTAMP,
+    <span class="kw">CONSTRAINT</span> CK_DEC_EST  <span class="kw">CHECK</span>(ESTADO <span class="kw">IN</span>(<span class="str">'BORRADOR'</span>,<span class="str">'EN_REVISION'</span>,<span class="str">'APROBADO'</span>,<span class="str">'ENVIADO'</span>,<span class="str">'RECHAZADO'</span>)),
+    <span class="kw">CONSTRAINT</span> FK_DEC_VER  <span class="kw">FOREIGN KEY</span>(CODIGO_VERSION_PLANTILLA) <span class="kw">REFERENCES</span> VERSION_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_DEC_UCRE <span class="kw">FOREIGN KEY</span>(USUARIO_CREADOR)          <span class="kw">REFERENCES</span> USUARIO(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_DEC_UMOD <span class="kw">FOREIGN KEY</span>(USUARIO_MODIFICADOR)      <span class="kw">REFERENCES</span> USUARIO(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_DEC_UENV <span class="kw">FOREIGN KEY</span>(USUARIO_ENVIO)            <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);
+<span class="kw">CREATE INDEX</span> IDX_DEC_RUC     <span class="kw">ON</span> FORMULARIO_DECLARACION(RUC_CONTRIBUYENTE);
+<span class="kw">CREATE INDEX</span> IDX_DEC_PERIODO <span class="kw">ON</span> FORMULARIO_DECLARACION(PERIODO_FISCAL);
+<span class="kw">CREATE INDEX</span> IDX_DEC_ESTADO  <span class="kw">ON</span> FORMULARIO_DECLARACION(ESTADO);
+
+<span class="kw">CREATE TABLE</span> DECLARACION_HISTORIAL_ESTADO (
+    CODIGO                        NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_FORMULARIO_DECLARACION NUMBER        <span class="kw">NOT NULL</span>,
+    ESTADO_ANTERIOR               VARCHAR2(<span class="nu">20</span>),
+    ESTADO_NUEVO                  VARCHAR2(<span class="nu">20</span>)  <span class="kw">NOT NULL</span>,
+    COMENTARIO                    VARCHAR2(<span class="nu">1000</span>),
+    USUARIO_RESPONSABLE           NUMBER        <span class="kw">NOT NULL</span>,
+    FECHA_CAMBIO                  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    <span class="kw">CONSTRAINT</span> FK_DHE_DEC <span class="kw">FOREIGN KEY</span>(CODIGO_FORMULARIO_DECLARACION) <span class="kw">REFERENCES</span> FORMULARIO_DECLARACION(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_DHE_USR <span class="kw">FOREIGN KEY</span>(USUARIO_RESPONSABLE)           <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);
+
+<span class="kw">CREATE TABLE</span> DETALLE_VALOR_CONCEPTO (
+    CODIGO_FORMULARIO_DECLARACION NUMBER <span class="kw">NOT NULL</span>,
+    CODIGO_CONCEPTO_TRIBUTARIO    NUMBER <span class="kw">NOT NULL</span>,
+    VALOR_CALCULADO               NUMBER(<span class="nu">19</span>,<span class="nu">4</span>),
+    FECHA_CALCULO                 TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    <span class="kw">PRIMARY KEY</span>(CODIGO_FORMULARIO_DECLARACION, CODIGO_CONCEPTO_TRIBUTARIO),
+    <span class="kw">CONSTRAINT</span> FK_DVC_DEC <span class="kw">FOREIGN KEY</span>(CODIGO_FORMULARIO_DECLARACION) <span class="kw">REFERENCES</span> FORMULARIO_DECLARACION(CODIGO) <span class="kw">ON DELETE CASCADE</span>,
+    <span class="kw">CONSTRAINT</span> FK_DVC_CON <span class="kw">FOREIGN KEY</span>(CODIGO_CONCEPTO_TRIBUTARIO)    <span class="kw">REFERENCES</span> CONCEPTO_TRIBUTARIO(CODIGO)
+);
+
+<span class="kw">CREATE TABLE</span> DECLARACION_OBSERVACION (
+    CODIGO                        NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_FORMULARIO_DECLARACION NUMBER         <span class="kw">NOT NULL</span>,
+    CODIGO_NODO_PLANTILLA         NUMBER,        <span class="cm">-- era CODIGO_CAMPO_PLANTILLA</span>
+    TIPO                          VARCHAR2(<span class="nu">20</span>)   DEFAULT <span class="str">'GENERAL'</span>,
+    MENSAJE                       VARCHAR2(<span class="nu">1000</span>) <span class="kw">NOT NULL</span>,
+    RESUELTO                      NUMBER(<span class="nu">1</span>)      DEFAULT <span class="nu">0</span>,
+    USUARIO_CREADOR               NUMBER         <span class="kw">NOT NULL</span>,
+    FECHA_CREACION                TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    USUARIO_RESOLUTOR             NUMBER,
+    FECHA_RESOLUCION              TIMESTAMP,
+    <span class="kw">CONSTRAINT</span> CK_DO_TIPO  <span class="kw">CHECK</span>(TIPO <span class="kw">IN</span>(<span class="str">'GENERAL'</span>,<span class="str">'CAMPO'</span>,<span class="str">'SECCION'</span>,<span class="str">'CALCULO'</span>)),
+    <span class="kw">CONSTRAINT</span> FK_DO_DEC   <span class="kw">FOREIGN KEY</span>(CODIGO_FORMULARIO_DECLARACION) <span class="kw">REFERENCES</span> FORMULARIO_DECLARACION(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_DO_NODO  <span class="kw">FOREIGN KEY</span>(CODIGO_NODO_PLANTILLA)         <span class="kw">REFERENCES</span> NODO_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_DO_UCRE  <span class="kw">FOREIGN KEY</span>(USUARIO_CREADOR)               <span class="kw">REFERENCES</span> USUARIO(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_DO_URES  <span class="kw">FOREIGN KEY</span>(USUARIO_RESOLUTOR)             <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);
+
+<span class="kw">CREATE TABLE</span> DECLARACION_ADJUNTO (
+    CODIGO                        NUMBER <span class="kw">GENERATED ALWAYS AS IDENTITY PRIMARY KEY</span>,
+    CODIGO_FORMULARIO_DECLARACION NUMBER        <span class="kw">NOT NULL</span>,
+    CODIGO_NODO_PLANTILLA         NUMBER,       <span class="cm">-- era CODIGO_CAMPO_PLANTILLA</span>
+    NOMBRE_ORIGINAL               VARCHAR2(<span class="nu">255</span>) <span class="kw">NOT NULL</span>,
+    NOMBRE_ALMACENADO             VARCHAR2(<span class="nu">255</span>) <span class="kw">NOT NULL</span>,
+    RUTA_ALMACENAMIENTO           VARCHAR2(<span class="nu">500</span>) <span class="kw">NOT NULL</span>,
+    MIME_TYPE                     VARCHAR2(<span class="nu">100</span>),
+    TAMANO_BYTES                  NUMBER,
+    HASH_SHA256                   VARCHAR2(<span class="nu">64</span>),
+    FECHA_CARGA                   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    USUARIO_CARGA                 NUMBER,
+    <span class="kw">CONSTRAINT</span> FK_DA_DEC  <span class="kw">FOREIGN KEY</span>(CODIGO_FORMULARIO_DECLARACION) <span class="kw">REFERENCES</span> FORMULARIO_DECLARACION(CODIGO) <span class="kw">ON DELETE CASCADE</span>,
+    <span class="kw">CONSTRAINT</span> FK_DA_NODO <span class="kw">FOREIGN KEY</span>(CODIGO_NODO_PLANTILLA)         <span class="kw">REFERENCES</span> NODO_PLANTILLA(CODIGO),
+    <span class="kw">CONSTRAINT</span> FK_DA_USR  <span class="kw">FOREIGN KEY</span>(USUARIO_CARGA)                 <span class="kw">REFERENCES</span> USUARIO(CODIGO)
+);</pre>
+
+  <h3>Resumen de tablas del sistema completo v2.0</h3>
+  <table>
+    <tr><th>#</th><th>Tabla</th><th>Módulo</th><th>Estado v2.0</th><th>Notas</th></tr>
+    <tr><td>1</td><td>CATEGORIA_COMPONENTE</td><td>Componentes</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>2</td><td>BIBLIOTECA_COMPONENTE</td><td>Componentes</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>3</td><td>CATALOGO_MAESTRO</td><td>Catálogos</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>4</td><td>CATALOGO_DETALLE</td><td>Catálogos</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>5</td><td>CONCEPTO_TRIBUTARIO</td><td>Tributario</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>6</td><td>CATEGORIA_PLANTILLA</td><td>Diseñador</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>7</td><td>PLANTILLA</td><td>Diseñador</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>8</td><td>VERSION_PLANTILLA</td><td>Diseñador</td><td><span class="badge b-mod">+CHECK ESTADO</span></td><td>—</td></tr>
+    <tr><td>9</td><td>VERSION_PLANTILLA_HISTORIAL</td><td>Diseñador</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>10</td><td><strong>NODO_PLANTILLA</strong></td><td>Diseñador</td><td><span class="badge b-new">NUEVA (unificada)</span></td><td>Absorbe SECCION + CAMPO</td></tr>
+    <tr><td>11</td><td>~~SECCION_PLANTILLA~~</td><td>—</td><td><span class="badge b-del">ELIMINADA</span></td><td>Absorbida en NODO_PLANTILLA</td></tr>
+    <tr><td>12</td><td>~~CAMPO_PLANTILLA~~</td><td>—</td><td><span class="badge b-del">ELIMINADA</span></td><td>Absorbida en NODO_PLANTILLA</td></tr>
+    <tr><td>13</td><td>GRID_COLUMNA_PLANTILLA</td><td>Diseñador</td><td><span class="badge b-mod">FK → NODO</span></td><td>FK renombrada a CODIGO_NODO_PLANTILLA</td></tr>
+    <tr><td>14</td><td>PLANTILLA_PERMISO_ROL</td><td>Diseñador</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>Nueva desde v1.1</td></tr>
+    <tr><td>15</td><td>REGLA_VALIDACION</td><td>Diseñador</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>16</td><td>NODO_REGLA_VALIDACION</td><td>Diseñador</td><td><span class="badge b-mod">RENOMBRADA</span></td><td>Era CAMPO_REGLA_VALIDACION</td></tr>
+    <tr><td>17</td><td>REGLA_CONDICIONAL</td><td>Diseñador</td><td><span class="badge b-mod">FK → NODO</span></td><td>+CHECK OPERADOR en detalle</td></tr>
+    <tr><td>18</td><td>REGLA_CONDICIONAL_DETALLE</td><td>Diseñador</td><td><span class="badge b-mod">+CHECK OPERADOR</span></td><td>—</td></tr>
+    <tr><td>19</td><td>NODO_PLANTILLA_CONCEPTO</td><td>Tributario</td><td><span class="badge b-mod">RENOMBRADA</span></td><td>Era CAMPO_PLANTILLA_CONCEPTO</td></tr>
+    <tr><td>20</td><td>FORMULARIO_DECLARACION</td><td>Ejecución</td><td><span class="badge b-mod">+CHECK ESTADO</span></td><td>—</td></tr>
+    <tr><td>21</td><td>DECLARACION_HISTORIAL_ESTADO</td><td>Ejecución</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>22</td><td>DETALLE_VALOR_CONCEPTO</td><td>Ejecución</td><td><span class="badge b-ok">SIN CAMBIO</span></td><td>—</td></tr>
+    <tr><td>23</td><td>DECLARACION_OBSERVACION</td><td>Ejecución</td><td><span class="badge b-mod">FK → NODO</span></td><td>CODIGO_CAMPO → CODIGO_NODO</td></tr>
+    <tr><td>24</td><td>DECLARACION_ADJUNTO</td><td>Ejecución</td><td><span class="badge b-mod">FK → NODO</span></td><td>CODIGO_CAMPO → CODIGO_NODO</td></tr>
+  </table>
+</section>
+
+<!-- ══════════════════════════════
+     06 ERD COMPLETO
+══════════════════════════════ -->
+<section id="erd-completo">
+  <h2><span class="sec-num">06</span> ERD Completo v2.0 — Sin Omisiones</h2>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#1a3a60;border:1px solid #5b9cf6"></div> Módulo Componentes</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a2a1a;border:1px solid #4df0a0"></div> Módulo Tributario</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a2040;border:1px solid #5b9cf6"></div> Módulo Diseñador</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3a1a3a;border:1px solid #e05cf6"></div> NODO_PLANTILLA (nueva)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2a1a10;border:1px solid #f6a94b"></div> Módulo Ejecución</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a1a2a;border:1px solid #8892aa"></div> Reglas</div>
+  </div>
+
+  <div class="erd-scroll">
+<svg class="erd" width="1600" height="1200" viewBox="0 0 1600 1200" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a1" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3z" fill="#5b9cf6" opacity=".7"/></marker>
+  <marker id="a2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3z" fill="#4df0a0" opacity=".7"/></marker>
+  <marker id="a3" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3z" fill="#f6a94b" opacity=".7"/></marker>
+  <marker id="a4" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3z" fill="#e05cf6" opacity=".7"/></marker>
+  <marker id="a5" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3z" fill="#8892aa" opacity=".7"/></marker>
+</defs>
+
+<!-- ════ MACRO: node(x,y,w,h, fill, stroke, title, titleColor, rows[]) ════ -->
+<!-- Usamos rect + text directo para compatibilidad -->
+
+<!-- ─────────────────────────────────────────
+     COL 1: COMPONENTES  (x=20)
+───────────────────────────────────────────── -->
+
+<!-- CATEGORIA_COMPONENTE -->
+<g transform="translate(20,40)">
+  <rect width="220" height="120" rx="7" fill="#0f1a30" stroke="#5b9cf6" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a3a60"/>
+  <rect width="220" height="13" y="13" fill="#1a3a60"/>
+  <text x="110" y="17" text-anchor="middle" fill="#5b9cf6" class="n-title">CATEGORIA_COMPONENTE</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col">    IDENTIFICADOR_TECNICO (UQ)</text>
+  <text x="8" y="70" class="n-col">    NOMBRE_AMIGABLE</text>
+  <text x="8" y="84" class="n-col">    PERMITE_CATALOGO · PERMITE_HIJOS</text>
+  <text x="8" y="98" class="n-col">    PERMITE_ADJUNTO · ACTIVO</text>
+  <text x="8" y="112" class="n-col" fill="#546070">    ICONO_CSS</text>
+</g>
+
+<!-- BIBLIOTECA_COMPONENTE -->
+<g transform="translate(20,185)">
+  <rect width="220" height="110" rx="7" fill="#0f1a30" stroke="#5b9cf6" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a3a60"/>
+  <rect width="220" height="13" y="13" fill="#1a3a60"/>
+  <text x="110" y="17" text-anchor="middle" fill="#5b9cf6" class="n-title">BIBLIOTECA_COMPONENTE</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_CATEGORIA_COMPONENTE</text>
+  <text x="8" y="70" class="n-col">    NOMBRE_UI · CATEGORIA_UI</text>
+  <text x="8" y="84" class="n-col">    CONFIGURACION_DEFAULT_JSON</text>
+  <text x="8" y="98" class="n-col">    ORDEN_CATALOGO · ACTIVO</text>
+</g>
+
+<!-- ─────────────────────────────────────────
+     COL 2: CATÁLOGOS (x=270)
+───────────────────────────────────────────── -->
+
+<!-- CATALOGO_MAESTRO -->
+<g transform="translate(270,40)">
+  <rect width="220" height="110" rx="7" fill="#0f200f" stroke="#4df0a0" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a3a1a"/>
+  <rect width="220" height="13" y="13" fill="#1a3a1a"/>
+  <text x="110" y="17" text-anchor="middle" fill="#4df0a0" class="n-title">CATALOGO_MAESTRO</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col">    CODIGO_UNICO (UQ)</text>
+  <text x="8" y="70" class="n-col">    NOMBRE · PERMITE_JERARQUIA</text>
+  <text x="8" y="84" class="n-col">    METADATA_COLUMNAS_JSON</text>
+  <text x="8" y="98" class="n-col n-col-fk">FK USUARIO_CREADOR</text>
+</g>
+
+<!-- CATALOGO_DETALLE -->
+<g transform="translate(270,175)">
+  <rect width="220" height="110" rx="7" fill="#0f200f" stroke="#4df0a0" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a3a1a"/>
+  <rect width="220" height="13" y="13" fill="#1a3a1a"/>
+  <text x="110" y="17" text-anchor="middle" fill="#4df0a0" class="n-title">CATALOGO_DETALLE</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_CATALOGO_MAESTRO</text>
+  <text x="8" y="70" class="n-col n-col-fk">FK CODIGO_ITEM_PADRE (self)</text>
+  <text x="8" y="84" class="n-col">    VALOR_CLAVE · ETIQUETA</text>
+  <text x="8" y="98" class="n-col">    ATRIBUTOS_EXTRA_JSON · ORDEN</text>
+</g>
+
+<!-- ─────────────────────────────────────────
+     COL 3: TRIBUTARIO (x=520)
+───────────────────────────────────────────── -->
+
+<!-- CONCEPTO_TRIBUTARIO -->
+<g transform="translate(520,40)">
+  <rect width="220" height="130" rx="7" fill="#0f200f" stroke="#4df0a0" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a3a1a"/>
+  <rect width="220" height="13" y="13" fill="#1a3a1a"/>
+  <text x="110" y="17" text-anchor="middle" fill="#4df0a0" class="n-title">CONCEPTO_TRIBUTARIO</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_PADRE (self)</text>
+  <text x="8" y="70" class="n-col">    CASILLERO_SRI · NOMBRE</text>
+  <text x="8" y="84" class="n-col">    TIPO_DATO · ES_CALCULADO</text>
+  <text x="8" y="98" class="n-col">    FORMULA_CALCULO</text>
+  <text x="8" y="112" class="n-col">    VIGENCIA_DESDE / HASTA</text>
+  <text x="8" y="126" class="n-col">    ACTIVO</text>
+</g>
+
+<!-- ─────────────────────────────────────────
+     COL 4: DISEÑADOR (x=20, y=340+)
+───────────────────────────────────────────── -->
+
+<!-- CATEGORIA_PLANTILLA -->
+<g transform="translate(20,380)">
+  <rect width="220" height="90" rx="7" fill="#101828" stroke="#5b9cf6" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a2a40"/>
+  <rect width="220" height="13" y="13" fill="#1a2a40"/>
+  <text x="110" y="17" text-anchor="middle" fill="#5b9cf6" class="n-title">CATEGORIA_PLANTILLA</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col">    NOMBRE · DESCRIPCION</text>
+  <text x="8" y="70" class="n-col">    ICONO_CSS · ORDEN · ACTIVO</text>
+</g>
+
+<!-- PLANTILLA -->
+<g transform="translate(20,495)">
+  <rect width="220" height="100" rx="7" fill="#101828" stroke="#5b9cf6" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a2a40"/>
+  <rect width="220" height="13" y="13" fill="#1a2a40"/>
+  <text x="110" y="17" text-anchor="middle" fill="#5b9cf6" class="n-title">PLANTILLA</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_CATEGORIA_PLANTILLA</text>
+  <text x="8" y="70" class="n-col">    IDENTIFICADOR (UQ) · NOMBRE</text>
+  <text x="8" y="84" class="n-col n-col-fk">FK USUARIO_CREADOR</text>
+</g>
+
+<!-- PLANTILLA_PERMISO_ROL -->
+<g transform="translate(20,622)">
+  <rect width="220" height="90" rx="7" fill="#101828" stroke="#5b9cf6" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a2a40"/>
+  <rect width="220" height="13" y="13" fill="#1a2a40"/>
+  <text x="110" y="17" text-anchor="middle" fill="#5b9cf6" class="n-title">PLANTILLA_PERMISO_ROL</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_PLANTILLA</text>
+  <text x="8" y="70" class="n-col">    CODIGO_ROL</text>
+  <text x="8" y="84" class="n-col">    PUEDE_DISENAR · PUBLICAR · EJECUTAR</text>
+</g>
+
+<!-- VERSION_PLANTILLA -->
+<g transform="translate(270,380)">
+  <rect width="220" height="120" rx="7" fill="#101828" stroke="#5b9cf6" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a2a40"/>
+  <rect width="220" height="13" y="13" fill="#1a2a40"/>
+  <text x="110" y="17" text-anchor="middle" fill="#5b9cf6" class="n-title">VERSION_PLANTILLA</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_PLANTILLA</text>
+  <text x="8" y="70" class="n-col">    NUMERO_VERSION (UQ por plt)</text>
+  <text x="8" y="84" class="n-col">    ESTADO · VIGENCIA_DESDE/HASTA</text>
+  <text x="8" y="98" class="n-col">    CONFIG_GLOBAL_JSON</text>
+  <text x="8" y="112" class="n-col n-col-fk">FK USUARIO_CREADOR</text>
+</g>
+
+<!-- VERSION_PLANTILLA_HISTORIAL -->
+<g transform="translate(270,525)">
+  <rect width="220" height="100" rx="7" fill="#101828" stroke="#5b9cf6" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a2a40"/>
+  <rect width="220" height="13" y="13" fill="#1a2a40"/>
+  <text x="110" y="17" text-anchor="middle" fill="#5b9cf6" class="n-title">VERSION_PLANTILLA_HISTORIAL</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_VERSION_PLANTILLA</text>
+  <text x="8" y="70" class="n-col">    ESTADO_ANTERIOR · ESTADO_NUEVO</text>
+  <text x="8" y="84" class="n-col">    COMENTARIO · FECHA_CAMBIO</text>
+  <text x="8" y="98" class="n-col n-col-fk">FK USUARIO_RESPONSABLE</text>
+</g>
+
+<!-- ─────────────────────────────────────────
+     NODO_PLANTILLA — tabla unificada central
+───────────────────────────────────────────── -->
+<g transform="translate(560,360)">
+  <rect width="260" height="210" rx="8" fill="#1e0a2e" stroke="#e05cf6" stroke-width="2"/>
+  <rect width="260" height="28" rx="8" fill="#3a1a5a"/>
+  <rect width="260" height="14" y="14" fill="#3a1a5a"/>
+  <!-- estrella badge -->
+  <text x="238" y="18" text-anchor="middle" fill="#e05cf6" font-size="11">★</text>
+  <text x="118" y="18" text-anchor="middle" fill="#e05cf6" class="n-title" font-size="10">NODO_PLANTILLA</text>
+  <text x="8" y="44" class="n-col n-col-key">PK  CODIGO</text>
+  <text x="8" y="58" class="n-col n-col-fk">FK  CODIGO_VERSION_PLANTILLA</text>
+  <text x="8" y="72" class="n-col n-col-fk">FK  CODIGO_PADRE (self-ref)</text>
+  <text x="8" y="86" class="n-col n-col-hi">    TIPO_NODO (PAGE/TAB/PANEL/…/CAMPO)</text>
+  <text x="8" y="100" class="n-col">    CLAVE_UI (UQ por versión) · ETIQUETA</text>
+  <text x="8" y="114" class="n-col">    ORDEN · ES_VISIBLE · ES_EDITABLE</text>
+  <text x="8" y="128" class="n-col">    ES_OBLIGATORIO · ES_READONLY</text>
+  <text x="8" y="142" class="n-col" fill="#546070">— Layout —</text>
+  <text x="8" y="156" class="n-col">    ES_COLAPSABLE · CONTENIDO_HTML</text>
+  <text x="8" y="170" class="n-col" fill="#546070">— Campo —</text>
+  <text x="8" y="184" class="n-col n-col-fk">FK  CODIGO_CATEGORIA_COMPONENTE</text>
+  <text x="8" y="198" class="n-col n-col-fk">FK  CODIGO_BIBLIOTECA_COMPONENTE</text>
+  <text x="8" y="212" class="n-col n-col-fk">FK  CODIGO_CATALOGO_MAESTRO · CONFIG_JSON</text>
+</g>
+
+<!-- GRID_COLUMNA_PLANTILLA -->
+<g transform="translate(560,600)">
+  <rect width="260" height="120" rx="7" fill="#101828" stroke="#5b9cf6" stroke-width="1.5"/>
+  <rect width="260" height="26" rx="7" fill="#1a2a40"/>
+  <rect width="260" height="13" y="13" fill="#1a2a40"/>
+  <text x="130" y="17" text-anchor="middle" fill="#5b9cf6" class="n-title">GRID_COLUMNA_PLANTILLA</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_NODO_PLANTILLA</text>
+  <text x="8" y="70" class="n-col">    CLAVE_COLUMNA · CABECERA · TIPO_DATO</text>
+  <text x="8" y="84" class="n-col">    ORDEN · ANCHO_PX</text>
+  <text x="8" y="98" class="n-col">    ES_ORDENABLE · ES_FILTRABLE</text>
+  <text x="8" y="112" class="n-col">    ES_EDITABLE_INLINE · CONFIG_CELDA_JSON</text>
+</g>
+
+<!-- ─────────────────────────────────────────
+     REGLAS (x=870)
+───────────────────────────────────────────── -->
+
+<!-- REGLA_VALIDACION -->
+<g transform="translate(870,40)">
+  <rect width="220" height="90" rx="7" fill="#131320" stroke="#8892aa" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#20203a"/>
+  <rect width="220" height="13" y="13" fill="#20203a"/>
+  <text x="110" y="17" text-anchor="middle" fill="#c8cce0" class="n-title">REGLA_VALIDACION</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col">    NOMBRE · TIPO</text>
+  <text x="8" y="70" class="n-col">    EXPRESION · MENSAJE_ERROR</text>
+  <text x="8" y="84" class="n-col">    REUTILIZABLE · ACTIVO</text>
+</g>
+
+<!-- NODO_REGLA_VALIDACION -->
+<g transform="translate(870,160)">
+  <rect width="220" height="90" rx="7" fill="#131320" stroke="#8892aa" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#20203a"/>
+  <rect width="220" height="13" y="13" fill="#20203a"/>
+  <text x="110" y="17" text-anchor="middle" fill="#c8cce0" class="n-title">NODO_REGLA_VALIDACION</text>
+  <text x="8" y="42" class="n-col n-col-key">PK (NODO, REGLA)</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_NODO_PLANTILLA</text>
+  <text x="8" y="70" class="n-col n-col-fk">FK CODIGO_REGLA_VALIDACION</text>
+  <text x="8" y="84" class="n-col">    ORDEN_EJECUCION · PARAMETROS_JSON</text>
+</g>
+
+<!-- REGLA_CONDICIONAL -->
+<g transform="translate(870,280)">
+  <rect width="220" height="100" rx="7" fill="#131320" stroke="#8892aa" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#20203a"/>
+  <rect width="220" height="13" y="13" fill="#20203a"/>
+  <text x="110" y="17" text-anchor="middle" fill="#c8cce0" class="n-title">REGLA_CONDICIONAL</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_NODO_PLANTILLA</text>
+  <text x="8" y="70" class="n-col">    ACCION (SHOW/HIDE/ENABLE…)</text>
+  <text x="8" y="84" class="n-col">    CONECTOR_LOGICO (AND/OR)</text>
+  <text x="8" y="98" class="n-col">    ORDEN</text>
+</g>
+
+<!-- REGLA_CONDICIONAL_DETALLE -->
+<g transform="translate(870,410)">
+  <rect width="220" height="100" rx="7" fill="#131320" stroke="#8892aa" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#20203a"/>
+  <rect width="220" height="13" y="13" fill="#20203a"/>
+  <text x="110" y="17" text-anchor="middle" fill="#c8cce0" class="n-title">REGLA_CONDICIONAL_DETALLE</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_REGLA_CONDICIONAL</text>
+  <text x="8" y="70" class="n-col">    CLAVE_UI_NODO_EVALUADO</text>
+  <text x="8" y="84" class="n-col">    OPERADOR (EQUALS/GREATER…)</text>
+  <text x="8" y="98" class="n-col">    VALOR_REFERENCIA</text>
+</g>
+
+<!-- NODO_PLANTILLA_CONCEPTO -->
+<g transform="translate(870,540)">
+  <rect width="220" height="90" rx="7" fill="#0f200f" stroke="#4df0a0" stroke-width="1.5"/>
+  <rect width="220" height="26" rx="7" fill="#1a3a1a"/>
+  <rect width="220" height="13" y="13" fill="#1a3a1a"/>
+  <text x="110" y="17" text-anchor="middle" fill="#4df0a0" class="n-title">NODO_PLANTILLA_CONCEPTO</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_NODO_PLANTILLA</text>
+  <text x="8" y="70" class="n-col n-col-fk">FK CODIGO_CONCEPTO_TRIBUTARIO</text>
+  <text x="8" y="84" class="n-col">    TIPO_OPERACION</text>
+</g>
+
+<!-- ─────────────────────────────────────────
+     EJECUCIÓN (x=1150+)
+───────────────────────────────────────────── -->
+
+<!-- FORMULARIO_DECLARACION -->
+<g transform="translate(1150,40)">
+  <rect width="240" height="150" rx="7" fill="#1a1000" stroke="#f6a94b" stroke-width="1.5"/>
+  <rect width="240" height="26" rx="7" fill="#3a2800"/>
+  <rect width="240" height="13" y="13" fill="#3a2800"/>
+  <text x="120" y="17" text-anchor="middle" fill="#f6a94b" class="n-title">FORMULARIO_DECLARACION</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_VERSION_PLANTILLA</text>
+  <text x="8" y="70" class="n-col">    RUC_CONTRIBUYENTE · PERIODO_FISCAL</text>
+  <text x="8" y="84" class="n-col">    NUMERO_DECLARACION (UQ) · ESTADO</text>
+  <text x="8" y="98" class="n-col">    PRIORIDAD · DATOS_JSON</text>
+  <text x="8" y="112" class="n-col n-col-fk">FK USUARIO_CREADOR / MODIFICADOR</text>
+  <text x="8" y="126" class="n-col n-col-fk">FK USUARIO_ENVIO</text>
+  <text x="8" y="140" class="n-col">    FECHA_CREACION / MODIFICACION / ENVIO</text>
+</g>
+
+<!-- DECLARACION_HISTORIAL_ESTADO -->
+<g transform="translate(1150,220)">
+  <rect width="240" height="100" rx="7" fill="#1a1000" stroke="#f6a94b" stroke-width="1.5"/>
+  <rect width="240" height="26" rx="7" fill="#3a2800"/>
+  <rect width="240" height="13" y="13" fill="#3a2800"/>
+  <text x="120" y="17" text-anchor="middle" fill="#f6a94b" class="n-title">DECLARACION_HISTORIAL_ESTADO</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_FORMULARIO_DECLARACION</text>
+  <text x="8" y="70" class="n-col">    ESTADO_ANTERIOR · ESTADO_NUEVO</text>
+  <text x="8" y="84" class="n-col">    COMENTARIO · FECHA_CAMBIO</text>
+  <text x="8" y="98" class="n-col n-col-fk">FK USUARIO_RESPONSABLE</text>
+</g>
+
+<!-- DETALLE_VALOR_CONCEPTO -->
+<g transform="translate(1150,350)">
+  <rect width="240" height="90" rx="7" fill="#1a1000" stroke="#f6a94b" stroke-width="1.5"/>
+  <rect width="240" height="26" rx="7" fill="#3a2800"/>
+  <rect width="240" height="13" y="13" fill="#3a2800"/>
+  <text x="120" y="17" text-anchor="middle" fill="#f6a94b" class="n-title">DETALLE_VALOR_CONCEPTO</text>
+  <text x="8" y="42" class="n-col n-col-key">PK (DECLARACION, CONCEPTO)</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_FORMULARIO_DECLARACION</text>
+  <text x="8" y="70" class="n-col n-col-fk">FK CODIGO_CONCEPTO_TRIBUTARIO</text>
+  <text x="8" y="84" class="n-col">    VALOR_CALCULADO · FECHA_CALCULO</text>
+</g>
+
+<!-- DECLARACION_OBSERVACION -->
+<g transform="translate(1150,470)">
+  <rect width="240" height="120" rx="7" fill="#1a1000" stroke="#f6a94b" stroke-width="1.5"/>
+  <rect width="240" height="26" rx="7" fill="#3a2800"/>
+  <rect width="240" height="13" y="13" fill="#3a2800"/>
+  <text x="120" y="17" text-anchor="middle" fill="#f6a94b" class="n-title">DECLARACION_OBSERVACION</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_FORMULARIO_DECLARACION</text>
+  <text x="8" y="70" class="n-col n-col-fk">FK CODIGO_NODO_PLANTILLA</text>
+  <text x="8" y="84" class="n-col">    TIPO · MENSAJE · RESUELTO</text>
+  <text x="8" y="98" class="n-col n-col-fk">FK USUARIO_CREADOR / RESOLUTOR</text>
+  <text x="8" y="112" class="n-col">    FECHA_CREACION / RESOLUCION</text>
+</g>
+
+<!-- DECLARACION_ADJUNTO -->
+<g transform="translate(1150,620)">
+  <rect width="240" height="120" rx="7" fill="#1a1000" stroke="#f6a94b" stroke-width="1.5"/>
+  <rect width="240" height="26" rx="7" fill="#3a2800"/>
+  <rect width="240" height="13" y="13" fill="#3a2800"/>
+  <text x="120" y="17" text-anchor="middle" fill="#f6a94b" class="n-title">DECLARACION_ADJUNTO</text>
+  <text x="8" y="42" class="n-col n-col-key">PK CODIGO</text>
+  <text x="8" y="56" class="n-col n-col-fk">FK CODIGO_FORMULARIO_DECLARACION</text>
+  <text x="8" y="70" class="n-col n-col-fk">FK CODIGO_NODO_PLANTILLA</text>
+  <text x="8" y="84" class="n-col">    NOMBRE_ORIGINAL · NOMBRE_ALMACENADO</text>
+  <text x="8" y="98" class="n-col">    RUTA · MIME_TYPE · TAMANO_BYTES</text>
+  <text x="8" y="112" class="n-col">    HASH_SHA256 · FECHA_CARGA</text>
+</g>
+
+<!-- ════════════════════════════
+     FLECHAS / RELACIONES
+═════════════════════════════ -->
+
+<!-- CATEGORIA → BIBLIOTECA (col1 interna) -->
+<line x1="130" y1="160" x2="130" y2="185" stroke="#5b9cf6" stroke-width="1" opacity=".6" marker-end="url(#a1)"/>
+
+<!-- CATALOGO_MAESTRO → DETALLE -->
+<line x1="380" y1="150" x2="380" y2="175" stroke="#4df0a0" stroke-width="1" opacity=".6" marker-end="url(#a2)"/>
+
+<!-- CONCEPTO self -->
+<path d="M630,170 Q665,185 650,130 Q635,75 630,90" fill="none" stroke="#4df0a0" stroke-width="1" opacity=".5" marker-end="url(#a2)"/>
+
+<!-- CATEGORIA_PLANTILLA → PLANTILLA -->
+<line x1="130" y1="470" x2="130" y2="495" stroke="#5b9cf6" stroke-width="1" opacity=".6" marker-end="url(#a1)"/>
+
+<!-- PLANTILLA → PERMISO_ROL -->
+<line x1="130" y1="595" x2="130" y2="622" stroke="#5b9cf6" stroke-width="1" opacity=".5" marker-end="url(#a1)"/>
+
+<!-- PLANTILLA → VERSION_PLANTILLA -->
+<line x1="240" y1="545" x2="270" y2="440" stroke="#5b9cf6" stroke-width="1" opacity=".6" marker-end="url(#a1)"/>
+
+<!-- VERSION → VERSION_HISTORIAL -->
+<line x1="380" y1="500" x2="380" y2="525" stroke="#5b9cf6" stroke-width="1" opacity=".5" marker-end="url(#a1)"/>
+
+<!-- VERSION → NODO_PLANTILLA -->
+<line x1="490" y1="440" x2="560" y2="440" stroke="#e05cf6" stroke-width="1.5" opacity=".7" marker-end="url(#a4)"/>
+
+<!-- NODO self-ref padre -->
+<path d="M560,460 Q530,480 530,510 Q530,540 560,545" fill="none" stroke="#e05cf6" stroke-width="1" opacity=".5" marker-end="url(#a4)"/>
+
+<!-- NODO → GRID_COLUMNA -->
+<line x1="690" y1="570" x2="690" y2="600" stroke="#e05cf6" stroke-width="1.2" opacity=".7" marker-end="url(#a4)"/>
+
+<!-- CATEGORIA_COMPONENTE → NODO (FK campo) -->
+<path d="M240,100 Q400,100 560,430" fill="none" stroke="#5b9cf6" stroke-width="1" opacity=".35" marker-end="url(#a1)"/>
+
+<!-- BIBLIOTECA_COMPONENTE → NODO -->
+<path d="M240,230 Q400,230 560,445" fill="none" stroke="#5b9cf6" stroke-width="1" opacity=".3" marker-end="url(#a1)"/>
+
+<!-- CATALOGO_MAESTRO → NODO -->
+<path d="M490,95 Q530,120 560,450" fill="none" stroke="#4df0a0" stroke-width="1" opacity=".3" marker-end="url(#a2)"/>
+
+<!-- NODO → NODO_REGLA_VALIDACION -->
+<line x1="820" y1="430" x2="870" y2="220" stroke="#8892aa" stroke-width="1" opacity=".5" marker-end="url(#a5)"/>
+
+<!-- NODO → REGLA_CONDICIONAL -->
+<line x1="820" y1="450" x2="870" y2="340" stroke="#8892aa" stroke-width="1" opacity=".5" marker-end="url(#a5)"/>
+
+<!-- NODO → NODO_PLANTILLA_CONCEPTO -->
+<line x1="820" y1="470" x2="870" y2="580" stroke="#4df0a0" stroke-width="1" opacity=".5" marker-end="url(#a2)"/>
+
+<!-- REGLA_VALIDACION → NODO_REGLA_VALIDACION -->
+<line x1="980" y1="130" x2="980" y2="160" stroke="#8892aa" stroke-width="1" opacity=".6" marker-end="url(#a5)"/>
+
+<!-- REGLA_CONDICIONAL → DETALLE -->
+<line x1="980" y1="380" x2="980" y2="410" stroke="#8892aa" stroke-width="1" opacity=".6" marker-end="url(#a5)"/>
+
+<!-- CONCEPTO → NODO_PLANTILLA_CONCEPTO -->
+<line x1="740" y1="170" x2="960" y2="555" stroke="#4df0a0" stroke-width="1" opacity=".3" marker-end="url(#a2)"/>
+
+<!-- VERSION → FORMULARIO_DECLARACION -->
+<line x1="490" y1="440" x2="1150" y2="100" stroke="#f6a94b" stroke-width="1" opacity=".4" marker-end="url(#a3)"/>
+
+<!-- FORMULARIO → HISTORIAL_ESTADO -->
+<line x1="1270" y1="190" x2="1270" y2="220" stroke="#f6a94b" stroke-width="1" opacity=".6" marker-end="url(#a3)"/>
+
+<!-- FORMULARIO → DETALLE_VALOR_CONCEPTO -->
+<line x1="1270" y1="190" x2="1270" y2="350" stroke="#f6a94b" stroke-width="1" opacity=".5" marker-end="url(#a3)"/>
+
+<!-- FORMULARIO → OBSERVACION -->
+<line x1="1270" y1="190" x2="1270" y2="470" stroke="#f6a94b" stroke-width="1" opacity=".5" marker-end="url(#a3)"/>
+
+<!-- FORMULARIO → ADJUNTO -->
+<line x1="1390" y1="190" x2="1390" y2="620" stroke="#f6a94b" stroke-width="1" opacity=".4" marker-end="url(#a3)"/>
+
+<!-- NODO → OBSERVACION (campo relacionado) -->
+<path d="M820,490 Q1000,500 1150,530" fill="none" stroke="#e05cf6" stroke-width="1" opacity=".3" marker-end="url(#a4)"/>
+
+<!-- NODO → ADJUNTO -->
+<path d="M820,500 Q1000,560 1150,650" fill="none" stroke="#e05cf6" stroke-width="1" opacity=".3" marker-end="url(#a4)"/>
+
+<!-- CONCEPTO → DETALLE_VALOR_CONCEPTO -->
+<path d="M740,100 Q1000,80 1150,395" fill="none" stroke="#4df0a0" stroke-width="1" opacity=".25" marker-end="url(#a2)"/>
+
+<!-- ════ LEYENDA ════ -->
+<g transform="translate(20,1090)">
+  <rect width="1560" height="90" rx="7" fill="#0f1218" stroke="#1f2535"/>
+  <text x="20" y="20" fill="#5a6480" font-family="JetBrains Mono,monospace" font-size="9" font-weight="700">LEYENDA · RELACIONES</text>
+
+  <line x1="20" y1="36" x2="60" y2="36" stroke="#e05cf6" stroke-width="2" marker-end="url(#a4)"/>
+  <text x="68" y="40" fill="#c8cce0" font-family="JetBrains Mono,monospace" font-size="9">NODO_PLANTILLA (unificada)</text>
+
+  <line x1="200" y1="36" x2="240" y2="36" stroke="#5b9cf6" stroke-width="1.5" marker-end="url(#a1)"/>
+  <text x="248" y="40" fill="#c8cce0" font-family="JetBrains Mono,monospace" font-size="9">Diseñador / Componentes</text>
+
+  <line x1="400" y1="36" x2="440" y2="36" stroke="#4df0a0" stroke-width="1.5" marker-end="url(#a2)"/>
+  <text x="448" y="40" fill="#c8cce0" font-family="JetBrains Mono,monospace" font-size="9">Tributario / Catálogos</text>
+
+  <line x1="590" y1="36" x2="630" y2="36" stroke="#f6a94b" stroke-width="1.5" marker-end="url(#a3)"/>
+  <text x="638" y="40" fill="#c8cce0" font-family="JetBrains Mono,monospace" font-size="9">Ejecución / Declaraciones</text>
+
+  <line x1="790" y1="36" x2="830" y2="36" stroke="#8892aa" stroke-width="1.5" marker-end="url(#a5)"/>
+  <text x="838" y="40" fill="#c8cce0" font-family="JetBrains Mono,monospace" font-size="9">Reglas de Validación / Condicionales</text>
+
+  <text x="20" y="62" fill="#5a6480" font-family="JetBrains Mono,monospace" font-size="8">★ NODO_PLANTILLA absorbe SECCION_PLANTILLA + CAMPO_PLANTILLA. GRID_COLUMNA_PLANTILLA permanece separada con FK a NODO. 24 tablas totales en el sistema.</text>
+  <text x="20" y="76" fill="#5a6480" font-family="JetBrains Mono,monospace" font-size="8">FK auto-referenciada en NODO (CODIGO_PADRE) cubre: página→tab, tab→sección, sección→campo, campo_grid→columnas_grid.</text>
+  <text x="20" y="90" fill="#5a6480" font-family="JetBrains Mono,monospace" font-size="8">NODO_REGLA_VALIDACION renombrada desde CAMPO_REGLA_VALIDACION · NODO_PLANTILLA_CONCEPTO renombrada desde CAMPO_PLANTILLA_CONCEPTO.</text>
+</g>
+</svg>
+  </div>
+</section>
+
+<!-- ══════════════════════════════
+     07 MIGRACIÓN
+══════════════════════════════ -->
+<section id="migracion">
+  <h2><span class="sec-num">07</span> Script de Migración v1 → v2</h2>
+  <p class="sec-desc">Script completo para migrar datos existentes. Ejecutar en transacción única.</p>
+
+  <pre><span class="lbl">Oracle SQL · Migración</span><span class="kw">BEGIN</span>
+  <span class="cm">-- PASO 1: Crear NODO_PLANTILLA vacía</span>
+  <span class="cm">-- (ejecutar el DDL de NODO_PLANTILLA de la sección 04 primero)</span>
+
+  <span class="cm">-- PASO 2: Migrar SECCION_PLANTILLA → NODO_PLANTILLA</span>
+  <span class="kw">INSERT INTO</span> NODO_PLANTILLA (
+      CODIGO_VERSION_PLANTILLA, CODIGO_PADRE,
+      TIPO_NODO, CLAVE_UI, ETIQUETA, DESCRIPCION,
+      ORDEN, ES_VISIBLE, ES_COLAPSABLE, CONTENIDO_HTML,
+      CONFIG_JSON
+  )
+  <span class="kw">SELECT</span>
+      CODIGO_VERSION_PLANTILLA,
+      CODIGO_SECCION_PADRE,       <span class="cm">-- se resuelve en paso 4</span>
+      TIPO,                       <span class="cm">-- PAGE/TAB/PANEL/SECTION/etc.</span>
+      CLAVE_UI,
+      ETIQUETA,
+      DESCRIPCION,
+      ORDEN,
+      VISIBLE_DEFECTO,
+      ES_COLAPSABLE,
+      CONTENIDO_HTML,
+      CONFIG_LAYOUT_JSON
+  <span class="kw">FROM</span> SECCION_PLANTILLA;
+
+  <span class="cm">-- PASO 3: Migrar CAMPO_PLANTILLA → NODO_PLANTILLA</span>
+  <span class="kw">INSERT INTO</span> NODO_PLANTILLA (
+      CODIGO_VERSION_PLANTILLA, CODIGO_PADRE,
+      TIPO_NODO, CLAVE_UI, ETIQUETA,
+      ORDEN, ES_VISIBLE, ES_EDITABLE, ES_OBLIGATORIO, ES_READONLY,
+      CODIGO_CATEGORIA_COMPONENTE, CODIGO_BIBLIOTECA_COMPONENTE,
+      CODIGO_CATALOGO_MAESTRO, ANCHO_COLUMNAS,
+      PLACEHOLDER, TEXTO_AYUDA,
+      CONFIG_JSON
+  )
+  <span class="kw">SELECT</span>
+      CODIGO_VERSION_PLANTILLA,
+      CODIGO_SECCION,             <span class="cm">-- se resuelve en paso 4</span>
+      <span class="str">'CAMPO'</span>,
+      CLAVE_UI,
+      ETIQUETA_UI,
+      ORDEN,
+      ES_VISIBLE,
+      ES_EDITABLE,
+      ES_OBLIGATORIO,
+      ES_READONLY,
+      CODIGO_CATEGORIA_COMPONENTE,
+      CODIGO_BIBLIOTECA_COMPONENTE,
+      CODIGO_CATALOGO_MAESTRO,
+      ANCHO_COLUMNAS,
+      PLACEHOLDER,
+      TEXTO_AYUDA,
+      PROPIEDADES_UI_JSON
+  <span class="kw">FROM</span> CAMPO_PLANTILLA;
+
+  <span class="cm">-- PASO 4: Actualizar CODIGO_PADRE usando tabla de mapeo de IDs antiguos→nuevos
+  -- (SECCION_PLANTILLA.CODIGO no coincide con NODO_PLANTILLA.CODIGO porque
+  --  IDENTITY generó nuevos IDs al insertar en pasos 2 y 3)
+  -- Solución: usar CLAVE_UI como pivot para resolver el padre</span>
+
+  <span class="kw">UPDATE</span> NODO_PLANTILLA np_hijo
+  <span class="kw">SET</span> np_hijo.CODIGO_PADRE = (
+      <span class="kw">SELECT</span> np_padre.CODIGO
+      <span class="kw">FROM</span>   NODO_PLANTILLA np_padre
+             <span class="kw">JOIN</span> SECCION_PLANTILLA sp <span class="kw">ON</span> sp.CLAVE_UI = np_padre.CLAVE_UI
+                                         <span class="kw">AND</span> sp.CODIGO_VERSION_PLANTILLA = np_padre.CODIGO_VERSION_PLANTILLA
+      <span class="kw">WHERE</span>  sp.CODIGO = (
+                 <span class="kw">SELECT</span> CODIGO_SECCION_PADRE
+                 <span class="kw">FROM</span>   SECCION_PLANTILLA sp2
+                 <span class="kw">WHERE</span>  sp2.CLAVE_UI = np_hijo.CLAVE_UI
+                        <span class="kw">AND</span> sp2.CODIGO_VERSION_PLANTILLA = np_hijo.CODIGO_VERSION_PLANTILLA
+             )
+  )
+  <span class="kw">WHERE</span> np_hijo.TIPO_NODO != <span class="str">'CAMPO'</span>  <span class="cm">-- secciones</span>
+    <span class="kw">AND</span> np_hijo.CODIGO_PADRE IS NOT NULL;
+
+  <span class="cm">-- Para los campos, padre es la sección identificada por CLAVE_UI</span>
+  <span class="kw">UPDATE</span> NODO_PLANTILLA np_campo
+  <span class="kw">SET</span> np_campo.CODIGO_PADRE = (
+      <span class="kw">SELECT</span> np_sec.CODIGO
+      <span class="kw">FROM</span>   NODO_PLANTILLA np_sec
+             <span class="kw">JOIN</span> SECCION_PLANTILLA sp <span class="kw">ON</span> sp.CLAVE_UI = np_sec.CLAVE_UI
+                                         <span class="kw">AND</span> sp.CODIGO_VERSION_PLANTILLA = np_sec.CODIGO_VERSION_PLANTILLA
+      <span class="kw">WHERE</span>  sp.CODIGO = (
+                 <span class="kw">SELECT</span> cp.CODIGO_SECCION
+                 <span class="kw">FROM</span>   CAMPO_PLANTILLA cp
+                 <span class="kw">WHERE</span>  cp.CLAVE_UI = np_campo.CLAVE_UI
+                        <span class="kw">AND</span> cp.CODIGO_VERSION_PLANTILLA = np_campo.CODIGO_VERSION_PLANTILLA
+             )
+  )
+  <span class="kw">WHERE</span> np_campo.TIPO_NODO = <span class="str">'CAMPO'</span>;
+
+  <span class="cm">-- PASO 5: Migrar GRID_COLUMNA_PLANTILLA → CODIGO_NODO_PLANTILLA</span>
+  <span class="kw">UPDATE</span> GRID_COLUMNA_PLANTILLA gcp
+  <span class="kw">SET</span> gcp.CODIGO_NODO_PLANTILLA = (
+      <span class="kw">SELECT</span> np.CODIGO
+      <span class="kw">FROM</span>   NODO_PLANTILLA np
+             <span class="kw">JOIN</span> CAMPO_PLANTILLA cp <span class="kw">ON</span> cp.CLAVE_UI = np.CLAVE_UI
+                                      <span class="kw">AND</span> cp.CODIGO_VERSION_PLANTILLA = np.CODIGO_VERSION_PLANTILLA
+      <span class="kw">WHERE</span>  cp.CODIGO = gcp.CODIGO_CAMPO_PLANTILLA
+  );
+
+  <span class="cm">-- PASO 6: Migrar CAMPO_REGLA_VALIDACION</span>
+  <span class="kw">INSERT INTO</span> NODO_REGLA_VALIDACION(CODIGO_NODO_PLANTILLA, CODIGO_REGLA_VALIDACION, ORDEN_EJECUCION, PARAMETROS_JSON)
+  <span class="kw">SELECT</span>
+      np.CODIGO, crv.CODIGO_REGLA_VALIDACION, crv.ORDEN_EJECUCION, crv.PARAMETROS_JSON
+  <span class="kw">FROM</span>   CAMPO_REGLA_VALIDACION crv
+         <span class="kw">JOIN</span> CAMPO_PLANTILLA cp  <span class="kw">ON</span> cp.CODIGO = crv.CODIGO_CAMPO_PLANTILLA
+         <span class="kw">JOIN</span> NODO_PLANTILLA   np  <span class="kw">ON</span> np.CLAVE_UI = cp.CLAVE_UI
+                                    <span class="kw">AND</span> np.CODIGO_VERSION_PLANTILLA = cp.CODIGO_VERSION_PLANTILLA;
+
+  <span class="cm">-- PASO 7: Migrar REGLA_CONDICIONAL</span>
+  <span class="kw">UPDATE</span> REGLA_CONDICIONAL rc
+  <span class="kw">SET</span> rc.CODIGO_NODO_PLANTILLA = (
+      <span class="kw">SELECT</span> np.CODIGO
+      <span class="kw">FROM</span>   NODO_PLANTILLA np
+             <span class="kw">JOIN</span> CAMPO_PLANTILLA cp <span class="kw">ON</span> cp.CLAVE_UI = np.CLAVE_UI
+      <span class="kw">WHERE</span>  cp.CODIGO = rc.CODIGO_CAMPO_PLANTILLA
+  );
+
+  <span class="cm">-- PASO 8: Migrar CAMPO_PLANTILLA_CONCEPTO</span>
+  <span class="kw">INSERT INTO</span> NODO_PLANTILLA_CONCEPTO(CODIGO_NODO_PLANTILLA, CODIGO_CONCEPTO_TRIBUTARIO, TIPO_OPERACION)
+  <span class="kw">SELECT</span>
+      np.CODIGO, cpc.CODIGO_CONCEPTO_TRIBUTARIO, cpc.TIPO_OPERACION
+  <span class="kw">FROM</span>   CAMPO_PLANTILLA_CONCEPTO cpc
+         <span class="kw">JOIN</span> CAMPO_PLANTILLA cp <span class="kw">ON</span> cp.CODIGO = cpc.CODIGO_CAMPO_PLANTILLA
+         <span class="kw">JOIN</span> NODO_PLANTILLA   np <span class="kw">ON</span> np.CLAVE_UI = cp.CLAVE_UI;
+
+  <span class="cm">-- PASO 9: Migrar FKs en DECLARACION_OBSERVACION y DECLARACION_ADJUNTO</span>
+  <span class="kw">UPDATE</span> DECLARACION_OBSERVACION dob
+  <span class="kw">SET</span> dob.CODIGO_NODO_PLANTILLA = (
+      <span class="kw">SELECT</span> np.CODIGO <span class="kw">FROM</span> NODO_PLANTILLA np
+             <span class="kw">JOIN</span> CAMPO_PLANTILLA cp <span class="kw">ON</span> cp.CLAVE_UI = np.CLAVE_UI
+      <span class="kw">WHERE</span>  cp.CODIGO = dob.CODIGO_CAMPO_PLANTILLA
+  ) <span class="kw">WHERE</span> dob.CODIGO_CAMPO_PLANTILLA IS NOT NULL;
+
+  <span class="kw">UPDATE</span> DECLARACION_ADJUNTO da
+  <span class="kw">SET</span> da.CODIGO_NODO_PLANTILLA = (
+      <span class="kw">SELECT</span> np.CODIGO <span class="kw">FROM</span> NODO_PLANTILLA np
+             <span class="kw">JOIN</span> CAMPO_PLANTILLA cp <span class="kw">ON</span> cp.CLAVE_UI = np.CLAVE_UI
+      <span class="kw">WHERE</span>  cp.CODIGO = da.CODIGO_CAMPO_PLANTILLA
+  ) <span class="kw">WHERE</span> da.CODIGO_CAMPO_PLANTILLA IS NOT NULL;
+
+  <span class="cm">-- PASO 10: DROP tablas antiguas (solo tras validar datos)</span>
+  <span class="cm">-- DROP TABLE CAMPO_REGLA_VALIDACION;</span>
+  <span class="cm">-- DROP TABLE CAMPO_PLANTILLA_CONCEPTO;</span>
+  <span class="cm">-- DROP TABLE CAMPO_PLANTILLA;</span>
+  <span class="cm">-- DROP TABLE SECCION_PLANTILLA;</span>
+
+  <span class="kw">COMMIT</span>;
+<span class="kw">END</span>;
+/</pre>
+</section>
+
+<!-- ══════════════════════════════
+     08 IMPACTO BACKEND
+══════════════════════════════ -->
+<section id="impacto-backend">
+  <h2><span class="sec-num">08</span> Impacto Backend · Quarkus + Panache</h2>
+
+  <h3>Entidad con discriminador Hibernate</h3>
+  <pre><span class="lbl">Java · Inheritance Strategy</span><span class="kw">@Entity</span>
+<span class="kw">@Table</span>(name = <span class="str">"NODO_PLANTILLA"</span>)
+<span class="kw">@Inheritance</span>(strategy = InheritanceType.SINGLE_TABLE)
+<span class="kw">@DiscriminatorColumn</span>(name = <span class="str">"TIPO_NODO"</span>, discriminatorType = DiscriminatorType.STRING)
+<span class="kw">public abstract class</span> <span class="cl">NodoPlantilla</span> <span class="kw">extends</span> PanacheEntityBase {
+
+    <span class="kw">@Id @GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">public</span> Long codigo;
+
+    <span class="kw">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="kw">@JoinColumn</span>(name = <span class="str">"CODIGO_VERSION_PLANTILLA"</span>)
+    <span class="kw">public</span> VersionPlantilla version;
+
+    <span class="kw">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="kw">@JoinColumn</span>(name = <span class="str">"CODIGO_PADRE"</span>)
+    <span class="kw">public</span> NodoPlantilla padre;
+
+    <span class="kw">@OneToMany</span>(mappedBy = <span class="str">"padre"</span>, cascade = CascadeType.ALL, orphanRemoval = <span class="kw">true</span>)
+    <span class="kw">@OrderBy</span>(<span class="str">"orden ASC"</span>)
+    <span class="kw">public</span> List&lt;NodoPlantilla&gt; hijos = <span class="kw">new</span> ArrayList&lt;&gt;();
+
+    <span class="kw">public</span> String claveUi;
+    <span class="kw">public</span> String etiqueta;
+    <span class="kw">public</span> Integer orden;
+    <span class="kw">public</span> Boolean esVisible = <span class="kw">true</span>;
+}
+
+<span class="cm">// Subclase para nodos de layout</span>
+<span class="kw">@Entity</span>
+<span class="kw">@DiscriminatorValue</span>(<span class="str">"PAGE"</span>)   <span class="cm">// o TAB, PANEL, SECTION, etc.</span>
+<span class="kw">public class</span> <span class="cl">NodoLayout</span> <span class="kw">extends</span> NodoPlantilla {
+    <span class="kw">public</span> Boolean esColapsable = <span class="kw">false</span>;
+    <span class="kw">public</span> String contenidoHtml;
+    <span class="kw">public</span> String configJson;   <span class="cm">// CONFIG_JSON</span>
+}
+
+<span class="cm">// Subclase para campos</span>
+<span class="kw">@Entity</span>
+<span class="kw">@DiscriminatorValue</span>(<span class="str">"CAMPO"</span>)
+<span class="kw">public class</span> <span class="cl">NodoCampo</span> <span class="kw">extends</span> NodoPlantilla {
+
+    <span class="kw">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="kw">@JoinColumn</span>(name = <span class="str">"CODIGO_CATEGORIA_COMPONENTE"</span>)
+    <span class="kw">public</span> CategoriaComponente categoriaComponente;
+
+    <span class="kw">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="kw">@JoinColumn</span>(name = <span class="str">"CODIGO_BIBLIOTECA_COMPONENTE"</span>)
+    <span class="kw">public</span> BibliotecaComponente bibliotecaComponente;
+
+    <span class="kw">@ManyToOne</span>(fetch = FetchType.LAZY)
+    <span class="kw">@JoinColumn</span>(name = <span class="str">"CODIGO_CATALOGO_MAESTRO"</span>)
+    <span class="kw">public</span> CatalogoMaestro catalogoMaestro;
+
+    <span class="kw">public</span> Boolean esObligatorio = <span class="kw">false</span>;
+    <span class="kw">public</span> Boolean esEditable    = <span class="kw">true</span>;
+    <span class="kw">public</span> Boolean esReadonly    = <span class="kw">false</span>;
+    <span class="kw">public</span> Integer anchoColumnas = <span class="nu">12</span>;
+    <span class="kw">public</span> String  placeholder;
+    <span class="kw">public</span> String  textoAyuda;
+    <span class="kw">public</span> String  configJson;   <span class="cm">// snapshot widget</span>
+
+    <span class="kw">@OneToMany</span>(mappedBy = <span class="str">"nodoCampo"</span>, cascade = CascadeType.ALL, orphanRemoval = <span class="kw">true</span>)
+    <span class="kw">public</span> List&lt;GridColumnaPlantilla&gt; columnasGrid = <span class="kw">new</span> ArrayList&lt;&gt;();
+}</pre>
+
+  <h3>Query árbol completo en Panache Reactive</h3>
+  <pre><span class="lbl">Java · Repository</span><span class="kw">public</span> Uni&lt;List&lt;NodoPlantilla&gt;&gt; <span class="fn">arbolCompleto</span>(Long versionId) {
+    <span class="kw">return</span> Panache.withSession(() ->
+        NodoPlantilla
+            .find(<span class="str">"codigoVersionPlantilla = ?1 ORDER BY orden ASC"</span>, versionId)
+            .list()
+            .map(nodos -> {
+                <span class="cm">// Construir árbol en memoria agrupando por padre</span>
+                Map&lt;Long, NodoPlantilla&gt; map = nodos.stream()
+                    .collect(Collectors.toMap(n -> n.codigo, n -> n));
+                List&lt;NodoPlantilla&gt; raices = <span class="kw">new</span> ArrayList&lt;&gt;();
+                nodos.forEach(n -> {
+                    <span class="kw">if</span> (n.padre == <span class="kw">null</span>) raices.add(n);
+                    <span class="kw">else</span> map.get(n.padre.codigo).hijos.add(n);
+                });
+                <span class="kw">return</span> raices;
+            })
+    );
+}</pre>
+</section>
+
+<!-- ══════════════════════════════
+     09 IMPACTO FRONTEND
+══════════════════════════════ -->
+<section id="impacto-frontend">
+  <h2><span class="sec-num">09</span> Impacto Frontend · Vue 3</h2>
+
+  <h3>Store del diseñador — árbol unificado</h3>
+  <pre><span class="lbl">stores/designer.js</span><span class="cm">// El árbol ya viene unificado del backend.
+// Ya no hay secciones y campos separados; todo es "nodo".</span>
+
+<span class="kw">export const</span> <span class="fn">useDesignerStore</span> = <span class="fn">defineStore</span>(<span class="str">'designer'</span>, () => {
+  <span class="kw">const</span> nodos = ref([])   <span class="cm">// árbol completo: [{tipo:'PAGE', hijos:[{tipo:'TAB'…}]}]</span>
+
+  <span class="kw">const</span> soloHojas = computed(() => {
+    <span class="kw">const</span> flat = (list) => list.flatMap(n => n.tipoNodo === <span class="str">'CAMPO'</span> ? [n] : flat(n.hijos ?? []))
+    <span class="kw">return</span> flat(nodos.value)
+  })
+
+  <span class="kw">async function</span> <span class="fn">moverNodo</span>(nodoCodigo, nuevoPadreCodigo, nuevoOrden) {
+    <span class="cm">// Un solo endpoint para mover CUALQUIER tipo de nodo</span>
+    <span class="kw">await</span> api.patch(<span class="str">`/nodos/${nodoCodigo}/mover`</span>, { nuevoPadreCodigo, nuevoOrden })
+    <span class="kw">await</span> cargarArbol()
+  }
+
+  <span class="kw">return</span> { nodos, soloHojas, moverNodo }
+})</pre>
+
+  <h3>NodoRenderer — renderiza cualquier tipo recursivamente</h3>
+  <pre><span class="lbl">NodoRenderer.vue</span><span class="kw">&lt;script setup&gt;</span>
+<span class="kw">const</span> props = defineProps({ nodo: Object, modoDiseno: Boolean })
+<span class="kw">&lt;/script&gt;</span>
+
+<span class="kw">&lt;template&gt;</span>
+  <span class="cm">&lt;!-- LAYOUT NODES --&gt;</span>
+  <span class="kw">&lt;template v-if</span>="['PAGE','TAB','PANEL','SECTION','FIELDSET'].includes(nodo.tipoNodo)"<span class="kw">&gt;</span>
+    <span class="kw">&lt;component</span>
+      :is="LAYOUT_MAP[nodo.tipoNodo]"
+      :nodo="nodo"
+    <span class="kw">&gt;</span>
+      <span class="cm">&lt;!-- Zona drop para diseño --&gt;</span>
+      <span class="kw">&lt;draggable v-if</span>="modoDiseno"
+        :list="nodo.hijos" group="nodos" item-key="codigo"
+        @change="onReorder(nodo, $event)"<span class="kw">&gt;</span>
+        <span class="kw">&lt;template #item="{element}"&gt;</span>
+          <span class="kw">&lt;NodoRenderer</span> :nodo="element" :modo-diseno="modoDiseno" <span class="kw">/&gt;</span>
+        <span class="kw">&lt;/template&gt;</span>
+      <span class="kw">&lt;/draggable&gt;</span>
+      <span class="cm">&lt;!-- Solo renderizado en runtime --&gt;</span>
+      <span class="kw">&lt;NodoRenderer v-else</span>
+        <span class="kw">v-for</span>="hijo in nodo.hijos" :key="hijo.codigo"
+        :nodo="hijo" <span class="kw">/&gt;</span>
+    <span class="kw">&lt;/component&gt;</span>
+  <span class="kw">&lt;/template&gt;</span>
+
+  <span class="cm">&lt;!-- TEXT_BLOCK --&gt;</span>
+  <span class="kw">&lt;div v-else-if</span>="nodo.tipoNodo==='TEXT_BLOCK'" v-html="nodo.contenidoHtml" <span class="kw">/&gt;</span>
+
+  <span class="cm">&lt;!-- DIVIDER --&gt;</span>
+  <span class="kw">&lt;Divider v-else-if</span>="nodo.tipoNodo==='DIVIDER'" <span class="kw">/&gt;</span>
+
+  <span class="cm">&lt;!-- CAMPO → delega al widget correspondiente --&gt;</span>
+  <span class="kw">&lt;CampoRenderer v-else-if</span>="nodo.tipoNodo==='CAMPO'" :nodo="nodo" <span class="kw">/&gt;</span>
+<span class="kw">&lt;/template&gt;</span></pre>
+
+  <div class="callout ok">
+    <strong>Resultado:</strong> el componente <code>NodoRenderer</code> es completamente recursivo y agnóstico al tipo. El diseñador drag&drop y el runtime de formularios comparten el mismo componente. Agregar un nuevo tipo de sección (ej: <code>ACCORDION</code>) solo requiere añadir una entrada en <code>LAYOUT_MAP</code> y el CHECK constraint en Oracle, sin tocar la estructura de tablas.
+  </div>
+</section>
+
+</main>
+
+<style>
+  .n-col { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; fill: #8892aa; }
+  .n-col-key { fill: #f6a94b !important; }
+  .n-col-fk  { fill: #5b9cf6 !important; }
+  .n-col-hi  { fill: #4df0a0 !important; }
+  .n-title   { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 9.5px; }
+</style>
+</body>
+</html>
