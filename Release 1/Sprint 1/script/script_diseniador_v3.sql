@@ -395,8 +395,9 @@ CREATE TABLE NODO_PLANTILLA_CONCEPTO (         -- era CAMPO_PLANTILLA_CONCEPTO
 /* ================================================================
    MÓDULO 5: EJECUCIÓN
    ================================================================ */
-Módulo 5 · Ejecución (sin cambios en estructura, FK renombradas)
-FK apuntan a NODO_PLANTILLA donde antes iban a CAMPO_PLANTILLACREATE TABLE FORMULARIO_DECLARACION (
+--Módulo 5 · Ejecución (sin cambios en estructura, FK renombradas)
+--FK apuntan a NODO_PLANTILLA donde antes iban a CAMPO_PLANTILLA
+CREATE TABLE FORMULARIO_DECLARACION (
     CODIGO                   NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     CODIGO_VERSION_PLANTILLA NUMBER        NOT NULL,
     RUC_CONTRIBUYENTE        VARCHAR2(13)  NOT NULL,
